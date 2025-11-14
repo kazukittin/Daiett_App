@@ -1,0 +1,47 @@
+# --- Node / npm ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Build output ---
+dist/
+dist-ssr/
+*.local
+
+# --- Environment files ---
+.env
+.env.local
+.env.*.local
+
+# --- Editor / OS files ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Cache ---
+.cache/
+vite-cache/
+.eslintcache
+stylelintcache/
+*.tsbuildinfo
+
+# --- Logs ---
+logs/
+*.log
+*.log.*
+
+# --- Optional: Test outputs ---
+coverage/
+
+# --- If accidentally added ---
+frontend/node_modules/
+frontend/dist/
+
+# --- Node modules ---
+**/node_modules/
+

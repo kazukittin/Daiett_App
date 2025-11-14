@@ -382,3 +382,79 @@ th {
   margin: 0;
   padding: 0;
 }
+
+
+/* ===== Add Meal Page ===== */
+.add-meal-page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-meal-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 40px 48px;
+  width: 640px;
+  max-width: 95%;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.add-meal-title {
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.add-meal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.form-input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d5d7dd;
+  font-size: 14px;
+}
+
+.add-meal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  padding: 10px 18px;
+  font-size: 14px;
+  cursor: pointer;
+}
