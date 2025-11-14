@@ -1,0 +1,54 @@
+# --- Node / npm ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# --- Vite build ---
+dist/
+dist-ssr/
+*.local
+
+# --- Editor files ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Logs ---
+logs
+*.log
+*.log.*
+npm-debug.log*
+pnpm-debug.log*
+
+# --- Environment files ---
+.env
+.env.local
+.env.*.local
+
+# --- Cache ---
+.cache/
+vite-cache/
+.eslintcache
+stylelintcache/
+
+# --- OS generated ---
+.DS_Store
+Thumbs.db
+
+# --- Optional: Ignore coverage ---
+coverage/
+
+# --- Optional: Ignore your frontend build if separate ---
+frontend/node_modules/
+frontend/dist/
+
+# --- Optional: If backend exists ---
+/backend/node_modules/
+/backend/dist/
+/backend/.env
