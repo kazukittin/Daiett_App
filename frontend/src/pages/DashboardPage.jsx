@@ -98,6 +98,7 @@ export default function DashboardPage() {
               <table>
                 <thead>
                   <tr>
+                    <th>項目</th>
                     <th>日</th>
                     <th>月</th>
                     <th>火</th>
@@ -115,6 +116,7 @@ export default function DashboardPage() {
                     <td>1,300</td>
                     <td>1,700</td>
                     <td>1,500</td>
+                    <td>1,500</td>
                     <td>–</td>
                   </tr>
                   <tr>
@@ -125,6 +127,7 @@ export default function DashboardPage() {
                     <td>朝/昼</td>
                     <td>スナック</td>
                     <td>-</td>
+                    <td>-</td>
                   </tr>
                   <tr>
                     <td>水</td>
@@ -133,6 +136,7 @@ export default function DashboardPage() {
                     <td>2.2 L</td>
                     <td>1.5 L</td>
                     <td>2.0 L</td>
+                    <td>-</td>
                     <td>-</td>
                   </tr>
                   <tr>
@@ -143,6 +147,7 @@ export default function DashboardPage() {
                     <td>7,500</td>
                     <td>10,000</td>
                     <td>-</td>
+                    <td>-</td>
                   </tr>
                   <tr>
                     <td>総カロリー</td>
@@ -152,15 +157,17 @@ export default function DashboardPage() {
                     <td>820</td>
                     <td>720</td>
                     <td>-</td>
+                     <td>-</td>
                   </tr>
                   <tr>
                     <td>気分</td>
-                    <td className="emoji-cell">🙂</td>
-                    <td className="emoji-cell">😄</td>
-                    <td className="emoji-cell">😐</td>
-                    <td className="emoji-cell">🙂</td>
-                    <td className="emoji-cell">😌</td>
-                    <td className="emoji-cell">-</td>
+                    <td >🙂</td>
+                    <td >😄</td>
+                    <td >😐</td>
+                    <td >🙂</td>
+                    <td >😌</td>
+                    <td >-</td>
+                    <td >-</td>
                   </tr>
                 </tbody>
               </table>
