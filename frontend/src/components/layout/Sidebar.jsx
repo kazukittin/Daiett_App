@@ -22,7 +22,9 @@ export default function Sidebar() {
           {menu.map((item) => (
             <li
               key={item.path}
-              className={`nav-item ${location.pathname === item.path ? "active" : ""}`}
+              className={`nav-item ${
+                location.pathname === item.path ? "active" : ""
+              }`}
               onClick={() => navigate(item.path)}
             >
               <div className="nav-icon" />
@@ -32,9 +34,20 @@ export default function Sidebar() {
         </ul>
       </div>
 
+      {/* 下部：クイックアクション */}
       <div className="sidebar-bottom">
-        <button className="btn-add-meal" onClick={() => navigate("/meals/new")}>
-          食事を追加します
+        <button
+          className="sidebar-action-btn meal"
+          onClick={() => navigate("/meals/new")}
+        >
+          🍙 食事を追加する
+        </button>
+
+        <button
+          className="sidebar-action-btn exercise"
+          onClick={() => navigate("/exercises/new")}
+        >
+          💪 運動記録を追加する
         </button>
       </div>
     </aside>
