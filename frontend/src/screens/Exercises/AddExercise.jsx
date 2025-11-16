@@ -1,140 +1,157 @@
-// src/screens/Exercises/AddExercise.jsx
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
+
+const STORAGE_KEY = "exercises";
 
 function getToday() {
-  const d = new Date();
-  return d.toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0];
+}
+
+function readExercises() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (error) {
+    console.error("Failed to parse exercises from storage", error);
+    return [];
+  }
+}
+
+function saveExercises(records) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 }
 
 export default function AddExercise() {
   const navigate = useNavigate();
-
-  const [date, setDate] = useState(getToday());
+  const today = useMemo(() => getToday(), []);
+  const [date, setDate] = useState(today);
   const [type, setType] = useState("");
   const [duration, setDuration] = useState("");
   const [calories, setCalories] = useState("");
   const [memo, setMemo] = useState("");
+  const [error, setError] = useState("");
 
-  const [todayList, setTodayList] = useState([]);
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
-  // データ取得
-  const loadData = () => {
-    try {
-      return JSON.parse(localStorage.getItem("exercises")) || [];
-    } catch {
-      return [];
-    }
-  };
-
-  // 保存
-  const saveData = (data) => {
-    localStorage.setItem("exercises", JSON.stringify(data));
-  };
-
-  // 今日のワークアウト読み込み
-  useEffect(() => {
-    const all = loadData();
-    const today = getToday();
-    setTodayList(all.filter((e) => e.date === today));
-  }, []);
-
-  const submit = (e) => {
-    e.preventDefault();
-
-    if (!type || !duration || !calories) {
-      alert("入力に抜けがあるよ〜！");
+    if (!type.trim() || !duration || !calories) {
+      setError("種類・時間・消費カロリーを入力してください");
       return;
     }
 
-    const all = loadData();
-    const newItem = {
+    const newRecord = {
       id: Date.now(),
       date,
-      type,
+      type: type.trim(),
       duration: Number(duration),
       calories: Number(calories),
-      memo,
+      memo: memo.trim(),
     };
 
-    const updated = [...all, newItem];
-    saveData(updated);
+    const existing = readExercises();
+    const updated = [...existing, newRecord];
+    saveExercises(updated);
+    window.dispatchEvent(new Event("exercisesUpdated"));
 
-    // 今日の一覧更新
-    const today = getToday();
-    setTodayList(updated.filter((e) => e.date === today));
-
-    // 入力をリセット
     setType("");
     setDuration("");
     setCalories("");
     setMemo("");
+    setError("");
   };
 
   return (
     <div className="page add-exercise-page">
-      <h1>運動記録を追加する</h1>
+      <header className="page-header">
+        <h1 className="page-title">運動記録を追加する</h1>
+        <p className="muted">今日の運動内容を記録して、目標に近づこう</p>
+      </header>
 
-      <form onSubmit={submit} className="exercise-form">
-        <label>
-          日付
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </label>
+      <div className="add-exercise-layout">
+        <section className="card exercise-form-card">
+          <form className="exercise-form" onSubmit={handleSubmit}>
+            <div className="form-field">
+              <label htmlFor="exercise-date" className="form-label">
+                日付
+              </label>
+              <input
+                id="exercise-date"
+                type="date"
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+              />
+            </div>
 
-        <label>
-          種類
-          <input
-            type="text"
-            placeholder="例: ランニング"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          />
-        </label>
+            <div className="form-field">
+              <label htmlFor="exercise-type" className="form-label">
+                種類
+              </label>
+              <input
+                id="exercise-type"
+                type="text"
+                placeholder="例: ランニング"
+                value={type}
+                onChange={(event) => setType(event.target.value)}
+              />
+            </div>
 
-        <label>
-          時間（分）
-          <input
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-          />
-        </label>
+            <div className="form-field">
+              <label htmlFor="exercise-duration" className="form-label">
+                時間（分）
+              </label>
+              <input
+                id="exercise-duration"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={duration}
+                onChange={(event) => setDuration(event.target.value)}
+              />
+            </div>
 
-        <label>
-          消費カロリー
-          <input
-            type="number"
-            value={calories}
-            onChange={(e) => setCalories(e.target.value)}
-          />
-        </label>
+            <div className="form-field">
+              <label htmlFor="exercise-calories" className="form-label">
+                消費カロリー（kcal）
+              </label>
+              <input
+                id="exercise-calories"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={calories}
+                onChange={(event) => setCalories(event.target.value)}
+              />
+            </div>
 
-        <label>
-          メモ（任意）
-          <textarea value={memo} onChange={(e) => setMemo(e.target.value)} />
-        </label>
+            <div className="form-field">
+              <label htmlFor="exercise-memo" className="form-label">
+                メモ（任意）
+              </label>
+              <textarea
+                id="exercise-memo"
+                rows="4"
+                placeholder="体調や気づきをメモ"
+                value={memo}
+                onChange={(event) => setMemo(event.target.value)}
+              />
+            </div>
 
-        <div className="form-actions">
-          <button type="button" onClick={() => navigate(-1)}>
-            戻る
-          </button>
-          <button type="submit">保存する</button>
-        </div>
-      </form>
+            {error && <div className="form-error">{error}</div>}
 
-      <h2>今日のワークアウト</h2>
-      {todayList.length === 0 ? (
-        <p>今日はまだ運動を登録してないよ〜！</p>
-      ) : (
-        <ul className="today-exercise-list">
-          {todayList.map((e) => (
-            <li key={e.id}>
-              <strong>{e.type}</strong> / {e.duration}分 / {e.calories}kcal
-              {e.memo && <div className="memo">{e.memo}</div>}
-            </li>
-          ))}
-        </ul>
-      )}
+            <div className="form-actions">
+              <button type="button" className="btn secondary" onClick={() => navigate(-1)}>
+                キャンセル
+              </button>
+              <button type="submit" className="btn primary">
+                記録する
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <TodayWorkout />
+      </div>
     </div>
   );
 }

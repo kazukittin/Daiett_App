@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
+import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 
 const weeklyBurn = [60, 75, 50, 80, 70, 65];
 const activities = [
@@ -43,6 +44,8 @@ export default function BurnDashboard() {
               </ul>
             </Card>
           </div>
+
+          <TodayWorkout />
         </section>
       </main>
     </div>

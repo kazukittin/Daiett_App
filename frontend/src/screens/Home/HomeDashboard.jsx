@@ -4,6 +4,7 @@ import SummaryCard from "../../components/ui/SummaryCard.jsx";
 import Card from "../../components/ui/Card.jsx";
 import WeightTrackerCard from "../../components/weight/WeightTrackerCard.jsx";
 import WeightTrendCard from "../../components/weight/WeightTrendCard.jsx";
+import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
 import { calculateDifference, calculateMonthOverMonth } from "../../utils/weight.js";
 
@@ -69,6 +70,8 @@ export default function HomeDashboard() {
             />
             <WeightTrendCard records={weightRecords} />
           </div>
+
+          <TodayWorkout />
 
           <div className="grid-3">
             <Card title="デイリーステップス">
