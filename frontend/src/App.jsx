@@ -1,19 +1,18 @@
 // src/App.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import HomeDashboardPage from "./pages/HomeDashboardPage.jsx";
-import DashboardPage from "./pages/DashboardPage.jsx"; // 摂取カロリー
-import BurnDashboardPage from "./pages/BurnDashboardPage.jsx";
-import AddMealPage from "./pages/AddMealPage.jsx";
-import "./App.css";
+import HomeDashboard from "./screens/Home/HomeDashboard.jsx";
+import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
+import BurnDashboard from "./screens/Burn/BurnDashboard.jsx";
+import AddMeal from "./screens/Meals/AddMeal.jsx";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomeDashboardPage />} />
-      <Route path="/intake" element={<DashboardPage />} />
-      <Route path="/burn" element={<BurnDashboardPage />} />
-      <Route path="/meals/new" element={<AddMealPage />} />
+      <Route path="/" element={<HomeDashboard />} />
+      <Route path="/intake" element={<IntakeDashboard />} />
+      <Route path="/burn" element={<BurnDashboard />} />
+      <Route path="/meals/new" element={<AddMeal />} />
     </Routes>
   );
 }
