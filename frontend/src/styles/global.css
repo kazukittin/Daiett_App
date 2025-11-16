@@ -13,11 +13,15 @@ body {
 }
 
 .page {
-  padding: var(--spacing-xl);
+  width: 100%;
+  padding: var(--spacing-xl) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
 }
 
 .page.add-exercise-page {
-  min-height: 100vh;
+  min-height: 0;
 }
 
 .page-header {
@@ -25,7 +29,7 @@ body {
 }
 
 .page-title {
-  font-size: 2rem;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
   margin: 0 0 var(--spacing-xs);
   font-weight: 700;
 }
@@ -37,7 +41,7 @@ body {
 
 .add-exercise-layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
   gap: var(--spacing-lg);
   align-items: flex-start;
 }
@@ -48,11 +52,12 @@ body {
   }
 }
 
-.card {
-  background: var(--color-surface);
+.card,
+.ds-card {
+  background: #ffffff;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 4px 12px rgba(15, 30, 65, 0.08);
 }
 
 .exercise-form-card {
@@ -62,6 +67,12 @@ body {
 .exercise-form {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.form-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--spacing-md);
 }
 
@@ -79,6 +90,7 @@ body {
 
 .exercise-form input,
 .exercise-form textarea {
+  width: 100%;
   border-radius: 14px;
   border: 1px solid var(--color-border-strong);
   padding: 0.85rem 1rem;
@@ -118,6 +130,10 @@ body {
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
@@ -140,6 +156,71 @@ body {
 .btn.secondary:hover {
   border-color: #3b82f6;
   color: #3b82f6;
+}
+
+.today-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.today-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.today-summary-pill {
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.today-summary-pill.positive {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+.today-summary-pill.negative {
+  background: rgba(221, 107, 32, 0.15);
+  color: #b45309;
+}
+
+.today-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.today-summary-stat {
+  background: var(--color-surface-muted);
+  border-radius: 14px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.today-summary-stat.negative {
+  border: 1px solid rgba(221, 107, 32, 0.3);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.stat-helper {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 .today-workout-card {
@@ -339,10 +420,10 @@ a {
 }
 
 .ds-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-xl);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(15, 30, 65, 0.08);
+  padding: 24px;
 }
 
 .ds-card.compact {
@@ -716,13 +797,19 @@ a {
 /* 共通のスタイル */
 .sidebar-action-btn {
   width: 100%;
-  padding: 12px 15px;
+  padding: 0.85rem 1.2rem;
   border-radius: 999px;
   border: none;
   font-weight: 600;
   color: white;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.1s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
 /* 食事ボタン：淡めのブルー */
@@ -737,6 +824,7 @@ a {
 
 /* ホバー時（お好みで） */
 .sidebar-action-btn:hover {
-  opacity: 0.9;
+  opacity: 0.95;
   transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
 }

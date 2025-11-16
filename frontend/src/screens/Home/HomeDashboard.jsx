@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import SummaryCard from "../../components/ui/SummaryCard.jsx";
 import Card from "../../components/ui/Card.jsx";
@@ -6,14 +6,32 @@ import WeightTrackerCard from "../../components/weight/WeightTrackerCard.jsx";
 import WeightTrendCard from "../../components/weight/WeightTrendCard.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
+import { useMealEntries } from "../../hooks/useMealEntries.js";
+import { useTodayExercises } from "../../hooks/useTodayExercises.js";
+import { getTodayISO } from "../../utils/date.js";
 import { calculateDifference, calculateMonthOverMonth } from "../../utils/weight.js";
+
+const DAILY_TARGET_CALORIES = 2000;
 
 export default function HomeDashboard() {
   const { weightRecords, latestRecord, previousRecord, addWeightRecord, targetWeight } =
     useWeightRecords();
+  const { mealEntries } = useMealEntries();
+  const { totalCalories: todayBurnCalories } = useTodayExercises();
+  const todayKey = getTodayISO();
 
   const difference = calculateDifference(weightRecords);
   const { currentAverage, difference: monthDifference } = calculateMonthOverMonth(weightRecords);
+
+  const todayIntakeCalories = useMemo(
+    () =>
+      mealEntries
+        .filter((entry) => entry.date === todayKey)
+        .reduce((total, entry) => total + (Number(entry.totalCalories) || 0), 0),
+    [mealEntries, todayKey],
+  );
+
+  const remainingCalories = DAILY_TARGET_CALORIES - todayIntakeCalories + todayBurnCalories;
 
   return (
     <div className="app-shell">
@@ -25,6 +43,42 @@ export default function HomeDashboard() {
         </header>
 
         <section className="content-grid">
+          <section className="card today-summary-card">
+            <div className="today-summary-header">
+              <div>
+                <h2>今日のサマリー</h2>
+                <p className="muted">目標 {DAILY_TARGET_CALORIES} kcal</p>
+              </div>
+              <span
+                className={`today-summary-pill ${remainingCalories < 0 ? "negative" : "positive"}`}
+              >
+                {remainingCalories < 0 ? "オーバー" : "残り"} {Math.abs(remainingCalories)} kcal
+              </span>
+            </div>
+
+            <div className="today-summary-grid">
+              <div className="today-summary-stat">
+                <span className="stat-label">摂取カロリー</span>
+                <strong className="stat-value">{todayIntakeCalories} kcal</strong>
+                <span className="stat-helper">食事ログから計算</span>
+              </div>
+              <div className="today-summary-stat">
+                <span className="stat-label">消費カロリー</span>
+                <strong className="stat-value">{todayBurnCalories} kcal</strong>
+                <span className="stat-helper">運動記録の合計</span>
+              </div>
+              <div className={`today-summary-stat ${remainingCalories < 0 ? "negative" : ""}`}>
+                <span className="stat-label">残り目標</span>
+                <strong className="stat-value">{Math.abs(remainingCalories)} kcal</strong>
+                <span className="stat-helper">
+                  {remainingCalories < 0 ? "目標を超えています" : "まだ余裕があります"}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <TodayWorkout />
+
           <div className="summary-cards-row">
             <SummaryCard
               label="現在の体重"
@@ -70,8 +124,6 @@ export default function HomeDashboard() {
             />
             <WeightTrendCard records={weightRecords} />
           </div>
-
-          <TodayWorkout />
 
           <div className="grid-3">
             <Card title="デイリーステップス">
