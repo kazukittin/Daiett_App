@@ -14,6 +14,7 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
+      <div className="sidebar-logo">DAIETT</div>
 
       <div>
         <div className="nav-section-title">メニュー</div>
@@ -21,9 +22,7 @@ export default function Sidebar() {
           {menu.map((item) => (
             <li
               key={item.path}
-              className={`nav-item ${
-                location.pathname === item.path ? "active" : ""
-              }`}
+              className={`nav-item ${location.pathname === item.path ? "active" : ""}`}
               onClick={() => navigate(item.path)}
             >
               <div className="nav-icon" />
@@ -34,10 +33,7 @@ export default function Sidebar() {
       </div>
 
       <div className="sidebar-bottom">
-        <button
-          className="btn-add-meal"
-          onClick={() => navigate("/meals/new")}
-        >
+        <button className="btn-add-meal" onClick={() => navigate("/meals/new")}>
           食事を追加します
         </button>
       </div>
