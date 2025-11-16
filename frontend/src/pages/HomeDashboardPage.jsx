@@ -1,64 +1,13 @@
 // src/pages/HomeDashboardPage.jsx
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar.jsx";
 import "../App.css";
 
 export default function HomeDashboardPage() {
-  const navigate = useNavigate();
-
   return (
     <div className="app">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-logo">カロリートラッ</div>
+      <Sidebar />
 
-        <div>
-            <div className="nav-section-title">メニュー</div>
-            <ul className="nav-list">
-
-                {/* ダッシュボード */}
-                <li
-                className={`nav-item ${location.pathname === "/" ? "active" : ""}`}
-                onClick={() => navigate("/")}
-                >
-                <div className="nav-icon" />
-                <span>ダッシュボード</span>
-                </li>
-
-                {/* 摂取カロリー */}
-                <li
-                className={`nav-item ${location.pathname === "/intake" ? "active" : ""}`}
-                onClick={() => navigate("/intake")}
-                >
-                <div className="nav-icon" />
-                <span>摂取カロリー</span>
-                </li>
-
-                {/* 消費カロリー（新規） */}
-                <li
-                className={`nav-item ${location.pathname === "/burn" ? "active" : ""}`}
-                onClick={() => navigate("/burn")}
-                >
-                <div className="nav-icon" />
-                <span>消費カロリー</span>
-                </li>
-
-            </ul>
-        </div>
-
-
-        <div className="sidebar-bottom">
-          <button
-            className="btn-add-meal"
-            onClick={() => navigate("/meals/new")}
-          >
-            食事を追加します
-          </button>
-          <div className="sidebar-link">⚙ 環境設定</div>
-        </div>
-      </aside>
-
-      {/* Main */}
       <main className="main">
         <header className="topbar">
           <div className="breadcrumb">
@@ -78,7 +27,7 @@ export default function HomeDashboardPage() {
             </div>
           </div>
 
-          {/* 上段：3つの小さめカード */}
+          {/* 上段：3つのカード */}
           <div className="row-3">
             <div className="card metric-card">
               <div className="metric-label">デイリーステップス</div>
@@ -90,24 +39,17 @@ export default function HomeDashboardPage() {
             </div>
             <div className="card metric-card">
               <div className="metric-label">消費カロリー</div>
-              <div className="metric-value">649 キロカロリー</div>
+              <div className="metric-value">649 kcal</div>
             </div>
           </div>
 
-          {/* 中段：食事ログ & 睡眠分析 */}
+          {/* 中段 row */}
           <div className="row">
             {/* 食事ログ */}
             <div className="card">
-              <div className="section-header">
-                <div className="section-title">食事ログ</div>
-              </div>
+              <div className="section-title">食事ログ</div>
               <div className="log-actions">
-                <button
-                  className="chip-button"
-                  onClick={() => navigate("/meals/new")}
-                >
-                  追加
-                </button>
+                <button className="chip-button">追加</button>
                 <button className="chip-button">ビュー</button>
                 <button className="chip-button">編集</button>
                 <button className="chip-button">削除</button>
@@ -118,15 +60,18 @@ export default function HomeDashboardPage() {
             {/* 睡眠分析 */}
             <div className="card">
               <div className="section-title">睡眠分析</div>
+
               <div className="sleep-grid">
                 <div className="sleep-item">
                   <div className="sleep-label">REM の期間</div>
                   <div className="sleep-value">22%</div>
                 </div>
+
                 <div className="sleep-item">
                   <div className="sleep-label">ディープスリープ</div>
                   <div className="sleep-value">52%</div>
                 </div>
+
                 <div className="sleep-item">
                   <div className="sleep-label">ライトスリープ</div>
                   <div className="sleep-value">16%</div>
@@ -135,11 +80,12 @@ export default function HomeDashboardPage() {
             </div>
           </div>
 
-          {/* 下段：カロリック概要 & 今後のお食事 */}
+          {/* 下段 row */}
           <div className="row">
             {/* カロリック概要 */}
             <div className="card">
               <div className="section-title">カロリックの概要</div>
+
               <div className="cal-summary">
                 <div className="cal-row">
                   <div className="cal-label">総摂取量</div>
@@ -176,7 +122,7 @@ export default function HomeDashboardPage() {
               </div>
             </div>
 
-            {/* 今後のお食事 / プロファイル */}
+            {/* 今後のお食事 */}
             <div className="card">
               <div className="section-title">今後のお食事</div>
               <ul className="upcoming-list">

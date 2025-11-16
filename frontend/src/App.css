@@ -385,13 +385,6 @@ th {
 
 
 /* ===== Add Meal Page ===== */
-.add-meal-page {
-  min-height: 100vh;
-  background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 .add-meal-card {
   background: var(--card-bg);
@@ -460,15 +453,6 @@ th {
 }
 
 /* ===== Add Meal Page ===== */
-
-.add-meal-page {
-  min-height: 100vh;
-  background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 0;
-}
 
 .add-meal-card {
   background: var(--card-bg);
@@ -855,4 +839,13 @@ th {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* もともとの .add-meal-page は消してOK */
+
+.add-meal-page-inner {
+  min-height: calc(100vh - 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
