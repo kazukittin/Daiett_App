@@ -6,6 +6,7 @@ import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
 import BurnDashboard from "./screens/Burn/BurnDashboard.jsx";
 import AddMeal from "./screens/Meals/AddMeal.jsx";
 import AddExercise from "./screens/Exercises/AddExercise.jsx";
+import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
       <Route path="/burn" element={<BurnDashboard />} />
       <Route path="/meals/new" element={<AddMeal />} />
       <Route path="/exercises/new" element={<AddExercise />} />
+      <Route path="/settings/workouts" element={<WorkoutSettings />} />
     </Routes>
   );
 }
