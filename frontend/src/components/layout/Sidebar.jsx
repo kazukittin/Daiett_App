@@ -7,6 +7,7 @@ const menu = [
   { label: "摂取カロリー", path: "/intake" },
   { label: "消費カロリー", path: "/burn" },
   { label: "固定ワークアウト設定", path: "/workouts/settings" },
+  { label: "Fitbit連携", path: "/settings/fitbit" },
 ];
 
 export default function Sidebar() {

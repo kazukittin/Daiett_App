@@ -4,7 +4,7 @@ import Card from "../../components/ui/Card.jsx";
 import { useDailyFixedWorkouts } from "../../hooks/useDailyFixedWorkouts.js";
 import { WEEKDAY_LABELS } from "../../services/dailyFixedWorkoutsStorage.js";
 
-const emptyMenu = { name: "", reps: "", seconds: "", sets: "" };
+const emptyMenu = { name: "", type: "reps", value: "", sets: "" };
 const defaultDay = { menus: [] };
 
 const toDraftPlan = (plan) => {
@@ -16,14 +16,11 @@ const toDraftPlan = (plan) => {
       menus: menus.length
         ? menus.map((menu) => ({
             name: menu?.name ?? "",
-            reps:
-              menu?.reps === null || menu?.reps === undefined
+            type: menu?.type === "seconds" ? "seconds" : "reps",
+            value:
+              menu?.value === null || menu?.value === undefined
                 ? ""
-                : String(menu.reps),
-            seconds:
-              menu?.seconds === null || menu?.seconds === undefined
-                ? ""
-                : String(menu.seconds),
+                : String(menu.value),
             sets:
               menu?.sets === null || menu?.sets === undefined
                 ? ""
@@ -96,14 +93,11 @@ export default function DailyFixedWorkoutSettings() {
       const cleanedMenus = menus
         .map((menu) => ({
           name: (menu?.name ?? "").trim(),
-          reps: toNumberOrNull(menu?.reps),
-          seconds: toNumberOrNull(menu?.seconds),
+          type: menu?.type === "seconds" ? "seconds" : "reps",
+          value: toNumberOrNull(menu?.value),
           sets: toNumberOrNull(menu?.sets),
         }))
-        .filter(
-          (menu) =>
-            menu.name || menu.reps !== null || menu.seconds !== null || menu.sets !== null,
-        );
+        .filter((menu) => menu.name || menu.value !== null || menu.sets !== null);
 
       acc[day.value] = { menus: cleanedMenus };
       return acc;
@@ -173,35 +167,59 @@ export default function DailyFixedWorkoutSettings() {
 
                                 <div className="fixed-workout-menu-numbers">
                                   <div className="fixed-workout-input-group">
-                                    <label className="fixed-workout-field-label">回数</label>
-                                    <input
-                                      type="number"
-                                      className="fixed-workout-input"
-                                      value={menu.reps}
-                                      min="0"
-                                      onChange={(event) =>
-                                        handleMenuChange(
-                                          day.value,
-                                          index,
-                                          "reps",
-                                          event.target.value,
-                                        )
-                                      }
-                                    />
+                                    <label className="fixed-workout-field-label">タイプ</label>
+                                    <div className="fixed-workout-type-options">
+                                      <label className="type-option">
+                                        <input
+                                          type="radio"
+                                          name={`type-${day.value}-${index}`}
+                                          value="reps"
+                                          checked={menu.type === "reps"}
+                                          onChange={(event) =>
+                                            handleMenuChange(
+                                              day.value,
+                                              index,
+                                              "type",
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                        <span>回数</span>
+                                      </label>
+                                      <label className="type-option">
+                                        <input
+                                          type="radio"
+                                          name={`type-${day.value}-${index}`}
+                                          value="seconds"
+                                          checked={menu.type === "seconds"}
+                                          onChange={(event) =>
+                                            handleMenuChange(
+                                              day.value,
+                                              index,
+                                              "type",
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                        <span>秒</span>
+                                      </label>
+                                    </div>
                                   </div>
 
                                   <div className="fixed-workout-input-group">
-                                    <label className="fixed-workout-field-label">秒</label>
+                                    <label className="fixed-workout-field-label">
+                                      {menu.type === "seconds" ? "秒" : "回数"}
+                                    </label>
                                     <input
                                       type="number"
                                       className="fixed-workout-input"
-                                      value={menu.seconds}
+                                      value={menu.value}
                                       min="0"
                                       onChange={(event) =>
                                         handleMenuChange(
                                           day.value,
                                           index,
-                                          "seconds",
+                                          "value",
                                           event.target.value,
                                         )
                                       }

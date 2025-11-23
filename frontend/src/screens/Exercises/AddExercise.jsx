@@ -91,14 +91,12 @@ export default function AddExercise() {
                       ? `この日の固定メニュー: ${selectedFixedWorkout.menus
                           .map((menu) => {
                             const name = menu?.name || "メニュー";
+                            const unit = menu?.type === "seconds" ? "秒" : "回";
                             const details = [
-                              menu?.reps !== null && menu?.reps !== undefined && menu?.reps !== ""
-                                ? `${menu.reps}回`
-                                : "",
-                              menu?.seconds !== null &&
-                              menu?.seconds !== undefined &&
-                              menu?.seconds !== ""
-                                ? `${menu.seconds}秒`
+                              menu?.value !== null &&
+                              menu?.value !== undefined &&
+                              menu?.value !== ""
+                                ? `${menu.value}${unit}`
                                 : "",
                               menu?.sets !== null && menu?.sets !== undefined && menu?.sets !== ""
                                 ? `${menu.sets}セット`

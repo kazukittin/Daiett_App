@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import SummaryCard from "../../components/ui/SummaryCard.jsx";
 import Card from "../../components/ui/Card.jsx";
@@ -10,6 +10,7 @@ import { useMealEntries } from "../../hooks/useMealEntries.js";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { getTodayISO } from "../../utils/date.js";
 import { calculateDifference, calculateMonthOverMonth } from "../../utils/weight.js";
+import { fetchFitbitToday } from "../../services/fitbitApi.js";
 
 const DAILY_TARGET_CALORIES = 2000;
 
@@ -19,6 +20,21 @@ export default function HomeDashboard() {
   const { mealEntries } = useMealEntries();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
   const todayKey = getTodayISO();
+  const [fitbitData, setFitbitData] = useState(null);
+  const [fitbitError, setFitbitError] = useState("");
+
+  useEffect(() => {
+    const loadFitbit = async () => {
+      try {
+        const data = await fetchFitbitToday();
+        setFitbitData(data);
+      } catch (error) {
+        setFitbitError("Fitbitデータを取得できませんでした。");
+      }
+    };
+
+    loadFitbit();
+  }, []);
 
   const difference = calculateDifference(weightRecords);
   const { currentAverage, difference: monthDifference } = calculateMonthOverMonth(weightRecords);
@@ -126,11 +142,17 @@ export default function HomeDashboard() {
           </div>
 
           <div className="grid-3">
-            <Card title="デイリーステップス">
-              <div className="metric-highlight">
-                <h2>8,526</h2>
-                <small>目標の 82% 達成</small>
-              </div>
+            <Card title="Fitbitアクティビティ">
+              {fitbitData ? (
+                <div className="metric-highlight">
+                  <h2>{fitbitData.steps ?? "--"} 歩</h2>
+                  <small>消費 {fitbitData.caloriesOut ?? "--"} kcal / アクティブ {fitbitData.activeMinutes ?? "--"} 分</small>
+                </div>
+              ) : fitbitError ? (
+                <p className="muted">{fitbitError}</p>
+              ) : (
+                <p className="muted">Fitbitを連携してデータを取得しましょう。</p>
+              )}
             </Card>
             <Card title="現在の気分">
               <div className="metric-highlight">

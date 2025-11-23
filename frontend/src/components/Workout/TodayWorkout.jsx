@@ -12,9 +12,9 @@ export default function TodayWorkout() {
   const hasFixedWorkout = Boolean(fixedWorkout?.menus?.length);
 
   const renderMenuMeta = (menu) => {
+    const unit = menu.type === "seconds" ? "秒" : "回";
     const details = [
-      menu.reps !== null && menu.reps !== undefined ? `${menu.reps}回` : "",
-      menu.seconds !== null && menu.seconds !== undefined ? `${menu.seconds}秒` : "",
+      menu.value !== null && menu.value !== undefined ? `${menu.value}${unit}` : "",
       menu.sets !== null && menu.sets !== undefined ? `${menu.sets}セット` : "",
     ]
       .filter(Boolean)

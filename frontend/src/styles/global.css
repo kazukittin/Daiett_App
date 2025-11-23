@@ -424,8 +424,10 @@ a {
   margin-top: auto;
 }
 
-.sidebar-bottom .sidebar-action-btn + .sidebar-action-btn {
-  margin-top: var(--spacing-sm);
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
 .btn-add-meal {
@@ -524,6 +526,22 @@ a {
 .metric-highlight h2 {
   margin: 0;
   font-size: 2rem;
+}
+
+.metric-highlight small {
+  color: var(--color-text-muted);
+}
+
+.fitbit-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.fitbit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
 }
 
 .summary-list {
@@ -712,6 +730,27 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--spacing-sm);
   width: 100%;
+}
+
+.fixed-workout-type-options {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+.type-option input {
+  accent-color: var(--color-primary);
 }
 
 .fixed-workout-input-group {

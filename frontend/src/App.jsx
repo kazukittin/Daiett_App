@@ -7,6 +7,7 @@ import BurnDashboard from "./screens/Burn/BurnDashboard.jsx";
 import AddMeal from "./screens/Meals/AddMeal.jsx";
 import AddExercise from "./screens/Exercises/AddExercise.jsx";
 import DailyFixedWorkoutSettings from "./screens/Workouts/DailyFixedWorkoutSettings.jsx";
+import FitbitIntegration from "./screens/Settings/FitbitIntegration.jsx";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/meals/new" element={<AddMeal />} />
       <Route path="/exercises/new" element={<AddExercise />} />
       <Route path="/workouts/settings" element={<DailyFixedWorkoutSettings />} />
+      <Route path="/settings/fitbit" element={<FitbitIntegration />} />
     </Routes>
   );
 }

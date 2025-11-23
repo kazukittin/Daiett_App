@@ -34,7 +34,7 @@ const toNumberOrNull = (input) => {
 const normalizeMenu = (menu) => {
   if (typeof menu === "string") {
     const trimmed = menu.trim();
-    return trimmed ? { name: trimmed, reps: null, seconds: null, sets: null } : null;
+    return trimmed ? { name: trimmed, type: "reps", value: null, sets: null } : null;
   }
 
   if (!menu || typeof menu !== "object") return null;
@@ -42,14 +42,25 @@ const normalizeMenu = (menu) => {
   const name = typeof menu.name === "string" ? menu.name.trim() : "";
   const reps = toNumberOrNull(menu.reps);
   const seconds = toNumberOrNull(menu.seconds);
+  let type = menu.type === "seconds" ? "seconds" : "reps";
+
+  if (!menu.type && seconds !== null && reps === null) {
+    type = "seconds";
+  }
+
+  const fallbackValue = type === "seconds" ? seconds ?? null : reps ?? seconds ?? null;
+
+  const value = toNumberOrNull(menu.value);
   const sets = toNumberOrNull(menu.sets);
 
-  if (!name && reps === null && seconds === null && sets === null) return null;
+  const finalValue = value ?? fallbackValue;
+
+  if (!name && finalValue === null && sets === null) return null;
 
   return {
     name,
-    reps,
-    seconds,
+    type,
+    value: finalValue,
     sets,
   };
 };
