@@ -23,7 +23,7 @@ export default function AddExercise() {
   );
 
   useEffect(() => {
-    const presetName = selectedFixedWorkout?.rest ? "" : selectedFixedWorkout?.name ?? "";
+    const presetName = selectedFixedWorkout?.menus?.[0] ?? "";
     const shouldUpdate = !type || type === lastAppliedPresetRef.current;
 
     lastAppliedPresetRef.current = presetName;
@@ -87,11 +87,9 @@ export default function AddExercise() {
                     onChange={(event) => setDate(event.target.value)}
                   />
                   <div className="fixed-workout-hint">
-                    {selectedFixedWorkout?.rest
-                      ? "この日は固定の休養日です。"
-                      : selectedFixedWorkout?.name
-                        ? `この日は「${selectedFixedWorkout.name}」に設定されています。`
-                        : "固定ワークアウトは設定されていません。"}
+                    {selectedFixedWorkout?.menus?.length
+                      ? `この日の固定メニュー: ${selectedFixedWorkout.menus.join(" / ")}`
+                      : "固定ワークアウトは設定されていません。"}
                   </div>
                 </div>
 

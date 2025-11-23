@@ -41,14 +41,14 @@ export default function Sidebar() {
           className="sidebar-action-btn meal"
           onClick={() => navigate("/meals/new")}
         >
-          🍙 食事を追加する
+          🍙 食事を追加
         </button>
 
         <button
           className="sidebar-action-btn exercise"
           onClick={() => navigate("/exercises/new")}
         >
-          💪 運動記録を追加する
+          💪 運動記録を追加
         </button>
       </div>
     </aside>

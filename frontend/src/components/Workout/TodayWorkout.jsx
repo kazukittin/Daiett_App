@@ -9,18 +9,14 @@ export default function TodayWorkout() {
   const { dailyFixedWorkouts } = useDailyFixedWorkouts();
   const todayKey = getTodayISO();
   const fixedWorkout = getFixedWorkoutForDate(dailyFixedWorkouts, todayKey);
-  const hasFixedWorkout = Boolean(fixedWorkout?.name || fixedWorkout?.rest);
+  const hasFixedWorkout = Boolean(fixedWorkout?.menus?.length);
 
   return (
     <section className="card today-workout-card">
       <header className="today-workout-header">
         <div className="today-workout-title">
           <h2>今日のワークアウト</h2>
-          {hasFixedWorkout && (
-            <span className="badge">
-              {fixedWorkout.rest ? "休養日に設定" : `固定: ${fixedWorkout.name}`}
-            </span>
-          )}
+          {hasFixedWorkout && <span className="badge">固定メニュー</span>}
         </div>
         {todayExercises.length > 0 && (
           <div className="today-workout-summary">合計 {totalCalories} kcal</div>
@@ -28,10 +24,15 @@ export default function TodayWorkout() {
       </header>
 
       {hasFixedWorkout && (
-        <div className={`fixed-workout-plan ${fixedWorkout.rest ? "rest" : ""}`}>
-          {fixedWorkout.rest
-            ? "今日は固定の休養日に設定されています。ゆっくり休みましょう。"
-            : `今日は「${fixedWorkout.name}」の日として保存されています。`}
+        <div className="fixed-workout-plan">
+          <div className="fixed-workout-plan-title">今日の固定メニュー</div>
+          <ul className="fixed-workout-menu-list">
+            {fixedWorkout.menus.map((menu, index) => (
+              <li key={`${menu}-${index}`} className="fixed-workout-menu-item">
+                {menu}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

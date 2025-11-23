@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   DAILY_FIXED_WORKOUTS_UPDATED_EVENT,
-  DEFAULT_DAILY_FIXED_WORKOUTS,
   loadDailyFixedWorkouts,
   saveDailyFixedWorkouts,
 } from "../services/dailyFixedWorkoutsStorage.js";
@@ -24,7 +23,7 @@ export function useDailyFixedWorkouts() {
   }, []);
 
   const updateDailyFixedWorkouts = (nextPlan) => {
-    const planToSave = nextPlan ?? DEFAULT_DAILY_FIXED_WORKOUTS;
+    const planToSave = nextPlan ?? {};
     setDailyFixedWorkouts(planToSave);
     saveDailyFixedWorkouts(planToSave);
   };

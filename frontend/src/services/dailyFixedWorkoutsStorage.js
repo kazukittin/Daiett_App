@@ -3,15 +3,17 @@ export const DAILY_FIXED_WORKOUTS_UPDATED_EVENT = "dailyFixedWorkoutsUpdated";
 
 const hasWindow = typeof window !== "undefined";
 
-export const DEFAULT_DAILY_FIXED_WORKOUTS = {
-  0: { name: "Rest", rest: true },
-  1: { name: "", rest: false },
-  2: { name: "", rest: false },
-  3: { name: "", rest: false },
-  4: { name: "", rest: false },
-  5: { name: "", rest: false },
-  6: { name: "", rest: false },
-};
+const createEmptyWeekPlan = () => ({
+  0: { menus: [] },
+  1: { menus: [] },
+  2: { menus: [] },
+  3: { menus: [] },
+  4: { menus: [] },
+  5: { menus: [] },
+  6: { menus: [] },
+});
+
+export const DEFAULT_DAILY_FIXED_WORKOUTS = createEmptyWeekPlan();
 
 export const WEEKDAY_LABELS = [
   { value: 1, label: "月曜日", short: "Mon" },
@@ -23,8 +25,28 @@ export const WEEKDAY_LABELS = [
   { value: 0, label: "日曜日", short: "Sun" },
 ];
 
+const normalizeDay = (value) => {
+  if (!value || typeof value !== "object") return { menus: [] };
+
+  if (Array.isArray(value.menus)) {
+    const menus = value.menus
+      .map((menu) => (typeof menu === "string" ? menu.trim() : ""))
+      .filter(Boolean);
+    return { menus };
+  }
+
+  if (typeof value.name === "string") {
+    const maybeMenu = value.name.trim();
+    return { menus: maybeMenu ? [maybeMenu] : [] };
+  }
+
+  if (value.rest) return { menus: [] };
+
+  return { menus: [] };
+};
+
 const normalizePlan = (plan) => {
-  const normalized = { ...DEFAULT_DAILY_FIXED_WORKOUTS };
+  const normalized = createEmptyWeekPlan();
 
   if (!plan || typeof plan !== "object") return normalized;
 
@@ -32,27 +54,24 @@ const normalizePlan = (plan) => {
     const weekday = Number(key);
     if (Number.isNaN(weekday)) return;
 
-    normalized[weekday] = {
-      name: value?.name ?? "",
-      rest: Boolean(value?.rest),
-    };
+    normalized[weekday] = normalizeDay(value);
   });
 
   return normalized;
 };
 
 export function loadDailyFixedWorkouts() {
-  if (!hasWindow) return { ...DEFAULT_DAILY_FIXED_WORKOUTS };
+  if (!hasWindow) return createEmptyWeekPlan();
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_DAILY_FIXED_WORKOUTS };
+    if (!raw) return createEmptyWeekPlan();
 
     const parsed = JSON.parse(raw);
     return normalizePlan(parsed);
   } catch (error) {
     console.error("Failed to load daily fixed workouts from storage", error);
-    return { ...DEFAULT_DAILY_FIXED_WORKOUTS };
+    return createEmptyWeekPlan();
   }
 }
 

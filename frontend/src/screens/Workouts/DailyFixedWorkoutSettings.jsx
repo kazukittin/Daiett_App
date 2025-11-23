@@ -4,7 +4,7 @@ import Card from "../../components/ui/Card.jsx";
 import { useDailyFixedWorkouts } from "../../hooks/useDailyFixedWorkouts.js";
 import { WEEKDAY_LABELS } from "../../services/dailyFixedWorkoutsStorage.js";
 
-const defaultDay = { name: "", rest: false };
+const defaultDay = { menus: [] };
 
 export default function DailyFixedWorkoutSettings() {
   const { dailyFixedWorkouts, updateDailyFixedWorkouts } = useDailyFixedWorkouts();
@@ -15,24 +15,39 @@ export default function DailyFixedWorkoutSettings() {
     setDraftPlan(dailyFixedWorkouts);
   }, [dailyFixedWorkouts]);
 
-  const handleNameChange = (weekday, value) => {
+  const handleMenuChange = (weekday, index, value) => {
+    setDraftPlan((prev) => {
+      const currentMenus = [...(prev?.[weekday]?.menus ?? [])];
+      currentMenus[index] = value;
+
+      return {
+        ...prev,
+        [weekday]: {
+          ...(prev?.[weekday] ?? defaultDay),
+          menus: currentMenus,
+        },
+      };
+    });
+  };
+
+  const handleAddMenu = (weekday) => {
     setDraftPlan((prev) => ({
       ...prev,
       [weekday]: {
         ...(prev?.[weekday] ?? defaultDay),
-        name: value,
-        rest: false,
+        menus: [...(prev?.[weekday]?.menus ?? []), ""],
       },
     }));
   };
 
-  const handleRestToggle = (weekday, rest) => {
+  const handleRemoveMenu = (weekday, index) => {
     setDraftPlan((prev) => ({
       ...prev,
       [weekday]: {
         ...(prev?.[weekday] ?? defaultDay),
-        rest,
-        name: rest ? "" : prev?.[weekday]?.name ?? "",
+        menus: (prev?.[weekday]?.menus ?? []).filter(
+          (_, menuIndex) => menuIndex !== index,
+        ),
       },
     }));
   };
@@ -56,9 +71,9 @@ export default function DailyFixedWorkoutSettings() {
 
         <section className="page fixed-workout-settings-page">
           <header className="page-header">
-            <h1 className="page-title">Daily Fixed Workout Settings</h1>
+            <h1 className="page-title">固定ワークアウト設定</h1>
             <p className="muted">
-              曜日ごとに固定のワークアウトを登録しておくと、「今日のワークアウト」や記録画面に自動で反映されます。
+              曜日ごとに固定のワークアウトメニューを登録しておくと、「今日のワークアウト」や記録画面に自動で反映されます。
             </p>
           </header>
 
@@ -67,6 +82,8 @@ export default function DailyFixedWorkoutSettings() {
               <div className="fixed-workout-grid">
                 {WEEKDAY_LABELS.map((day) => {
                   const current = draftPlan?.[day.value] ?? defaultDay;
+                  const menus = current.menus?.length ? current.menus : [""];
+
                   return (
                     <div key={day.value} className="fixed-workout-row">
                       <div className="day-label">
@@ -75,23 +92,40 @@ export default function DailyFixedWorkoutSettings() {
                       </div>
 
                       <div className="fixed-workout-row-controls">
-                        <input
-                          type="text"
-                          className="fixed-workout-input"
-                          placeholder="例: Push / Pull / Legs"
-                          value={current.name}
-                          onChange={(event) => handleNameChange(day.value, event.target.value)}
-                          disabled={current.rest}
-                        />
+                        <div className="fixed-workout-menu-list">
+                          {menus.map((menu, index) => (
+                            <div className="fixed-workout-menu-item" key={`${day.value}-${index}`}>
+                              <input
+                                type="text"
+                                className="fixed-workout-input"
+                                placeholder="例: ベンチプレス"
+                                value={menu}
+                                onChange={(event) =>
+                                  handleMenuChange(day.value, index, event.target.value)
+                                }
+                              />
+                              {menus.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="btn ghost fixed-workout-remove"
+                                  onClick={() => handleRemoveMenu(day.value, index)}
+                                >
+                                  削除
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
 
-                        <label className="rest-toggle">
-                          <input
-                            type="checkbox"
-                            checked={current.rest}
-                            onChange={(event) => handleRestToggle(day.value, event.target.checked)}
-                          />
-                          休養日にする
-                        </label>
+                        <div className="fixed-workout-row-actions">
+                          <button
+                            type="button"
+                            className="btn secondary"
+                            onClick={() => handleAddMenu(day.value)}
+                          >
+                            メニューを追加
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
