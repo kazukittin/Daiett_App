@@ -15,17 +15,14 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">DAIETT</div>
 
       <div>
-        <div className="nav-section-title">メニュー</div>
         <ul className="nav-list">
           {menu.map((item) => (
             <li
               key={item.path}
-              className={`nav-item ${
-                location.pathname === item.path ? "active" : ""
-              }`}
+              className={`nav-item ${location.pathname === item.path ? "active" : ""
+                }`}
               onClick={() => navigate(item.path)}
             >
               <div className="nav-icon" />
