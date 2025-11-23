@@ -4,21 +4,52 @@ import Card from "../../components/ui/Card.jsx";
 import { useDailyFixedWorkouts } from "../../hooks/useDailyFixedWorkouts.js";
 import { WEEKDAY_LABELS } from "../../services/dailyFixedWorkoutsStorage.js";
 
+const emptyMenu = { name: "", reps: "", seconds: "", sets: "" };
 const defaultDay = { menus: [] };
+
+const toDraftPlan = (plan) => {
+  const draft = {};
+
+  WEEKDAY_LABELS.forEach((day) => {
+    const menus = plan?.[day.value]?.menus ?? [];
+    draft[day.value] = {
+      menus: menus.length
+        ? menus.map((menu) => ({
+            name: menu?.name ?? "",
+            reps:
+              menu?.reps === null || menu?.reps === undefined
+                ? ""
+                : String(menu.reps),
+            seconds:
+              menu?.seconds === null || menu?.seconds === undefined
+                ? ""
+                : String(menu.seconds),
+            sets:
+              menu?.sets === null || menu?.sets === undefined
+                ? ""
+                : String(menu.sets),
+          }))
+        : [],
+    };
+  });
+
+  return draft;
+};
 
 export default function DailyFixedWorkoutSettings() {
   const { dailyFixedWorkouts, updateDailyFixedWorkouts } = useDailyFixedWorkouts();
-  const [draftPlan, setDraftPlan] = useState(dailyFixedWorkouts);
+  const [draftPlan, setDraftPlan] = useState(toDraftPlan(dailyFixedWorkouts));
   const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
-    setDraftPlan(dailyFixedWorkouts);
+    setDraftPlan(toDraftPlan(dailyFixedWorkouts));
   }, [dailyFixedWorkouts]);
 
-  const handleMenuChange = (weekday, index, value) => {
+  const handleMenuChange = (weekday, index, field, value) => {
     setDraftPlan((prev) => {
       const currentMenus = [...(prev?.[weekday]?.menus ?? [])];
-      currentMenus[index] = value;
+      const targetMenu = { ...(currentMenus[index] ?? emptyMenu), [field]: value };
+      currentMenus[index] = targetMenu;
 
       return {
         ...prev,
@@ -35,7 +66,7 @@ export default function DailyFixedWorkoutSettings() {
       ...prev,
       [weekday]: {
         ...(prev?.[weekday] ?? defaultDay),
-        menus: [...(prev?.[weekday]?.menus ?? []), ""],
+        menus: [...(prev?.[weekday]?.menus ?? []), { ...emptyMenu }],
       },
     }));
   };
@@ -54,7 +85,31 @@ export default function DailyFixedWorkoutSettings() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    updateDailyFixedWorkouts(draftPlan);
+    const toNumberOrNull = (value) => {
+      if (value === "" || value === null || value === undefined) return null;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const normalizedPlan = WEEKDAY_LABELS.reduce((acc, day) => {
+      const menus = draftPlan?.[day.value]?.menus ?? [];
+      const cleanedMenus = menus
+        .map((menu) => ({
+          name: (menu?.name ?? "").trim(),
+          reps: toNumberOrNull(menu?.reps),
+          seconds: toNumberOrNull(menu?.seconds),
+          sets: toNumberOrNull(menu?.sets),
+        }))
+        .filter(
+          (menu) =>
+            menu.name || menu.reps !== null || menu.seconds !== null || menu.sets !== null,
+        );
+
+      acc[day.value] = { menus: cleanedMenus };
+      return acc;
+    }, {});
+
+    updateDailyFixedWorkouts(normalizedPlan);
     setStatusMessage("保存しました。毎日の画面で自動的に反映されます。");
     if (typeof window !== "undefined") {
       window.setTimeout(() => setStatusMessage(""), 3500);
@@ -82,7 +137,9 @@ export default function DailyFixedWorkoutSettings() {
               <div className="fixed-workout-grid">
                 {WEEKDAY_LABELS.map((day) => {
                   const current = draftPlan?.[day.value] ?? defaultDay;
-                  const menus = current.menus?.length ? current.menus : [""];
+                  const menus = current.menus?.length
+                    ? current.menus
+                    : [{ ...emptyMenu }];
 
                   return (
                     <div key={day.value} className="fixed-workout-row">
@@ -95,15 +152,82 @@ export default function DailyFixedWorkoutSettings() {
                         <div className="fixed-workout-menu-list">
                           {menus.map((menu, index) => (
                             <div className="fixed-workout-menu-item" key={`${day.value}-${index}`}>
-                              <input
-                                type="text"
-                                className="fixed-workout-input"
-                                placeholder="例: ベンチプレス"
-                                value={menu}
-                                onChange={(event) =>
-                                  handleMenuChange(day.value, index, event.target.value)
-                                }
-                              />
+                              <div className="fixed-workout-menu-fields">
+                                <div className="fixed-workout-input-group">
+                                  <label className="fixed-workout-field-label">メニュー名</label>
+                                  <input
+                                    type="text"
+                                    className="fixed-workout-input"
+                                    placeholder="例: ベンチプレス"
+                                    value={menu.name}
+                                    onChange={(event) =>
+                                      handleMenuChange(
+                                        day.value,
+                                        index,
+                                        "name",
+                                        event.target.value,
+                                      )
+                                    }
+                                  />
+                                </div>
+
+                                <div className="fixed-workout-menu-numbers">
+                                  <div className="fixed-workout-input-group">
+                                    <label className="fixed-workout-field-label">回数</label>
+                                    <input
+                                      type="number"
+                                      className="fixed-workout-input"
+                                      value={menu.reps}
+                                      min="0"
+                                      onChange={(event) =>
+                                        handleMenuChange(
+                                          day.value,
+                                          index,
+                                          "reps",
+                                          event.target.value,
+                                        )
+                                      }
+                                    />
+                                  </div>
+
+                                  <div className="fixed-workout-input-group">
+                                    <label className="fixed-workout-field-label">秒</label>
+                                    <input
+                                      type="number"
+                                      className="fixed-workout-input"
+                                      value={menu.seconds}
+                                      min="0"
+                                      onChange={(event) =>
+                                        handleMenuChange(
+                                          day.value,
+                                          index,
+                                          "seconds",
+                                          event.target.value,
+                                        )
+                                      }
+                                    />
+                                  </div>
+
+                                  <div className="fixed-workout-input-group">
+                                    <label className="fixed-workout-field-label">セット数</label>
+                                    <input
+                                      type="number"
+                                      className="fixed-workout-input"
+                                      value={menu.sets}
+                                      min="0"
+                                      onChange={(event) =>
+                                        handleMenuChange(
+                                          day.value,
+                                          index,
+                                          "sets",
+                                          event.target.value,
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
                               {menus.length > 1 && (
                                 <button
                                   type="button"

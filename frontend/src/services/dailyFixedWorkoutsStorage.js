@@ -25,18 +25,47 @@ export const WEEKDAY_LABELS = [
   { value: 0, label: "日曜日", short: "Sun" },
 ];
 
+const toNumberOrNull = (input) => {
+  if (input === null || input === undefined || input === "") return null;
+  const parsed = Number(input);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const normalizeMenu = (menu) => {
+  if (typeof menu === "string") {
+    const trimmed = menu.trim();
+    return trimmed ? { name: trimmed, reps: null, seconds: null, sets: null } : null;
+  }
+
+  if (!menu || typeof menu !== "object") return null;
+
+  const name = typeof menu.name === "string" ? menu.name.trim() : "";
+  const reps = toNumberOrNull(menu.reps);
+  const seconds = toNumberOrNull(menu.seconds);
+  const sets = toNumberOrNull(menu.sets);
+
+  if (!name && reps === null && seconds === null && sets === null) return null;
+
+  return {
+    name,
+    reps,
+    seconds,
+    sets,
+  };
+};
+
 const normalizeDay = (value) => {
   if (!value || typeof value !== "object") return { menus: [] };
 
   if (Array.isArray(value.menus)) {
     const menus = value.menus
-      .map((menu) => (typeof menu === "string" ? menu.trim() : ""))
+      .map(normalizeMenu)
       .filter(Boolean);
     return { menus };
   }
 
   if (typeof value.name === "string") {
-    const maybeMenu = value.name.trim();
+    const maybeMenu = normalizeMenu({ name: value.name });
     return { menus: maybeMenu ? [maybeMenu] : [] };
   }
 

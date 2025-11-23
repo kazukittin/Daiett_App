@@ -306,6 +306,19 @@ body {
   list-style: disc;
   font-weight: 600;
   color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fixed-workout-menu-name {
+  font-weight: 700;
+}
+
+.fixed-workout-menu-meta {
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }
 
 .today-workout-main {
@@ -409,6 +422,10 @@ a {
 
 .sidebar-bottom {
   margin-top: auto;
+}
+
+.sidebar-bottom .sidebar-action-btn + .sidebar-action-btn {
+  margin-top: var(--spacing-sm);
 }
 
 .btn-add-meal {
@@ -637,8 +654,9 @@ a {
 
 .fixed-workout-menu-item {
   display: flex;
+  flex-direction: column;
   gap: var(--spacing-xs);
-  align-items: center;
+  align-items: flex-start;
 }
 
 .fixed-workout-row-actions {
@@ -653,8 +671,8 @@ a {
 }
 
 .fixed-workout-input {
-  flex: 1;
-  min-width: 220px;
+  width: 100%;
+  min-width: 0;
   border-radius: 12px;
   border: 1px solid var(--color-border-strong);
   padding: 0.85rem 1rem;
@@ -680,6 +698,32 @@ a {
 
 .save-status {
   color: var(--color-text-muted);
+}
+
+.fixed-workout-menu-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.fixed-workout-menu-numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.fixed-workout-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fixed-workout-field-label {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
 }
 
 @media (max-width: 720px) {

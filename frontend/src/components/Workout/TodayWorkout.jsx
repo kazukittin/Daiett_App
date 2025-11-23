@@ -11,6 +11,18 @@ export default function TodayWorkout() {
   const fixedWorkout = getFixedWorkoutForDate(dailyFixedWorkouts, todayKey);
   const hasFixedWorkout = Boolean(fixedWorkout?.menus?.length);
 
+  const renderMenuMeta = (menu) => {
+    const details = [
+      menu.reps !== null && menu.reps !== undefined ? `${menu.reps}回` : "",
+      menu.seconds !== null && menu.seconds !== undefined ? `${menu.seconds}秒` : "",
+      menu.sets !== null && menu.sets !== undefined ? `${menu.sets}セット` : "",
+    ]
+      .filter(Boolean)
+      .join(" / ");
+
+    return details;
+  };
+
   return (
     <section className="card today-workout-card">
       <header className="today-workout-header">
@@ -27,11 +39,16 @@ export default function TodayWorkout() {
         <div className="fixed-workout-plan">
           <div className="fixed-workout-plan-title">今日の固定メニュー</div>
           <ul className="fixed-workout-menu-list">
-            {fixedWorkout.menus.map((menu, index) => (
-              <li key={`${menu}-${index}`} className="fixed-workout-menu-item">
-                {menu}
-              </li>
-            ))}
+            {fixedWorkout.menus.map((menu, index) => {
+              const label = menu?.name || "メニュー";
+              const meta = renderMenuMeta(menu ?? {});
+              return (
+                <li key={`${label}-${index}`} className="fixed-workout-menu-item">
+                  <div className="fixed-workout-menu-name">{label}</div>
+                  {meta && <div className="fixed-workout-menu-meta">{meta}</div>}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

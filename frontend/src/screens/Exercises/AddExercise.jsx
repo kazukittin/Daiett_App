@@ -23,7 +23,7 @@ export default function AddExercise() {
   );
 
   useEffect(() => {
-    const presetName = selectedFixedWorkout?.menus?.[0] ?? "";
+    const presetName = selectedFixedWorkout?.menus?.[0]?.name ?? "";
     const shouldUpdate = !type || type === lastAppliedPresetRef.current;
 
     lastAppliedPresetRef.current = presetName;
@@ -69,7 +69,7 @@ export default function AddExercise() {
 
         <section className="page add-exercise-page">
           <header className="page-header">
-            <h1 className="page-title">運動記録を追加する</h1>
+            <h1 className="page-title">運動記録を追加</h1>
             <p className="muted">今日の運動内容を記録して、目標に近づこう</p>
           </header>
 
@@ -88,7 +88,28 @@ export default function AddExercise() {
                   />
                   <div className="fixed-workout-hint">
                     {selectedFixedWorkout?.menus?.length
-                      ? `この日の固定メニュー: ${selectedFixedWorkout.menus.join(" / ")}`
+                      ? `この日の固定メニュー: ${selectedFixedWorkout.menus
+                          .map((menu) => {
+                            const name = menu?.name || "メニュー";
+                            const details = [
+                              menu?.reps !== null && menu?.reps !== undefined && menu?.reps !== ""
+                                ? `${menu.reps}回`
+                                : "",
+                              menu?.seconds !== null &&
+                              menu?.seconds !== undefined &&
+                              menu?.seconds !== ""
+                                ? `${menu.seconds}秒`
+                                : "",
+                              menu?.sets !== null && menu?.sets !== undefined && menu?.sets !== ""
+                                ? `${menu.sets}セット`
+                                : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" / ");
+
+                            return details ? `${name} (${details})` : name;
+                          })
+                          .join("、 ")}`
                       : "固定ワークアウトは設定されていません。"}
                   </div>
                 </div>
