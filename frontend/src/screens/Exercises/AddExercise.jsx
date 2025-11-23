@@ -44,10 +44,6 @@ export default function AddExercise() {
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb">ホーム / 運動 / <span>記録を追加</span></div>
-        </header>
-
         <section className="page add-exercise-page">
           <header className="page-header">
             <h1 className="page-title">運動記録を追加</h1>

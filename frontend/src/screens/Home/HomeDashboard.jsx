@@ -38,10 +38,6 @@ export default function HomeDashboard() {
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb">ホーム / <span>概要</span></div>
-          <span className="badge">今日の記録を確認</span>
-        </header>
 
         <section className="content-grid">
           <section className="card today-summary-card">

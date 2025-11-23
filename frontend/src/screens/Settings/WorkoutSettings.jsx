@@ -56,9 +56,6 @@ export default function WorkoutSettings() {
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb">ホーム / <span>ワークアウト設定</span></div>
-        </header>
 
         <section className="page settings-page">
           <div className="settings-grid">

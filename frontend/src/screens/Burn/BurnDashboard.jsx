@@ -15,9 +15,6 @@ export default function BurnDashboard() {
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb">ホーム / <span>消費カロリー</span></div>
-        </header>
 
         <section className="content-grid">
           <div className="grid-2">

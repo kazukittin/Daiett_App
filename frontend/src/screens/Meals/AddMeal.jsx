@@ -76,9 +76,6 @@ export default function AddMeal() {
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb">ホーム / 食事ログ / <span>新規追加</span></div>
-        </header>
 
         <section className="content-grid">
           <Card title="新しい食事を追加">
