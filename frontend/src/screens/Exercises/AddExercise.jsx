@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import { appendExercise } from "../../services/exerciseStorage.js";
 import { getTodayISO } from "../../utils/date.js";
+import { getFixedWorkoutForDate } from "../../services/dailyFixedWorkoutsStorage.js";
+import { useDailyFixedWorkouts } from "../../hooks/useDailyFixedWorkouts.js";
 
 export default function AddExercise() {
   const navigate = useNavigate();
@@ -13,6 +15,23 @@ export default function AddExercise() {
   const [calories, setCalories] = useState("");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
+  const { dailyFixedWorkouts } = useDailyFixedWorkouts();
+  const lastAppliedPresetRef = useRef("");
+  const selectedFixedWorkout = useMemo(
+    () => getFixedWorkoutForDate(dailyFixedWorkouts, date),
+    [dailyFixedWorkouts, date],
+  );
+
+  useEffect(() => {
+    const presetName = selectedFixedWorkout?.rest ? "" : selectedFixedWorkout?.name ?? "";
+    const shouldUpdate = !type || type === lastAppliedPresetRef.current;
+
+    lastAppliedPresetRef.current = presetName;
+
+    if (shouldUpdate) {
+      setType(presetName);
+    }
+  }, [selectedFixedWorkout, type]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -67,6 +86,13 @@ export default function AddExercise() {
                     value={date}
                     onChange={(event) => setDate(event.target.value)}
                   />
+                  <div className="fixed-workout-hint">
+                    {selectedFixedWorkout?.rest
+                      ? "この日は固定の休養日です。"
+                      : selectedFixedWorkout?.name
+                        ? `この日は「${selectedFixedWorkout.name}」に設定されています。`
+                        : "固定ワークアウトは設定されていません。"}
+                  </div>
                 </div>
 
                 <div className="form-field">

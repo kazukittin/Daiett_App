@@ -6,6 +6,7 @@ const menu = [
   { label: "ダッシュボード", path: "/" },
   { label: "摂取カロリー", path: "/intake" },
   { label: "消費カロリー", path: "/burn" },
+  { label: "固定ワークアウト設定", path: "/workouts/settings" },
 ];
 
 export default function Sidebar() {
