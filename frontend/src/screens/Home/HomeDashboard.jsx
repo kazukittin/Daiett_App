@@ -5,6 +5,7 @@ import Card from "../../components/ui/Card.jsx";
 import WeightTrackerCard from "../../components/weight/WeightTrackerCard.jsx";
 import WeightTrendCard from "../../components/weight/WeightTrendCard.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
+import FitbitTodayCard from "../../components/fitbit/FitbitTodayCard.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
 import { useMealEntries } from "../../hooks/useMealEntries.js";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
@@ -78,6 +79,8 @@ export default function HomeDashboard() {
           </section>
 
           <TodayWorkout />
+
+          <FitbitTodayCard />
 
           <div className="summary-cards-row">
             <SummaryCard

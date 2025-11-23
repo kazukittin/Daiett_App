@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 import { getTodayISO } from "../../utils/date";
@@ -6,14 +6,17 @@ import { isValidWeight } from "../../utils/weight";
 
 const WeightTrackerCard = ({ onSave, latestRecord, previousRecord }) => {
   const [date, setDate] = useState(getTodayISO());
-  const [weight, setWeight] = useState(latestRecord?.weight ?? "");
+  const [weight, setWeight] = useState(
+    latestRecord?.date === getTodayISO() ? latestRecord.weight : "",
+  );
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (latestRecord?.date === date) {
-      setWeight(latestRecord.weight);
-    }
-  }, [latestRecord, date]);
+  const autoFilledWeight = useMemo(
+    () => (latestRecord?.date === date ? latestRecord.weight : null),
+    [date, latestRecord],
+  );
+
+  const effectiveWeight = weight === "" && autoFilledWeight != null ? autoFilledWeight : weight;
 
   const comparisonWeight = useMemo(() => {
     if (!latestRecord) return null;
@@ -24,9 +27,9 @@ const WeightTrackerCard = ({ onSave, latestRecord, previousRecord }) => {
   }, [date, latestRecord, previousRecord]);
 
   const difference = useMemo(() => {
-    if (comparisonWeight == null || weight === "") return null;
-    return Number(weight) - Number(comparisonWeight);
-  }, [comparisonWeight, weight]);
+    if (comparisonWeight == null || effectiveWeight === "") return null;
+    return Number(effectiveWeight) - Number(comparisonWeight);
+  }, [comparisonWeight, effectiveWeight]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -34,12 +37,12 @@ const WeightTrackerCard = ({ onSave, latestRecord, previousRecord }) => {
       setError("日付を入力してください。");
       return;
     }
-    if (!isValidWeight(weight)) {
+    if (!isValidWeight(effectiveWeight)) {
       setError("体重は数値で入力してください (例: 62.5)");
       return;
     }
     setError("");
-    onSave({ date, weight: Number(weight) });
+    onSave({ date, weight: Number(effectiveWeight) });
   };
 
   return (
@@ -57,7 +60,7 @@ const WeightTrackerCard = ({ onSave, latestRecord, previousRecord }) => {
               type="number"
               step="0.1"
               inputMode="decimal"
-              value={weight}
+              value={effectiveWeight ?? ""}
               onChange={(event) => setWeight(event.target.value)}
               placeholder="62.8"
             />

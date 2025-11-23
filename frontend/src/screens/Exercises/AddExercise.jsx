@@ -50,7 +50,7 @@ export default function AddExercise() {
 
         <section className="page add-exercise-page">
           <header className="page-header">
-            <h1 className="page-title">運動記録を追加する</h1>
+            <h1 className="page-title">運動記録を追加</h1>
             <p className="muted">今日の運動内容を記録して、目標に近づこう</p>
           </header>
 
