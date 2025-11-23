@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import { appendExercise } from "../../services/exerciseStorage.js";
 import { getTodayISO } from "../../utils/date.js";
+import { getFixedWorkoutForDate } from "../../services/dailyFixedWorkoutsStorage.js";
+import { useDailyFixedWorkouts } from "../../hooks/useDailyFixedWorkouts.js";
 
 export default function AddExercise() {
   const navigate = useNavigate();
@@ -13,6 +15,23 @@ export default function AddExercise() {
   const [calories, setCalories] = useState("");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
+  const { dailyFixedWorkouts } = useDailyFixedWorkouts();
+  const lastAppliedPresetRef = useRef("");
+  const selectedFixedWorkout = useMemo(
+    () => getFixedWorkoutForDate(dailyFixedWorkouts, date),
+    [dailyFixedWorkouts, date],
+  );
+
+  useEffect(() => {
+    const presetName = selectedFixedWorkout?.menus?.[0]?.name ?? "";
+    const shouldUpdate = !type || type === lastAppliedPresetRef.current;
+
+    lastAppliedPresetRef.current = presetName;
+
+    if (shouldUpdate) {
+      setType(presetName);
+    }
+  }, [selectedFixedWorkout, type]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -50,7 +69,7 @@ export default function AddExercise() {
 
         <section className="page add-exercise-page">
           <header className="page-header">
-            <h1 className="page-title">運動記録を追加する</h1>
+            <h1 className="page-title">運動記録を追加</h1>
             <p className="muted">今日の運動内容を記録して、目標に近づこう</p>
           </header>
 
@@ -67,6 +86,32 @@ export default function AddExercise() {
                     value={date}
                     onChange={(event) => setDate(event.target.value)}
                   />
+                  <div className="fixed-workout-hint">
+                    {selectedFixedWorkout?.menus?.length
+                      ? `この日の固定メニュー: ${selectedFixedWorkout.menus
+                          .map((menu) => {
+                            const name = menu?.name || "メニュー";
+                            const details = [
+                              menu?.reps !== null && menu?.reps !== undefined && menu?.reps !== ""
+                                ? `${menu.reps}回`
+                                : "",
+                              menu?.seconds !== null &&
+                              menu?.seconds !== undefined &&
+                              menu?.seconds !== ""
+                                ? `${menu.seconds}秒`
+                                : "",
+                              menu?.sets !== null && menu?.sets !== undefined && menu?.sets !== ""
+                                ? `${menu.sets}セット`
+                                : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" / ");
+
+                            return details ? `${name} (${details})` : name;
+                          })
+                          .join("、 ")}`
+                      : "固定ワークアウトは設定されていません。"}
+                  </div>
                 </div>
 
                 <div className="form-field">
