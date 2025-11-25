@@ -17,6 +17,10 @@ export default function TodayWorkout() {
         )}
       </header>
 
+      {!hasDefaultPlan && (
+        <div className="muted">本日の固定ワークアウトは設定されていません。</div>
+      )}
+
       {hasDefaultPlan && (
         <div className="fixed-workout-plan">
           <div className="fixed-workout-header">
