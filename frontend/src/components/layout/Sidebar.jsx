@@ -35,6 +35,13 @@ export default function Sidebar() {
       {/* 下部：クイックアクション */}
       <div className="sidebar-bottom">
         <button
+          className="sidebar-action-btn weight"
+          onClick={() => navigate("/weight/new")}
+        >
+          ⚖️ 体重を追加
+        </button>
+
+        <button
           className="sidebar-action-btn meal"
           onClick={() => navigate("/meals/new")}
         >
