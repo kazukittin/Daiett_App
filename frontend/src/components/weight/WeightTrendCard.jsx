@@ -1,18 +1,7 @@
-import React, { useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-} from "recharts";
+import React, { useEffect, useMemo, useState } from "react";
 import Card from "../ui/Card";
 import { getMonthKey } from "../../utils/date";
+import { loadRecharts } from "../../utils/loadRecharts";
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間", days: 7 },
@@ -78,6 +67,27 @@ const CalorieTooltip = ({ active, payload, label, period }) => {
  */
 const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
   const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
+  const [recharts, setRecharts] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    loadRecharts()
+      .then((module) => {
+        if (mounted) setRecharts(module);
+      })
+      .catch((error) => {
+        console.error("Failed to load Recharts", error);
+        if (mounted) setLoadError(error);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const rechartsReady = Boolean(recharts);
   const latestDate = useMemo(() => {
     const dates = [
       ...records.map((record) => new Date(record.date)),
@@ -208,11 +218,28 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
 
   const tickFormatter = (value) => formatLabel(value, period);
 
+  const {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Legend,
+    BarChart,
+    Bar,
+  } = recharts || {};
+
   return (
     <Card title="体重トレンド" action={renderRangeButtons()} className="weight-trend-card">
       <div className="trend-section">
         <h4 className="trend-subtitle">体重推移</h4>
-        {weightChartData.length ? (
+        {loadError ? (
+          <div className="trend-placeholder">グラフライブラリの読み込みに失敗しました。</div>
+        ) : !rechartsReady ? (
+          <div className="trend-placeholder">グラフライブラリを読み込み中です…</div>
+        ) : weightChartData.length ? (
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={weightChartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -241,7 +268,11 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
 
       <div className="trend-section">
         <h4 className="trend-subtitle">摂取 / 消費カロリー</h4>
-        {calorieTrends.length ? (
+        {loadError ? (
+          <div className="trend-placeholder">グラフライブラリの読み込みに失敗しました。</div>
+        ) : !rechartsReady ? (
+          <div className="trend-placeholder">グラフライブラリを読み込み中です…</div>
+        ) : calorieTrends.length ? (
           calorieChartData.length ? (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={calorieChartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
