@@ -717,77 +717,6 @@ a {
   gap: var(--spacing-lg);
 }
 
-.home-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
-}
-
-.dashboard-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--spacing-lg);
-  flex-wrap: wrap;
-  background: #ffffff;
-  padding: var(--spacing-xl);
-  border-radius: 16px;
-  box-shadow: var(--shadow-card);
-}
-
-.dashboard-hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.dashboard-hero-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
-.section-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
-}
-
-.section-label {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  margin: 0 0 4px;
-  font-weight: 700;
-}
-
-.section-title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.section-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-}
-
-.section-block {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.today-focus-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--spacing-lg);
-}
-
 .ds-card {
   background: #ffffff;
   border-radius: 16px;
@@ -1299,10 +1228,6 @@ a {
   .settings-grid {
     grid-template-columns: 1fr;
   }
-
-  .dashboard-hero {
-    padding: var(--spacing-lg);
-  }
 }
 
 @media (max-width: 768px) {
@@ -1322,20 +1247,6 @@ a {
 
   .meal-highlight-actions {
     justify-content: flex-start;
-  }
-
-  .dashboard-hero {
-    flex-direction: column;
-  }
-
-  .dashboard-hero-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .sidebar {
@@ -1454,4 +1365,86 @@ a {
 .chart-tooltip-label {
   margin: 0 0 4px;
   font-weight: 700;
+}
+
+.intake-page {
+  gap: var(--spacing-lg);
+}
+
+.intake-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.intake-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.intake-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.intake-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.intake-progress {
+  background: var(--color-surface-muted);
+  border-radius: 12px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.intake-progress-bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #34d399 0%, #3b82f6 100%);
+}
+
+.intake-progress-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--color-text-muted);
+}
+
+.section-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 768px) {
+  .intake-header {
+    align-items: flex-start;
+  }
+
+  .intake-progress {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .intake-progress-label {
+    justify-content: space-between;
+  }
 }

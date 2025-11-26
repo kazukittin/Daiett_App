@@ -37,38 +37,14 @@ export default function HomeDashboard() {
     navigate("/weight/new");
   };
 
-  const handleAddMealClick = () => {
-    navigate("/meals/new");
-  };
-
   return (
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
-        <div className="page home-dashboard">
-          <header className="dashboard-hero">
-            <div className="dashboard-hero-text">
-              <p className="section-label">ホーム</p>
-              <h1 className="page-title">今日のダッシュボード</h1>
-              <p className="muted">きょうのカロリーバランスと記録をひと目でチェックしましょう。</p>
-            </div>
-            <div className="dashboard-hero-actions">
-              <button className="btn secondary" type="button" onClick={handleAddMealClick}>
-                🍙 食事を追加
-              </button>
-              <button className="btn primary" type="button" onClick={handleAddWeightClick}>
-                体重を追加
-              </button>
-            </div>
-          </header>
 
-          <section className="section-stack">
-            <div className="section-header">
-              <div>
-                <p className="section-label">サマリー</p>
-                <h2 className="section-title">今日のカロリーバランス</h2>
-              </div>
-              <p className="muted">摂取・消費・残りのカロリーと現在の体重を確認</p>
+        <section className="content-grid dashboard-layout">
+          <div className="dashboard-top">
+            <div className="dashboard-actions">
             </div>
 
             <TodaySummaryCard
@@ -79,51 +55,17 @@ export default function HomeDashboard() {
               currentWeight={latestRecord?.weight ?? null}
               targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
             />
-          </section>
+          </div>
 
-          <section className="today-focus-grid">
-            <div className="section-block">
-              <div className="section-header">
-                <div>
-                  <p className="section-label">今日の食事</p>
-                  <h3 className="section-title">食事記録と摂取カロリー</h3>
-                </div>
-                <button className="btn secondary" type="button" onClick={handleAddMealClick}>
-                  食事を記録する
-                </button>
-              </div>
+          <div className="dashboard-middle">
+            <TodayMealHighlight meals={todayMealEntries} totalCalories={todayIntakeCalories} />
+            <TodayWorkout />
+          </div>
 
-              <TodayMealHighlight meals={todayMealEntries} totalCalories={todayIntakeCalories} />
-            </div>
-
-            <div className="section-block">
-              <div className="section-header">
-                <div>
-                  <p className="section-label">今日の運動</p>
-                  <h3 className="section-title">運動メニューと消費カロリー</h3>
-                </div>
-              </div>
-
-              <TodayWorkout />
-            </div>
-          </section>
-
-          <section className="section-stack">
-            <div className="section-header">
-              <div>
-                <p className="section-label">推移</p>
-                <h3 className="section-title">体重・カロリーのトレンド</h3>
-              </div>
-              <div className="section-actions">
-                <button className="btn secondary" type="button" onClick={handleAddWeightClick}>
-                  今日の体重を記録
-                </button>
-              </div>
-            </div>
-
+          <div className="dashboard-bottom single-column">
             <WeightTrendCard records={weightRecords} calorieTrends={calorieTrends} />
-          </section>
-        </div>
+          </div>
+        </section>
       </main>
     </div>
   );
