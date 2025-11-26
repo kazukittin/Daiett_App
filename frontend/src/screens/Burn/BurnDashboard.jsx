@@ -1,10 +1,33 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 
-const weeklyBurn = [60, 75, 50, 80, 70, 65];
+const BURN_PERIODS = [
+  { key: "7d", label: "1週間" },
+  { key: "30d", label: "1か月" },
+  { key: "1y", label: "1年間" },
+];
+
+const burnSeriesByPeriod = {
+  "7d": {
+    labels: ["月", "火", "水", "木", "金", "土", "日"],
+    values: [60, 75, 50, 80, 70, 65, 55],
+    helper: "日別の消費カロリー",
+  },
+  "30d": {
+    labels: ["1週目", "2週目", "3週目", "4週目"],
+    values: [320, 340, 310, 360],
+    helper: "週ごとの合計 (直近1か月)",
+  },
+  "1y": {
+    labels: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+    values: [1250, 1320, 1280, 1400, 1350, 1420, 1500, 1470, 1390, 1300, 1220, 1180],
+    helper: "月ごとの合計 (直近1年間)",
+  },
+};
+
 const activities = [
   { label: "ウォーキング", calories: 230 },
   { label: "ランニング", calories: 320 },
@@ -13,16 +36,31 @@ const activities = [
 
 export default function BurnDashboard() {
   const navigate = useNavigate();
+  const [period, setPeriod] = useState(BURN_PERIODS[0].key);
 
   const weeklyTotal = useMemo(
-    () => weeklyBurn.reduce((total, value) => total + value, 0),
+    () => burnSeriesByPeriod["7d"].values.reduce((total, value) => total + value, 0),
     [],
   );
 
   const weeklyAverage = useMemo(
-    () => Math.round(weeklyTotal / weeklyBurn.length),
+    () => Math.round(weeklyTotal / burnSeriesByPeriod["7d"].values.length),
     [weeklyTotal],
   );
+
+  const chartSeries = useMemo(() => burnSeriesByPeriod[period] ?? burnSeriesByPeriod["7d"], [period]);
+
+  const chartTotal = useMemo(
+    () => chartSeries.values.reduce((total, value) => total + value, 0),
+    [chartSeries],
+  );
+
+  const chartAverage = useMemo(
+    () => Math.round(chartTotal / chartSeries.values.length),
+    [chartTotal, chartSeries.values.length],
+  );
+
+  const maxValue = Math.max(...chartSeries.values, 1);
 
   return (
     <div className="app-shell">
@@ -36,8 +74,12 @@ export default function BurnDashboard() {
               <p className="muted">どれくらい動けているかをすぐ確認し、必要なら運動を追加しましょう。</p>
             </div>
             <div className="header-actions">
-              <button type="button" className="ds-button secondary" onClick={() => navigate("/settings/workout")}>設定を見直す</button>
-              <button type="button" className="ds-button primary" onClick={() => navigate("/exercises/add")}>運動を記録</button>
+              <button type="button" className="ds-button secondary" onClick={() => navigate("/settings/workout")}>
+                設定を見直す
+              </button>
+              <button type="button" className="ds-button primary" onClick={() => navigate("/exercises/add")}>
+                運動を記録
+              </button>
             </div>
           </header>
 
@@ -70,15 +112,53 @@ export default function BurnDashboard() {
           </div>
 
           <div className="grid-2 burn-detail-grid">
-            <Card title="週間の消費カロリー" className="burn-chart-card">
-              <div className="fake-chart">
-                {weeklyBurn.map((height, index) => (
-                  <div key={index} className="bar" style={{ height: `${height}%` }} />
+            <Card title="期間の消費カロリー" className="burn-chart-card">
+              <div className="burn-chart-header">
+                <div>
+                  <p className="muted">{chartSeries.helper}</p>
+                  <div className="burn-chart-meta">
+                    <div>
+                      <span className="stat-label">合計</span>
+                      <strong className="stat-value">{chartTotal} kcal</strong>
+                    </div>
+                    <div>
+                      <span className="stat-label">平均</span>
+                      <strong className="stat-value">{chartAverage} kcal</strong>
+                    </div>
+                  </div>
+                </div>
+                <div className="trend-range-toggle" aria-label="期間切り替え">
+                  {BURN_PERIODS.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className={`trend-range-button ${period === item.key ? "active" : ""}`}
+                      onClick={() => setPeriod(item.key)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div
+                className="fake-chart"
+                style={{ gridTemplateColumns: `repeat(${chartSeries.values.length}, minmax(0, 1fr))` }}
+              >
+                {chartSeries.values.map((value, index) => (
+                  <div
+                    key={`${chartSeries.labels[index]}-${index}`}
+                    className="bar"
+                    style={{ height: `${Math.round((value / maxValue) * 100)}%` }}
+                    title={`${chartSeries.labels[index]}: ${value} kcal`}
+                  />
                 ))}
               </div>
-              <div className="bar-labels">
-                {["月", "火", "水", "木", "金", "土"].map((day) => (
-                  <span key={day}>{day}</span>
+              <div
+                className="bar-labels"
+                style={{ gridTemplateColumns: `repeat(${chartSeries.labels.length}, minmax(0, 1fr))` }}
+              >
+                {chartSeries.labels.map((label) => (
+                  <span key={label}>{label}</span>
                 ))}
               </div>
             </Card>

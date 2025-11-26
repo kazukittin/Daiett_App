@@ -786,6 +786,21 @@ a {
   align-items: start;
 }
 
+.burn-chart-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.burn-chart-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+
 .burn-chart-card .fake-chart {
   margin-top: var(--spacing-md);
 }
