@@ -45,9 +45,6 @@ export default function HomeDashboard() {
         <section className="content-grid dashboard-layout">
           <div className="dashboard-top">
             <div className="dashboard-actions">
-              <button type="button" className="btn primary" onClick={handleAddWeightClick}>
-                体重を追加
-              </button>
             </div>
 
             <TodaySummaryCard
