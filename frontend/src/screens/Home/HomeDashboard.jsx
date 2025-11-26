@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
-import SummaryCard from "../../components/ui/SummaryCard.jsx";
 import WeightTrackerCard from "../../components/weight/WeightTrackerCard.jsx";
 import WeightTrendCard from "../../components/weight/WeightTrendCard.jsx";
+import WeightSummaryCard from "../../components/weight/WeightSummaryCard.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import FitbitTodayCard from "../../components/fitbit/FitbitTodayCard.jsx";
 import TodayMealHighlight from "../../components/meals/TodayMealHighlight.jsx";
@@ -10,7 +10,7 @@ import { useWeightRecords } from "../../hooks/useWeightRecords.js";
 import { useMealEntries } from "../../hooks/useMealEntries.js";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { getTodayISO } from "../../utils/date.js";
-import { calculateDifference, calculateMonthOverMonth } from "../../utils/weight.js";
+import { calculateMonthOverMonth } from "../../utils/weight.js";
 
 const DAILY_TARGET_CALORIES = 2000;
 
@@ -22,7 +22,6 @@ export default function HomeDashboard() {
   const todayKey = getTodayISO();
   const calorieTrends = []; // TODO: wire calorie trend data when available
 
-  const difference = calculateDifference(weightRecords);
   const { currentAverage, difference: monthDifference } = calculateMonthOverMonth(weightRecords);
 
   const todayMealEntries = useMemo(
@@ -79,42 +78,12 @@ export default function HomeDashboard() {
             </section>
 
             <div className="top-metrics-grid">
-              <div className="summary-cards-row">
-                <SummaryCard
-                  label="現在の体重"
-                  value={latestRecord ? `${latestRecord.weight.toFixed(1)} kg` : "--"}
-                  helper={previousRecord ? "前回との差" : "初回の記録を追加しましょう"}
-                  trend={previousRecord ? difference : undefined}
-                />
-
-                <SummaryCard
-                  label="目標体重"
-                  value={`${targetWeight.toFixed(1)} kg`}
-                  helper="目標との差"
-                  trend={latestRecord ? latestRecord.weight - targetWeight : undefined}
-                />
-
-                <SummaryCard
-                  label="今月の平均"
-                  value={
-                    currentAverage || currentAverage === 0
-                      ? `${currentAverage.toFixed(1)} kg`
-                      : "--"
-                  }
-                  helper="平均体重"
-                />
-
-                <SummaryCard
-                  label="月次の変化"
-                  value={
-                    monthDifference || monthDifference === 0
-                      ? `${monthDifference > 0 ? "+" : ""}${monthDifference.toFixed(1)} kg`
-                      : "--"
-                  }
-                  helper="先月比"
-                  trend={monthDifference ?? undefined}
-                />
-              </div>
+              <WeightSummaryCard
+                currentWeight={latestRecord?.weight ?? null}
+                targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
+                monthlyAverage={currentAverage ?? null}
+                monthlyDiff={monthDifference ?? null}
+              />
 
               <FitbitTodayCard />
             </div>
