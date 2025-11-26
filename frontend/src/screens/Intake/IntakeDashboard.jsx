@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
@@ -16,23 +16,75 @@ const foodLog = [
 ];
 
 const weeklyCalories = [
-  { day: "月", intake: 1500, burned: 350 },
-  { day: "火", intake: 1620, burned: 400 },
-  { day: "水", intake: 1380, burned: 320 },
-  { day: "木", intake: 1490, burned: 380 },
-  { day: "金", intake: 1700, burned: 450 },
-  { day: "土", intake: 1820, burned: 500 },
-  { day: "日", intake: 1600, burned: 420 },
+  { label: "月", intake: 1500, burned: 350 },
+  { label: "火", intake: 1620, burned: 400 },
+  { label: "水", intake: 1380, burned: 320 },
+  { label: "木", intake: 1490, burned: 380 },
+  { label: "金", intake: 1700, burned: 450 },
+  { label: "土", intake: 1820, burned: 500 },
+  { label: "日", intake: 1600, burned: 420 },
 ];
 
 const monthlyCalories = [
-  { week: "1週目", intake: 10750, burned: 2500 },
-  { week: "2週目", intake: 11200, burned: 2680 },
-  { week: "3週目", intake: 10420, burned: 2400 },
-  { week: "4週目", intake: 11050, burned: 2550 },
+  { label: "1週目", intake: 10750, burned: 2500 },
+  { label: "2週目", intake: 11200, burned: 2680 },
+  { label: "3週目", intake: 10420, burned: 2400 },
+  { label: "4週目", intake: 11050, burned: 2550 },
+];
+
+const yearlyCalories = [
+  { label: "1月", intake: 45000, burned: 9800 },
+  { label: "2月", intake: 43000, burned: 9500 },
+  { label: "3月", intake: 47000, burned: 10200 },
+  { label: "4月", intake: 45500, burned: 9900 },
+  { label: "5月", intake: 46800, burned: 10000 },
+  { label: "6月", intake: 46200, burned: 9950 },
+  { label: "7月", intake: 48000, burned: 10300 },
+  { label: "8月", intake: 47500, burned: 10150 },
+  { label: "9月", intake: 46000, burned: 9800 },
+  { label: "10月", intake: 47200, burned: 10050 },
+  { label: "11月", intake: 45800, burned: 9700 },
+  { label: "12月", intake: 48500, burned: 10400 },
+];
+
+const PERIOD_OPTIONS = [
+  { key: "7d", label: "1週間" },
+  { key: "30d", label: "1か月" },
+  { key: "1y", label: "1年間" },
 ];
 
 export default function IntakeDashboard() {
+  const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
+
+  const trendData = useMemo(() => {
+    if (period === "1y") return yearlyCalories;
+    if (period === "30d") return monthlyCalories;
+    return weeklyCalories;
+  }, [period]);
+
+  const xKey = period === "7d" ? "label" : "label";
+  const subtitle =
+    period === "7d"
+      ? "曜日ごとの摂取/消費を比較"
+      : period === "30d"
+        ? "週ごとの合計で増減を把握"
+        : "月ごとの推移で年間バランスを確認";
+
+  const renderRangeButtons = () => (
+    <div className="trend-range-toggle">
+      {PERIOD_OPTIONS.map((option) => (
+        <button
+          key={option.key}
+          type="button"
+          onClick={() => setPeriod(option.key)}
+          className={`trend-range-button ${period === option.key ? "active" : ""}`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="app-shell">
       <Sidebar />
@@ -96,36 +148,19 @@ export default function IntakeDashboard() {
           </div>
 
           <div className="intake-trend-grid">
-            <Card title="1週間のバランス" className="intake-trend-card">
+            <Card title="摂取・消費の推移" className="intake-trend-card" action={renderRangeButtons()}>
               <div className="section-header">
-                <p className="muted small">曜日ごとの摂取/消費を比較</p>
+                <p className="muted small">{subtitle}</p>
               </div>
               <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={weeklyCalories} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+                <BarChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="day" />
+                  <XAxis dataKey={xKey} />
                   <YAxis unit=" kcal" />
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="intake" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
                   <Bar dataKey="burned" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-
-            <Card title="1か月の推移" className="intake-trend-card">
-              <div className="section-header">
-                <p className="muted small">週ごとの合計で増減を把握</p>
-              </div>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={monthlyCalories} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="week" />
-                  <YAxis unit=" kcal" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="intake" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={28} />
-                  <Bar dataKey="burned" name="消費" fill="#f6c343" radius={[6, 6, 0, 0]} barSize={28} />
                 </BarChart>
               </ResponsiveContainer>
             </Card>

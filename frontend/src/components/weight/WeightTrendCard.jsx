@@ -18,7 +18,7 @@ import { getMonthKey } from "../../utils/date";
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間", days: 7 },
   { key: "30d", label: "1か月", days: 30 },
-  { key: "12m", label: "12か月", months: 12 },
+  { key: "1y", label: "1年間", months: 12 },
 ];
 
 /**
@@ -50,7 +50,7 @@ const formatMonthTick = (value) => {
   return `${year}/${month}`;
 };
 
-const formatLabel = (value, period) => (period === "12m" ? formatMonthTick(value) : formatDayTick(value));
+const formatLabel = (value, period) => (period === "1y" ? formatMonthTick(value) : formatDayTick(value));
 
 const dateKeyFromDate = (date) => {
   const y = date.getFullYear();
@@ -168,7 +168,7 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
       )
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    if (period === "12m") {
+    if (period === "1y") {
       const startMonth = new Date(latestDate.getFullYear(), latestDate.getMonth() - 11, 1);
       const monthlySummary = new Map();
 
@@ -331,7 +331,7 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
                 <Area
                   type="monotone"
                   dataKey="weight"
-                  name={period === "12m" ? "平均体重" : "体重"}
+                  name={period === "1y" ? "平均体重" : "体重"}
                   stroke="var(--color-primary)"
                   fill="rgba(59,130,246,0.12)"
                   strokeWidth={3}
@@ -359,14 +359,14 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
                   <ReferenceLine y={0} stroke="var(--color-border-strong)" />
                   <Bar
                     dataKey="intakeCalories"
-                    name={period === "12m" ? "月間摂取" : "摂取カロリー"}
+                    name={period === "1y" ? "月間摂取" : "摂取カロリー"}
                     fill="#3b82f6"
                     radius={[6, 6, 0, 0]}
                     barSize={28}
                   />
                   <Bar
                     dataKey="burnedCalories"
-                    name={period === "12m" ? "月間消費" : "消費カロリー"}
+                    name={period === "1y" ? "月間消費" : "消費カロリー"}
                     fill="#10b981"
                     radius={[6, 6, 0, 0]}
                     barSize={28}
