@@ -21,7 +21,7 @@ export async function loadRecharts() {
       }
     }
 
-    return import(CDN_URL);
+    return import(/* @vite-ignore */ CDN_URL);
   })();
 
   return rechartsPromise;
