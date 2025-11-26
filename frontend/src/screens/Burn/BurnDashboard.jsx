@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
@@ -11,14 +12,65 @@ const activities = [
 ];
 
 export default function BurnDashboard() {
+  const navigate = useNavigate();
+
+  const weeklyTotal = useMemo(
+    () => weeklyBurn.reduce((total, value) => total + value, 0),
+    [],
+  );
+
+  const weeklyAverage = useMemo(
+    () => Math.round(weeklyTotal / weeklyBurn.length),
+    [weeklyTotal],
+  );
+
   return (
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
+        <section className="page burn-page">
+          <header className="page-header burn-header">
+            <div>
+              <p className="eyebrow">消費カロリー</p>
+              <h1 className="page-title">今日と今週のアクティビティ</h1>
+              <p className="muted">どれくらい動けているかをすぐ確認し、必要なら運動を追加しましょう。</p>
+            </div>
+            <div className="header-actions">
+              <button type="button" className="ds-button secondary" onClick={() => navigate("/settings/workout")}>設定を見直す</button>
+              <button type="button" className="ds-button primary" onClick={() => navigate("/exercises/add")}>運動を記録</button>
+            </div>
+          </header>
 
-        <section className="content-grid">
-          <div className="grid-2">
-            <Card title="週間の消費カロリー">
+          <div className="burn-overview-grid">
+            <Card title="今週のサマリー" className="burn-summary-card">
+              <div className="burn-summary-stats">
+                <div className="stat-block">
+                  <span className="stat-label">合計</span>
+                  <strong className="stat-value">{weeklyTotal} kcal</strong>
+                  <p className="stat-helper">1週間で消費したカロリー</p>
+                </div>
+                <div className="stat-block">
+                  <span className="stat-label">1日平均</span>
+                  <strong className="stat-value">{weeklyAverage} kcal</strong>
+                  <p className="stat-helper">平均でどれくらい動けているか</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card title="アクティビティの内訳" className="burn-activity-card">
+              <ul className="upcoming-list">
+                {activities.map((activity) => (
+                  <li key={activity.label} className="activity-row">
+                    <div className="activity-label">{activity.label}</div>
+                    <div className="activity-value">{activity.calories} kcal</div>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+
+          <div className="grid-2 burn-detail-grid">
+            <Card title="週間の消費カロリー" className="burn-chart-card">
               <div className="fake-chart">
                 {weeklyBurn.map((height, index) => (
                   <div key={index} className="bar" style={{ height: `${height}%` }} />
@@ -31,18 +83,8 @@ export default function BurnDashboard() {
               </div>
             </Card>
 
-            <Card title="アクティビティの内訳">
-              <ul className="upcoming-list">
-                {activities.map((activity) => (
-                  <li key={activity.label}>
-                    {activity.label}: {activity.calories} kcal
-                  </li>
-                ))}
-              </ul>
-            </Card>
+            <TodayWorkout />
           </div>
-
-          <TodayWorkout />
         </section>
       </main>
     </div>

@@ -45,37 +45,54 @@ export default function AddExercise() {
       <Sidebar />
       <main className="main-shell">
         <section className="page add-exercise-page">
-          <header className="page-header">
-            <h1 className="page-title">運動記録を追加</h1>
-            <p className="muted">今日の運動内容を記録して、目標に近づこう</p>
+          <header className="page-header add-exercise-header">
+            <div>
+              <p className="eyebrow">消費カロリー</p>
+              <h1 className="page-title">運動記録を追加</h1>
+              <p className="muted">今日の運動内容をさっと記録して、消費カロリーを積み上げましょう。</p>
+            </div>
+
+            <div className="header-actions">
+              <div className="pill-note">時間・カロリーを入力するだけでOK</div>
+              <button type="button" className="btn secondary" onClick={() => navigate(-1)}>
+                戻る
+              </button>
+            </div>
           </header>
 
           <div className="add-exercise-layout">
             <section className="card exercise-form-card">
-              <form className="exercise-form" onSubmit={handleSubmit}>
-                <div className="form-field">
-                  <label htmlFor="exercise-date" className="form-label">
-                    日付
-                  </label>
-                  <input
-                    id="exercise-date"
-                    type="date"
-                    value={date}
-                    onChange={(event) => setDate(event.target.value)}
-                  />
-                </div>
+              <div className="card-header">
+                <h2>基本情報</h2>
+                <p className="muted small">入力欄は必要なものだけ。まずは必須の項目を埋めましょう。</p>
+              </div>
 
-                <div className="form-field">
-                  <label htmlFor="exercise-type" className="form-label">
-                    種類
-                  </label>
-                  <input
-                    id="exercise-type"
-                    type="text"
-                    placeholder="例: ランニング"
-                    value={type}
-                    onChange={(event) => setType(event.target.value)}
-                  />
+              <form className="exercise-form" onSubmit={handleSubmit}>
+                <div className="form-columns">
+                  <div className="form-field">
+                    <label htmlFor="exercise-date" className="form-label">
+                      日付
+                    </label>
+                    <input
+                      id="exercise-date"
+                      type="date"
+                      value={date}
+                      onChange={(event) => setDate(event.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label htmlFor="exercise-type" className="form-label">
+                      種類
+                    </label>
+                    <input
+                      id="exercise-type"
+                      type="text"
+                      placeholder="例: ランニング"
+                      value={type}
+                      onChange={(event) => setType(event.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="form-columns">
@@ -123,16 +140,37 @@ export default function AddExercise() {
 
                 {error && <div className="form-error">{error}</div>}
 
-                <div className="form-actions">
-                  <button type="button" className="btn secondary" onClick={() => navigate(-1)}>
-                    キャンセル
-                  </button>
-                  <button type="submit" className="btn primary">
-                    記録する
-                  </button>
+                <div className="form-actions space-between">
+                  <div className="helper-note">時間とカロリーがわからない場合は目安でもOK</div>
+                  <div className="action-buttons">
+                    <button type="button" className="btn secondary" onClick={() => navigate(-1)}>
+                      キャンセル
+                    </button>
+                    <button type="submit" className="btn primary">
+                      記録する
+                    </button>
+                  </div>
                 </div>
               </form>
             </section>
+
+            <aside className="ds-card compact info-card">
+              <div className="ds-card-title">入力のポイント</div>
+              <ul className="summary-list">
+                <li className="summary-item">
+                  <span>運動名</span>
+                  <strong>「ウォーキング」など短く</strong>
+                </li>
+                <li className="summary-item">
+                  <span>時間</span>
+                  <strong>覚えている範囲でOK</strong>
+                </li>
+                <li className="summary-item">
+                  <span>メモ</span>
+                  <strong>体調や強度を残す</strong>
+                </li>
+              </ul>
+            </aside>
 
             <TodayWorkout />
           </div>

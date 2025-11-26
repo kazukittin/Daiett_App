@@ -34,6 +34,15 @@ body {
   font-weight: 700;
 }
 
+.eyebrow {
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
 .muted {
   color: var(--color-text-muted);
   font-size: 0.95rem;
@@ -56,6 +65,25 @@ body {
   }
 }
 
+.add-exercise-header,
+.settings-header,
+.burn-header,
+.meal-page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .card,
 .ds-card {
   background: #ffffff;
@@ -66,6 +94,13 @@ body {
 
 .exercise-form-card {
   width: 100%;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--spacing-md);
 }
 
 .exercise-form {
@@ -130,6 +165,11 @@ body {
 .form-actions.space-between {
   justify-content: space-between;
   align-items: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
 }
 
 .form-actions.end {
@@ -338,6 +378,10 @@ body {
   gap: var(--spacing-xl);
 }
 
+.workout-settings-page {
+  padding-top: 0;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
@@ -448,6 +492,11 @@ body {
   font-weight: 700;
 }
 
+.helper-note {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
 .fitbit-status-row {
   display: flex;
   align-items: center;
@@ -493,6 +542,14 @@ body {
 
 .fitbit-summary-list li:last-child {
   border-bottom: none;
+}
+
+.fitbit-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .fitbit-today-grid {
@@ -681,6 +738,58 @@ a {
   align-items: stretch;
 }
 
+.burn-page {
+  gap: var(--spacing-xl);
+}
+
+.burn-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.burn-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.burn-activity-card .upcoming-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.activity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.activity-label {
+  font-weight: 600;
+}
+
+.activity-value {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.burn-detail-grid {
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.burn-chart-card .fake-chart {
+  margin-top: var(--spacing-md);
+}
+
 .dashboard-middle {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
@@ -763,6 +872,78 @@ a {
   display: flex;
   justify-content: space-between;
   font-size: 0.95rem;
+}
+
+.info-card {
+  position: sticky;
+  top: var(--spacing-lg);
+  align-self: start;
+}
+
+.tip-list {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-md);
+}
+
+.tip-pill,
+.pill-note,
+.total-calorie-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.35rem 0.75rem;
+  background: var(--color-surface-muted);
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.total-calorie-chip strong {
+  color: var(--color-primary);
+}
+
+.add-weight-layout,
+.add-meal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.add-meal-layout .info-card,
+.add-weight-layout .info-card {
+  position: sticky;
+  top: var(--spacing-lg);
+}
+
+@media (max-width: 900px) {
+  .add-weight-layout,
+  .add-meal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .info-card {
+    position: static;
+  }
+}
+
+.add-meal-page .weight-form {
+  gap: var(--spacing-lg);
+}
+
+.meal-form-card .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .meal-highlight-actions {

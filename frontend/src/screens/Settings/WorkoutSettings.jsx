@@ -56,8 +56,21 @@ export default function WorkoutSettings() {
     <div className="app-shell">
       <Sidebar />
       <main className="main-shell">
+        <section className="page settings-page workout-settings-page">
+          <header className="page-header settings-header">
+            <div>
+              <p className="eyebrow">ワークアウト設定</p>
+              <h1 className="page-title">毎日のプランと連携をまとめて管理</h1>
+              <p className="muted">曜日ごとの固定メニューとFitbit連携を確認して、運動の計画をスムーズに。</p>
+            </div>
+            <div className="header-actions">
+              {saveStatus && <span className="save-status">{saveStatus}</span>}
+              <button type="button" className="ds-button primary" onClick={handleSave}>
+                設定を保存
+              </button>
+            </div>
+          </header>
 
-        <section className="page settings-page">
           <div className="settings-grid">
             <Card title="デイリー固定ワークアウト設定" className="daily-plan-card">
               <p className="muted">
@@ -157,19 +170,15 @@ export default function WorkoutSettings() {
                   );
                 })}
               </div>
-
-              <div className="form-actions end">
-                {saveStatus && <span className="save-status">{saveStatus}</span>}
-                <button type="button" className="ds-button primary" onClick={handleSave}>
-                  設定を保存
-                </button>
-              </div>
             </Card>
 
             <Card title="Fitbit連携" className="fitbit-card">
-              <p className="muted">
-                Fitbitアカウントを連携すると、今日のアクティビティデータを自動で取得できます。
-              </p>
+              <div className="fitbit-header">
+                <p className="muted">Fitbitアカウントを連携すると、今日のアクティビティデータを自動で取得できます。</p>
+                <button type="button" className="ds-button secondary" onClick={refresh}>
+                  再読み込み
+                </button>
+              </div>
 
               {fitbitError && <div className="form-error">{fitbitError}</div>}
 
@@ -215,9 +224,7 @@ export default function WorkoutSettings() {
               )}
 
               <div className="form-actions space-between">
-                <button type="button" className="ds-button secondary" onClick={refresh}>
-                  再読み込み
-                </button>
+                <div className="helper-note">連携でデータ入力が短縮できます</div>
                 <button type="button" className="ds-button primary" onClick={startFitbitAuth}>
                   Fitbitと連携する
                 </button>
