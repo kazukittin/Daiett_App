@@ -1,13 +1,38 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 import Card from "../ui/Card";
 import { getMonthKey } from "../../utils/date";
-import { loadRecharts } from "../../utils/loadRecharts";
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間", days: 7 },
   { key: "30d", label: "1か月", days: 30 },
   { key: "12m", label: "12か月", months: 12 },
 ];
+
+/**
+ * @typedef {Object} WeightRecord
+ * @property {string} date - ISO date string (YYYY-MM-DD)
+ * @property {number} weight
+ *
+ * @typedef {Object} CalorieTrend
+ * @property {string} date - ISO date string (YYYY-MM-DD)
+ * @property {number} intakeCalories
+ * @property {number} burnedCalories
+ *
+ * @typedef {Object} WeightTrendCardProps
+ * @property {WeightRecord[]} records
+ * @property {CalorieTrend[]} [calorieTrends]
+ */
 
 const formatDayTick = (value) => {
   const date = new Date(value);
@@ -23,71 +48,64 @@ const formatMonthTick = (value) => {
   return `${year}/${month}`;
 };
 
-const formatLabel = (value, period) =>
-  period === "12m" ? formatMonthTick(value) : formatDayTick(value);
+const formatLabel = (value, period) => (period === "12m" ? formatMonthTick(value) : formatDayTick(value));
 
-const CalorieTooltip = ({ active, payload, label, period }) => {
+const dateKeyFromDate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+/**
+ * Custom tooltip showing weight and calorie balance for the hovered date/month.
+ */
+const TrendTooltip = ({ active, payload, label, period }) => {
   if (!active || !payload || !payload.length) return null;
 
-  const intake = payload.find((entry) => entry.dataKey === "intakeCalories")?.value ?? 0;
-  const burned = payload.find((entry) => entry.dataKey === "burnedCalories")?.value ?? 0;
-  const diff = intake - burned;
+  const weight = payload.find((entry) => entry.dataKey === "weight")?.value;
+  const intake = payload.find((entry) => entry.dataKey === "intakeCalories")?.value ?? null;
+  const burned = payload.find((entry) => entry.dataKey === "burnedCalories")?.value ?? null;
+  const diff =
+    intake !== null && burned !== null && Number.isFinite(intake) && Number.isFinite(burned)
+      ? intake - burned
+      : null;
 
   return (
     <div className="chart-tooltip">
       <p className="chart-tooltip-label">{formatLabel(label, period)}</p>
-      <p>
-        摂取: <strong>{intake}</strong> kcal
-      </p>
-      <p>
-        消費: <strong>{burned}</strong> kcal
-      </p>
-      <p>
-        差分: <strong>{diff}</strong> kcal
-      </p>
+      {weight !== undefined && weight !== null && (
+        <p>
+          体重: <strong>{weight}</strong> kg
+        </p>
+      )}
+      {intake !== null && (
+        <p>
+          摂取: <strong>{intake}</strong> kcal
+        </p>
+      )}
+      {burned !== null && (
+        <p>
+          消費: <strong>{burned}</strong> kcal
+        </p>
+      )}
+      {diff !== null && (
+        <p>
+          差分: <strong>{diff}</strong> kcal
+        </p>
+      )}
     </div>
   );
 };
 
 /**
- * @typedef {Object} WeightRecord
- * @property {string} date - ISO date string (YYYY-MM-DD)
- * @property {number} weight
- *
- * @typedef {Object} CalorieTrend
- * @property {string} date - ISO date string (YYYY-MM-DD)
- * @property {number} intakeCalories
- * @property {number} burnedCalories
- */
-
-/**
- * @param {Object} props
- * @param {WeightRecord[]} props.records
- * @param {CalorieTrend[]} [props.calorieTrends]
+ * 体重とカロリーをまとめて表示するトレンドチャート。
+ * @param {WeightTrendCardProps} props
  */
 const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
   const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
-  const [recharts, setRecharts] = useState(null);
-  const [loadError, setLoadError] = useState(null);
+  const hasCalorieData = Array.isArray(calorieTrends) && calorieTrends.length > 0;
 
-  useEffect(() => {
-    let mounted = true;
-
-    loadRecharts()
-      .then((module) => {
-        if (mounted) setRecharts(module);
-      })
-      .catch((error) => {
-        console.error("Failed to load Recharts", error);
-        if (mounted) setLoadError(error);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const rechartsReady = Boolean(recharts);
   const latestDate = useMemo(() => {
     const dates = [
       ...records.map((record) => new Date(record.date)),
@@ -108,81 +126,63 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
     });
   }, [latestDate]);
 
-  const weightChartData = useMemo(() => {
-    if (!latestDate || !records.length) return [];
+  const chartData = useMemo(() => {
+    if (!latestDate) return [];
 
-    const sorted = [...records]
+    const sortedWeights = [...records]
       .map((record) => ({ ...record, weight: Number(record.weight) }))
-      .filter((record) => Number.isFinite(record.weight))
+      .filter((record) => Number.isFinite(record.weight) && !Number.isNaN(new Date(record.date)))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    if (period === "12m") {
-      const startMonth = new Date(latestDate.getFullYear(), latestDate.getMonth() - 11, 1);
-      const monthlyTotals = new Map();
-
-      sorted
-        .filter((record) => new Date(record.date) >= startMonth)
-        .forEach((record) => {
-          const key = getMonthKey(record.date);
-          const current = monthlyTotals.get(key) ?? { total: 0, count: 0 };
-          monthlyTotals.set(key, {
-            total: current.total + record.weight,
-            count: current.count + 1,
-          });
-        });
-
-      return monthKeys.map((key) => {
-        const summary = monthlyTotals.get(key);
-        return {
-          date: key,
-          weight: summary ? +(summary.total / summary.count).toFixed(1) : null,
-        };
-      });
-    }
-
-    const days = period === "7d" ? 7 : 30;
-    const startDate = new Date(latestDate);
-    startDate.setDate(startDate.getDate() - (days - 1));
-
-    return sorted
-      .filter((record) => new Date(record.date) >= startDate)
-      .map((record) => ({ date: record.date, weight: record.weight }));
-  }, [latestDate, records, period, monthKeys]);
-
-  const calorieChartData = useMemo(() => {
-    if (!latestDate || !calorieTrends.length) return [];
-
-    const sorted = [...calorieTrends]
+    const sortedCalories = [...calorieTrends]
       .map((trend) => ({
         ...trend,
         intakeCalories: Number(trend.intakeCalories),
         burnedCalories: Number(trend.burnedCalories),
       }))
-      .filter((trend) =>
-        Number.isFinite(trend.intakeCalories) && Number.isFinite(trend.burnedCalories),
+      .filter(
+        (trend) =>
+          Number.isFinite(trend.intakeCalories) &&
+          Number.isFinite(trend.burnedCalories) &&
+          !Number.isNaN(new Date(trend.date)),
       )
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     if (period === "12m") {
       const startMonth = new Date(latestDate.getFullYear(), latestDate.getMonth() - 11, 1);
-      const monthlyTotals = new Map();
+      const monthlySummary = new Map();
 
-      sorted
+      sortedWeights
+        .filter((record) => new Date(record.date) >= startMonth)
+        .forEach((record) => {
+          const key = getMonthKey(record.date);
+          const current = monthlySummary.get(key) ?? { weightTotal: 0, weightCount: 0, intake: 0, burned: 0 };
+          monthlySummary.set(key, {
+            weightTotal: current.weightTotal + record.weight,
+            weightCount: current.weightCount + 1,
+            intake: current.intake,
+            burned: current.burned,
+          });
+        });
+
+      sortedCalories
         .filter((trend) => new Date(trend.date) >= startMonth)
         .forEach((trend) => {
           const key = getMonthKey(trend.date);
-          const current = monthlyTotals.get(key) ?? { intake: 0, burned: 0 };
-          monthlyTotals.set(key, {
+          const current = monthlySummary.get(key) ?? { weightTotal: 0, weightCount: 0, intake: 0, burned: 0 };
+          monthlySummary.set(key, {
+            ...current,
             intake: current.intake + trend.intakeCalories,
             burned: current.burned + trend.burnedCalories,
           });
         });
 
       return monthKeys.map((key) => {
-        const summary = monthlyTotals.get(key);
+        const summary = monthlySummary.get(key);
         return {
           date: key,
-          intakeCalories: summary?.intake ?? null,
+          weight: summary && summary.weightCount ? +(summary.weightTotal / summary.weightCount).toFixed(1) : null,
+          intakeCalories: summary?.intake ?? null, // 月次は合計カロリーを表示
           burnedCalories: summary?.burned ?? null,
         };
       });
@@ -192,14 +192,37 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
     const startDate = new Date(latestDate);
     startDate.setDate(startDate.getDate() - (days - 1));
 
-    return sorted
+    const weightByDate = new Map();
+    sortedWeights
+      .filter((record) => new Date(record.date) >= startDate)
+      .forEach((record) => {
+        weightByDate.set(record.date, record.weight);
+      });
+
+    const calorieByDate = new Map();
+    sortedCalories
       .filter((trend) => new Date(trend.date) >= startDate)
-      .map((trend) => ({
-        date: trend.date,
-        intakeCalories: trend.intakeCalories,
-        burnedCalories: trend.burnedCalories,
-      }));
-  }, [latestDate, calorieTrends, period, monthKeys]);
+      .forEach((trend) => {
+        calorieByDate.set(trend.date, {
+          intakeCalories: trend.intakeCalories,
+          burnedCalories: trend.burnedCalories,
+        });
+      });
+
+    const rows = [];
+    for (let cursor = new Date(startDate); cursor <= latestDate; cursor.setDate(cursor.getDate() + 1)) {
+      const key = dateKeyFromDate(cursor);
+      const calorie = calorieByDate.get(key);
+      rows.push({
+        date: key,
+        weight: weightByDate.get(key) ?? null,
+        intakeCalories: calorie?.intakeCalories ?? (hasCalorieData ? null : undefined),
+        burnedCalories: calorie?.burnedCalories ?? (hasCalorieData ? null : undefined),
+      });
+    }
+
+    return rows;
+  }, [latestDate, records, calorieTrends, period, monthKeys, hasCalorieData]);
 
   const renderRangeButtons = () => (
     <div className="trend-range-toggle">
@@ -217,81 +240,60 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
   );
 
   const tickFormatter = (value) => formatLabel(value, period);
-
-  const {
-    ResponsiveContainer,
-    LineChart,
-    Line,
-    CartesianGrid,
-    XAxis,
-    YAxis,
-    Tooltip,
-    Legend,
-    BarChart,
-    Bar,
-  } = recharts || {};
+  const noData = !chartData.length;
 
   return (
-    <Card title="体重トレンド" action={renderRangeButtons()} className="weight-trend-card">
-      <div className="trend-section">
-        <h4 className="trend-subtitle">体重推移</h4>
-        {loadError ? (
-          <div className="trend-placeholder">グラフライブラリの読み込みに失敗しました。</div>
-        ) : !rechartsReady ? (
-          <div className="trend-placeholder">グラフライブラリを読み込み中です…</div>
-        ) : weightChartData.length ? (
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={weightChartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-              <XAxis dataKey="date" tickFormatter={tickFormatter} />
-              <YAxis unit=" kg" tickCount={6} />
-              <Tooltip labelFormatter={tickFormatter} formatter={(value) => [`${value} kg`, "体重"]} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="weight"
-                name="体重"
-                stroke="var(--color-primary)"
-                strokeWidth={3}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-                connectNulls
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="trend-placeholder">
-            まだデータがありません。まずは今日の体重を記録しましょう。
-          </div>
-        )}
-      </div>
-
-      <div className="trend-section">
-        <h4 className="trend-subtitle">摂取 / 消費カロリー</h4>
-        {loadError ? (
-          <div className="trend-placeholder">グラフライブラリの読み込みに失敗しました。</div>
-        ) : !rechartsReady ? (
-          <div className="trend-placeholder">グラフライブラリを読み込み中です…</div>
-        ) : calorieTrends.length ? (
-          calorieChartData.length ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={calorieChartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="date" tickFormatter={tickFormatter} />
-                <YAxis unit=" kcal" tickCount={6} />
-                <Tooltip content={<CalorieTooltip period={period} />} />
-                <Legend />
-                <Bar dataKey="intakeCalories" name="摂取カロリー" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="burnedCalories" name="消費カロリー" fill="#f6c343" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="trend-placeholder">選択期間のカロリーデータがありません。</div>
-          )
-        ) : (
-          <div className="trend-placeholder">カロリーデータがありません。</div>
-        )}
-      </div>
+    <Card title="体重 & カロリートレンド" action={renderRangeButtons()} className="weight-trend-card">
+      {noData ? (
+        <div className="trend-placeholder">まだデータがありません。体重やカロリーを記録してみましょう。</div>
+      ) : (
+        <ResponsiveContainer width="100%" height={280}>
+          <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+            <XAxis dataKey="date" tickFormatter={tickFormatter} />
+            <YAxis yAxisId="left" unit=" kg" tickCount={6} />
+            <YAxis yAxisId="right" orientation="right" unit=" kcal" tickCount={6} />
+            <Tooltip content={<TrendTooltip period={period} />} />
+            <Legend />
+            {hasCalorieData && (
+              <>
+                <Bar
+                  yAxisId="right"
+                  dataKey="intakeCalories"
+                  name={period === "12m" ? "月間摂取" : "摂取カロリー"}
+                  fill="#3b82f6"
+                  radius={[6, 6, 0, 0]}
+                  barSize={20}
+                />
+                <Bar
+                  yAxisId="right"
+                  dataKey="burnedCalories"
+                  name={period === "12m" ? "月間消費" : "消費カロリー"}
+                  fill="#f6c343"
+                  radius={[6, 6, 0, 0]}
+                  barSize={20}
+                />
+              </>
+            )}
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="weight"
+              name={period === "12m" ? "平均体重" : "体重"}
+              stroke="var(--color-primary)"
+              strokeWidth={3}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+              connectNulls
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      )}
+      {!hasCalorieData && !noData && (
+        <p className="muted" style={{ margin: 0 }}>
+          カロリーデータがありません。追加すると棒グラフが表示されます。
+        </p>
+      )}
     </Card>
   );
 };

@@ -20,6 +20,7 @@ export default function HomeDashboard() {
   const { mealEntries } = useMealEntries();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
   const todayKey = getTodayISO();
+  const calorieTrends = []; // TODO: wire calorie trend data when available
 
   const difference = calculateDifference(weightRecords);
   const { currentAverage, difference: monthDifference } = calculateMonthOverMonth(weightRecords);
@@ -130,7 +131,7 @@ export default function HomeDashboard() {
               latestRecord={latestRecord}
               previousRecord={previousRecord}
             />
-            <WeightTrendCard records={weightRecords} />
+            <WeightTrendCard records={weightRecords} calorieTrends={calorieTrends} />
           </div>
         </section>
       </main>
