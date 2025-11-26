@@ -1,18 +1,7 @@
-import React, { useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-} from "recharts";
+import React, { useEffect, useMemo, useState } from "react";
 import Card from "../ui/Card";
 import { getMonthKey } from "../../utils/date";
+import { loadRecharts } from "../../utils/loadRecharts";
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間", days: 7 },
@@ -78,6 +67,23 @@ const CalorieTooltip = ({ active, payload, label, period }) => {
  */
 const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
   const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
+  const [recharts, setRecharts] = useState(null);
+  const [rechartsError, setRechartsError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    loadRecharts()
+      .then((module) => {
+        if (mounted) setRecharts(module);
+      })
+      .catch((error) => {
+        if (mounted) setRechartsError(error);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const latestDate = useMemo(() => {
     const dates = [
@@ -207,7 +213,45 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
     </div>
   );
 
+  const {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Legend,
+    BarChart,
+    Bar,
+  } = recharts || {};
+
   const tickFormatter = (value) => formatLabel(value, period);
+
+  if (!recharts && !rechartsError) {
+    return (
+      <Card title="体重トレンド" action={renderRangeButtons()} className="weight-trend-card">
+        <div className="trend-section">
+          <div className="trend-placeholder">グラフライブラリを読み込み中です…</div>
+        </div>
+        <div className="trend-section">
+          <div className="trend-placeholder">グラフライブラリを読み込み中です…</div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (rechartsError) {
+    return (
+      <Card title="体重トレンド" action={renderRangeButtons()} className="weight-trend-card">
+        <div className="trend-section">
+          <div className="trend-placeholder">
+            グラフライブラリの読み込みに失敗しました。recharts をインストールするか、ネットワーク設定を確認してください。
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card title="体重トレンド" action={renderRangeButtons()} className="weight-trend-card">
