@@ -1,28 +1,25 @@
 import React, { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar.jsx";
-import WeightTrackerCard from "../../components/weight/WeightTrackerCard.jsx";
 import WeightTrendCard from "../../components/weight/WeightTrendCard.jsx";
-import WeightSummaryCard from "../../components/weight/WeightSummaryCard.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
-import FitbitTodayCard from "../../components/fitbit/FitbitTodayCard.jsx";
 import TodayMealHighlight from "../../components/meals/TodayMealHighlight.jsx";
+import TodaySummaryCard from "../../components/summary/TodaySummaryCard.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
 import { useMealEntries } from "../../hooks/useMealEntries.js";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { getTodayISO } from "../../utils/date.js";
-import { calculateMonthOverMonth } from "../../utils/weight.js";
 
 const DAILY_TARGET_CALORIES = 2000;
 
 export default function HomeDashboard() {
-  const { weightRecords, latestRecord, previousRecord, addWeightRecord, targetWeight } =
-    useWeightRecords();
+  const navigate = useNavigate();
+
+  const { weightRecords, latestRecord, targetWeight } = useWeightRecords();
   const { mealEntries } = useMealEntries();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
   const todayKey = getTodayISO();
   const calorieTrends = []; // TODO: wire calorie trend data when available
-
-  const { currentAverage, difference: monthDifference } = calculateMonthOverMonth(weightRecords);
 
   const todayMealEntries = useMemo(
     () => mealEntries.filter((entry) => entry.date === todayKey),
@@ -36,6 +33,10 @@ export default function HomeDashboard() {
 
   const remainingCalories = DAILY_TARGET_CALORIES - todayIntakeCalories + todayBurnCalories;
 
+  const handleAddMealClick = () => {
+    navigate("/meals/new");
+  };
+
   return (
     <div className="app-shell">
       <Sidebar />
@@ -43,50 +44,20 @@ export default function HomeDashboard() {
 
         <section className="content-grid dashboard-layout">
           <div className="dashboard-top">
-            <section className="card today-summary-card">
-              <div className="today-summary-header">
-                <div>
-                  <h2>今日のサマリー</h2>
-                  <p className="muted">目標 {DAILY_TARGET_CALORIES} kcal</p>
-                </div>
-                <span
-                  className={`today-summary-pill ${remainingCalories < 0 ? "negative" : "positive"}`}
-                >
-                  {remainingCalories < 0 ? "オーバー" : "残り"} {Math.abs(remainingCalories)} kcal
-                </span>
-              </div>
-
-              <div className="today-summary-grid">
-                <div className="today-summary-stat">
-                  <span className="stat-label">摂取カロリー</span>
-                  <strong className="stat-value">{todayIntakeCalories} kcal</strong>
-                  <span className="stat-helper">食事ログから計算</span>
-                </div>
-                <div className="today-summary-stat">
-                  <span className="stat-label">消費カロリー</span>
-                  <strong className="stat-value">{todayBurnCalories} kcal</strong>
-                  <span className="stat-helper">運動記録の合計</span>
-                </div>
-                <div className={`today-summary-stat ${remainingCalories < 0 ? "negative" : ""}`}>
-                  <span className="stat-label">残り目標</span>
-                  <strong className="stat-value">{Math.abs(remainingCalories)} kcal</strong>
-                  <span className="stat-helper">
-                    {remainingCalories < 0 ? "目標を超えています" : "まだ余裕があります"}
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            <div className="top-metrics-grid">
-              <WeightSummaryCard
-                currentWeight={latestRecord?.weight ?? null}
-                targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
-                monthlyAverage={currentAverage ?? null}
-                monthlyDiff={monthDifference ?? null}
-              />
-
-              <FitbitTodayCard />
+            <div className="dashboard-actions">
+              <button type="button" className="btn primary" onClick={handleAddMealClick}>
+                食事を追加
+              </button>
             </div>
+
+            <TodaySummaryCard
+              dailyTargetCalories={DAILY_TARGET_CALORIES}
+              intakeCalories={todayIntakeCalories}
+              burnCalories={todayBurnCalories}
+              remainingCalories={remainingCalories}
+              currentWeight={latestRecord?.weight ?? null}
+              targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
+            />
           </div>
 
           <div className="dashboard-middle">
@@ -94,12 +65,7 @@ export default function HomeDashboard() {
             <TodayWorkout />
           </div>
 
-          <div className="dashboard-bottom">
-            <WeightTrackerCard
-              onSave={addWeightRecord}
-              latestRecord={latestRecord}
-              previousRecord={previousRecord}
-            />
+          <div className="dashboard-bottom single-column">
             <WeightTrendCard records={weightRecords} calorieTrends={calorieTrends} />
           </div>
         </section>
