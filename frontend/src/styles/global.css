@@ -1283,6 +1283,11 @@ a {
   background-color: #3b82f6; /* 明るい青 */
 }
 
+/* 体重ボタン：ミントグリーン */
+.sidebar-action-btn.weight {
+  background-color: #10b981; /* グリーン系 */
+}
+
 /* 運動ボタン：ちょい濃いブルー */
 .sidebar-action-btn.exercise {
   background-color: #2563eb; /* 濃い青 */
