@@ -1,12 +1,28 @@
+const CDN_URL = "https://esm.sh/recharts@2.12.7";
+
+let rechartsPromise = null;
+
 /**
- * Dynamically load Recharts from the local dependency when available and fall back to a CDN build.
- * This allows the dashboard to keep working in environments where the package install may be blocked.
+ * Dynamically load Recharts, optionally honoring a user-provided module path via env var.
+ * Falls back to the CDN build when the local package is not available.
  * @returns {Promise<import('recharts')>}
  */
 export async function loadRecharts() {
-  try {
-    return await import(/* @vite-ignore */ "recharts");
-  } catch {
-    return await import("https://esm.sh/recharts@2.12.7");
-  }
+  if (rechartsPromise) return rechartsPromise;
+
+  rechartsPromise = (async () => {
+    const overridePath = import.meta.env?.VITE_RECHARTS_PATH;
+
+    if (overridePath) {
+      try {
+        return await import(/* @vite-ignore */ overridePath);
+      } catch (error) {
+        console.warn("Failed to load Recharts from override path", error);
+      }
+    }
+
+    return import(CDN_URL);
+  })();
+
+  return rechartsPromise;
 }
