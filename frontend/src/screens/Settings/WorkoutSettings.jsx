@@ -14,6 +14,8 @@ const WeekdayMenuBlock = ({
   menus,
   draft,
   addError,
+  expanded,
+  onToggleExpand,
   onDraftChange,
   onAddMenu,
   onMenuChange,
@@ -21,9 +23,20 @@ const WeekdayMenuBlock = ({
 }) => (
   <div className="weekday-settings-block">
     <div className="weekday-settings-header">
-      <div>
+      <div className="weekday-header-left">
         <div className="weekday-label">{label}</div>
-        <p className="muted small">よく使うメニューを登録すると追加がスムーズです。</p>
+        <div className="weekday-meta-row">
+          <span className="menu-count-chip">{menus.length}件のメニュー</span>
+          <p className="muted small">よく使うメニューを登録すると追加がスムーズです。</p>
+        </div>
+      </div>
+      <div className="weekday-header-actions">
+        <button type="button" className="ds-button ghost" onClick={() => onToggleExpand(weekday)}>
+          {expanded ? "折りたたむ" : "一覧を開く"}
+        </button>
+        <button type="button" className="ds-button secondary" onClick={() => onAddMenu(weekday)}>
+          メニューを追加
+        </button>
       </div>
     </div>
 
@@ -84,66 +97,70 @@ const WeekdayMenuBlock = ({
       </div>
     </div>
 
-    {menus.length === 0 && <div className="empty-menu-state">まだメニューがありません</div>}
+    {expanded && (
+      <div className="weekday-menu-list">
+        {menus.length === 0 && <div className="empty-menu-state">まだメニューがありません</div>}
 
-    {menus.map((menu, index) => (
-      <div key={`${label}-${index}`} className="menu-entry">
-        <div className="menu-row">
-          <label className="menu-label">メニュー名</label>
-          <input
-            type="text"
-            value={menu.name}
-            onChange={(event) => onMenuChange(weekday, index, "name", event.target.value)}
-            placeholder="例: プッシュアップ"
-          />
-        </div>
+        {menus.map((menu, index) => (
+          <div key={`${label}-${index}`} className="menu-entry">
+            <div className="menu-row">
+              <label className="menu-label">メニュー名</label>
+              <input
+                type="text"
+                value={menu.name}
+                onChange={(event) => onMenuChange(weekday, index, "name", event.target.value)}
+                placeholder="例: プッシュアップ"
+              />
+            </div>
 
-        <div className="menu-row menu-row-grid">
-          <div className="menu-field">
-            <label className="menu-label">タイプ</label>
-            <select
-              value={menu.type}
-              onChange={(event) => onMenuChange(weekday, index, "type", event.target.value)}
-            >
-              <option value="reps">回数</option>
-              <option value="seconds">秒</option>
-            </select>
+            <div className="menu-row menu-row-grid">
+              <div className="menu-field">
+                <label className="menu-label">タイプ</label>
+                <select
+                  value={menu.type}
+                  onChange={(event) => onMenuChange(weekday, index, "type", event.target.value)}
+                >
+                  <option value="reps">回数</option>
+                  <option value="seconds">秒</option>
+                </select>
+              </div>
+
+              <div className="menu-field">
+                <label className="menu-label">{menu.type === "seconds" ? "秒" : "回数"}</label>
+                <input
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={menu.value}
+                  onChange={(event) => onMenuChange(weekday, index, "value", event.target.value)}
+                />
+              </div>
+
+              <div className="menu-field">
+                <label className="menu-label">セット数</label>
+                <input
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={menu.sets}
+                  onChange={(event) => onMenuChange(weekday, index, "sets", event.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="menu-actions">
+              <button
+                type="button"
+                className="ds-button ghost danger-text"
+                onClick={() => onRemoveMenu(weekday, index)}
+              >
+                削除
+              </button>
+            </div>
           </div>
-
-          <div className="menu-field">
-            <label className="menu-label">{menu.type === "seconds" ? "秒" : "回数"}</label>
-            <input
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={menu.value}
-              onChange={(event) => onMenuChange(weekday, index, "value", event.target.value)}
-            />
-          </div>
-
-          <div className="menu-field">
-            <label className="menu-label">セット数</label>
-            <input
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={menu.sets}
-              onChange={(event) => onMenuChange(weekday, index, "sets", event.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="menu-actions">
-          <button
-            type="button"
-            className="ds-button ghost danger-text"
-            onClick={() => onRemoveMenu(weekday, index)}
-          >
-            削除
-          </button>
-        </div>
+        ))}
       </div>
-    ))}
+    )}
   </div>
 );
 
@@ -154,6 +171,9 @@ export default function WorkoutSettings() {
     weekdayLabels.reduce((acc, _, index) => ({ ...acc, [index]: createEmptyMenu() }), {}),
   );
   const [addErrors, setAddErrors] = useState({});
+  const [expandedWeekdays, setExpandedWeekdays] = useState(() =>
+    weekdayLabels.reduce((acc, _, index) => ({ ...acc, [index]: false }), {}),
+  );
 
   const { data: fitbitData, loading: fitbitLoading, error: fitbitError, refresh } = useFitbitToday();
 
@@ -180,6 +200,7 @@ export default function WorkoutSettings() {
     }));
     setNewMenuDrafts((prev) => ({ ...prev, [weekday]: createEmptyMenu() }));
     setAddErrors((prev) => ({ ...prev, [weekday]: "" }));
+    setExpandedWeekdays((prev) => ({ ...prev, [weekday]: true }));
   };
 
   const handleDraftChange = (weekday, field, value) => {
@@ -188,6 +209,10 @@ export default function WorkoutSettings() {
       [weekday]: { ...(prev?.[weekday] ?? createEmptyMenu()), [field]: value },
     }));
     setAddErrors((prev) => ({ ...prev, [weekday]: "" }));
+  };
+
+  const handleToggleExpand = (weekday) => {
+    setExpandedWeekdays((prev) => ({ ...prev, [weekday]: !prev?.[weekday] }));
   };
 
   const handleMenuChange = (weekday, menuIndex, field, value) => {
@@ -257,6 +282,8 @@ export default function WorkoutSettings() {
                       menus={menus}
                       draft={newMenuDrafts?.[weekday]}
                       addError={addErrors?.[weekday]}
+                      expanded={expandedWeekdays?.[weekday] ?? false}
+                      onToggleExpand={handleToggleExpand}
                       onDraftChange={handleDraftChange}
                       onAddMenu={handleAddMenu}
                       onMenuChange={handleMenuChange}
