@@ -152,17 +152,19 @@ export default function IntakeDashboard() {
               <div className="section-header">
                 <p className="muted small">{subtitle}</p>
               </div>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey={xKey} />
-                  <YAxis unit=" kcal" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="intake" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
-                  <Bar dataKey="burned" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="intake-chart-area">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={trendData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey={xKey} />
+                    <YAxis unit=" kcal" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="intake" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="burned" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </Card>
           </div>
         </section>
