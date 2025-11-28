@@ -57,11 +57,11 @@ export default function AddMeal() {
     return true;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!validateForm()) return;
 
-    addMealEntry({
+    await addMealEntry({
       mealType,
       date,
       memo,

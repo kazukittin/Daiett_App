@@ -1,24 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { getTodayISO, getWeekdayIndexFromISO } from "../utils/date.js";
-import {
-  DAILY_FIXED_WORKOUTS_UPDATED_EVENT,
-  loadDailyFixedWorkouts,
-} from "../services/dailyFixedWorkouts.js";
+import { getWorkoutSettings } from "../api/workouts";
 
 export function useDailyFixedWorkoutPlan(dateISO = getTodayISO()) {
-  const [plans, setPlans] = useState(() => loadDailyFixedWorkouts());
+  const [plans, setPlans] = useState(() => ({}));
 
   useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const handleUpdate = () => setPlans(loadDailyFixedWorkouts());
-
-    window.addEventListener("storage", handleUpdate);
-    window.addEventListener(DAILY_FIXED_WORKOUTS_UPDATED_EVENT, handleUpdate);
+    let cancelled = false;
+    getWorkoutSettings()
+      .then((data) => {
+        if (!cancelled) setPlans(data);
+      })
+      .catch((error) => console.error("Failed to load workout settings", error));
 
     return () => {
-      window.removeEventListener("storage", handleUpdate);
-      window.removeEventListener(DAILY_FIXED_WORKOUTS_UPDATED_EVENT, handleUpdate);
+      cancelled = true;
     };
   }, []);
 

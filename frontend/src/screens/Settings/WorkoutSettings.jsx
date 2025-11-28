@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import { weekdayLabels } from "../../utils/date.js";
-import { loadDailyFixedWorkouts, saveDailyFixedWorkouts } from "../../services/dailyFixedWorkouts.js";
 import { startFitbitAuth } from "../../services/fitbitApi.js";
 import { useFitbitToday } from "../../hooks/useFitbitToday.js";
+import { getWorkoutSettings, saveWorkoutSettings as saveWorkoutSettingsApi } from "../../api/workouts.js";
 
 const createEmptyMenu = () => ({ name: "", type: "reps", value: "", sets: "" });
 
@@ -165,7 +165,7 @@ const WeekdayMenuBlock = ({
 );
 
 export default function WorkoutSettings() {
-  const [plans, setPlans] = useState(() => loadDailyFixedWorkouts());
+  const [plans, setPlans] = useState(() => ({}));
   const [saveStatus, setSaveStatus] = useState("");
   const [newMenuDrafts, setNewMenuDrafts] = useState(() =>
     weekdayLabels.reduce((acc, _, index) => ({ ...acc, [index]: createEmptyMenu() }), {}),
@@ -176,6 +176,12 @@ export default function WorkoutSettings() {
   );
 
   const { data: fitbitData, loading: fitbitLoading, error: fitbitError, refresh } = useFitbitToday();
+
+  useEffect(() => {
+    getWorkoutSettings()
+      .then((settings) => setPlans(settings))
+      .catch((error) => console.error("Failed to load workout settings", error));
+  }, []);
 
   const handleAddMenu = (weekday) => {
     const draft = newMenuDrafts?.[weekday] ?? createEmptyMenu();
@@ -234,14 +240,13 @@ export default function WorkoutSettings() {
   };
 
   const handleSave = () => {
-    const normalized = saveDailyFixedWorkouts(plans);
-    if (normalized) {
-      setPlans(normalized);
-      setSaveStatus("保存しました");
-      setTimeout(() => setSaveStatus(""), 2500);
-    } else {
-      setSaveStatus("保存に失敗しました");
-    }
+    saveWorkoutSettingsApi(plans)
+      .then((normalized) => {
+        setPlans(normalized);
+        setSaveStatus("保存しました");
+        setTimeout(() => setSaveStatus(""), 2500);
+      })
+      .catch(() => setSaveStatus("保存に失敗しました"));
   };
 
   const fitbitSummary = useMemo(() => fitbitData?.summary, [fitbitData]);

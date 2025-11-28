@@ -1,51 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-
-const sampleMeals = [
-  { label: "朝食", calories: 320 },
-  { label: "昼食", calories: 540 },
-  { label: "夕食", calories: 340 },
-];
-
-const foodLog = [
-  "ごはん 150g — 252 kcal",
-  "味噌汁 — 80 kcal",
-  "サラダ — 120 kcal",
-];
-
-const weeklyCalories = [
-  { label: "月", intake: 1500, burned: 350 },
-  { label: "火", intake: 1620, burned: 400 },
-  { label: "水", intake: 1380, burned: 320 },
-  { label: "木", intake: 1490, burned: 380 },
-  { label: "金", intake: 1700, burned: 450 },
-  { label: "土", intake: 1820, burned: 500 },
-  { label: "日", intake: 1600, burned: 420 },
-];
-
-const monthlyCalories = [
-  { label: "1週目", intake: 10750, burned: 2500 },
-  { label: "2週目", intake: 11200, burned: 2680 },
-  { label: "3週目", intake: 10420, burned: 2400 },
-  { label: "4週目", intake: 11050, burned: 2550 },
-];
-
-const yearlyCalories = [
-  { label: "1月", intake: 45000, burned: 9800 },
-  { label: "2月", intake: 43000, burned: 9500 },
-  { label: "3月", intake: 47000, burned: 10200 },
-  { label: "4月", intake: 45500, burned: 9900 },
-  { label: "5月", intake: 46800, burned: 10000 },
-  { label: "6月", intake: 46200, burned: 9950 },
-  { label: "7月", intake: 48000, burned: 10300 },
-  { label: "8月", intake: 47500, burned: 10150 },
-  { label: "9月", intake: 46000, burned: 9800 },
-  { label: "10月", intake: 47200, burned: 10050 },
-  { label: "11月", intake: 45800, burned: 9700 },
-  { label: "12月", intake: 48500, burned: 10400 },
-];
+import { getMealSummary } from "../../api/meals.js";
+import { useWeightTrend } from "../../hooks/useWeightTrend.js";
+import { getTodayISO } from "../../utils/date.js";
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
@@ -54,20 +13,30 @@ const PERIOD_OPTIONS = [
 ];
 
 export default function IntakeDashboard() {
-  const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
+  const { trend, period, setPeriod } = useWeightTrend(PERIOD_OPTIONS[0].key);
+  const [todaySummary, setTodaySummary] = useState({ totalCalories: 0, records: [] });
+  const todayISO = getTodayISO();
+  const DAILY_GOAL = 1500;
 
-  const trendData = useMemo(() => {
-    if (period === "1y") return yearlyCalories;
-    if (period === "30d") return monthlyCalories;
-    return weeklyCalories;
-  }, [period]);
+  useEffect(() => {
+    getMealSummary({ date: todayISO })
+      .then((summary) => setTodaySummary(summary))
+      .catch((error) => console.error("Failed to load meal summary", error));
+  }, [todayISO]);
 
-  const xKey = period === "7d" ? "label" : "label";
+  const chartData = useMemo(() => trend?.rows ?? [], [trend]);
+  const todayMeals = todaySummary.records || [];
+  const mealBreakdown = useMemo(() => {
+    return todayMeals.reduce((acc, meal) => {
+      const prev = acc[meal.mealType] || 0;
+      return { ...acc, [meal.mealType]: prev + (Number(meal.totalCalories) || 0) };
+    }, {});
+  }, [todayMeals]);
   const subtitle =
     period === "7d"
       ? "曜日ごとの摂取/消費を比較"
       : period === "30d"
-        ? "週ごとの合計で増減を把握"
+        ? "日別の合計推移"
         : "月ごとの推移で年間バランスを確認";
 
   const renderRangeButtons = () => (
@@ -105,14 +74,17 @@ export default function IntakeDashboard() {
             <Card title="今日の摂取カロリー" className="intake-summary-card">
               <div className="intake-summary">
                 <div className="metric-highlight">
-                  <h2>1,200 kcal</h2>
-                  <small>1,500 kcal の目標まであと 300 kcal</small>
+                  <h2>{todaySummary.totalCalories} kcal</h2>
+                  <small>{DAILY_GOAL} kcal の目標まであと {Math.max(DAILY_GOAL - todaySummary.totalCalories, 0)} kcal</small>
                 </div>
                 <div className="intake-progress">
-                  <div className="intake-progress-bar" style={{ width: "80%" }} />
+                  <div
+                    className="intake-progress-bar"
+                    style={{ width: `${Math.min((todaySummary.totalCalories / DAILY_GOAL) * 100, 100)}%` }}
+                  />
                   <div className="intake-progress-label">
                     <span>進捗</span>
-                    <strong>80%</strong>
+                    <strong>{Math.min(Math.round((todaySummary.totalCalories / DAILY_GOAL) * 100), 100)}%</strong>
                   </div>
                 </div>
               </div>
@@ -122,10 +94,11 @@ export default function IntakeDashboard() {
                   <h3>食事の内訳</h3>
                 </div>
                 <ul className="summary-list">
-                  {sampleMeals.map((meal) => (
-                    <li key={meal.label} className="summary-item">
-                      <span>{meal.label}</span>
-                      <strong>{meal.calories} kcal</strong>
+                  {Object.keys(mealBreakdown).length === 0 && <li className="muted">まだ食事が登録されていません。</li>}
+                  {Object.entries(mealBreakdown).map(([mealType, calories]) => (
+                    <li key={mealType} className="summary-item">
+                      <span>{mealType}</span>
+                      <strong>{calories} kcal</strong>
                     </li>
                   ))}
                 </ul>
@@ -138,11 +111,23 @@ export default function IntakeDashboard() {
                   <h3>今日の記録</h3>
                   <p className="small muted">最近追加した食品の一覧</p>
                 </div>
-                <ul className="upcoming-list">
-                  {foodLog.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+                {todayMeals.length === 0 ? (
+                  <p className="muted">今日の食事はまだ登録されていません。</p>
+                ) : (
+                  <ul className="upcoming-list">
+                    {todayMeals.map((meal) => (
+                      <li key={meal.id}>
+                        <div className="meal-log-row">
+                          <div>
+                            <strong>{meal.mealType}</strong>
+                            <div className="muted small">{meal.memo}</div>
+                          </div>
+                          <div>{meal.totalCalories} kcal</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </Card>
           </div>
@@ -154,14 +139,14 @@ export default function IntakeDashboard() {
               </div>
               <div className="intake-chart-area">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trendData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
+                  <BarChart data={chartData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey={xKey} />
+                    <XAxis dataKey="date" />
                     <YAxis unit=" kcal" />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="intake" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
-                    <Bar dataKey="burned" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="intakeCalories" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="burnedCalories" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

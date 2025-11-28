@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
-import { appendExercise } from "../../services/exerciseStorage.js";
 import { getTodayISO } from "../../utils/date.js";
+import { addWorkoutRecord } from "../../api/workouts.js";
 
 export default function AddExercise() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function AddExercise() {
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!type.trim() || !duration || !calories) {
@@ -23,7 +23,6 @@ export default function AddExercise() {
     }
 
     const newRecord = {
-      id: Date.now(),
       date,
       type: type.trim(),
       duration: Number(duration),
@@ -31,7 +30,7 @@ export default function AddExercise() {
       memo: memo.trim() || undefined,
     };
 
-    appendExercise(newRecord);
+    await addWorkoutRecord(newRecord);
 
     setType("");
     setDuration("");
