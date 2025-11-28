@@ -1,6 +1,9 @@
 import { store, isValidDateString } from "../data/store.js";
 import { getMonthKey, getCurrentMonthKey, getPreviousMonthKey, parseDateOrNull } from "../utils/date.js";
 
+// Centralize weight-related calculations that previously lived in the frontend so
+// components only ask the API for summaries/trends instead of reimplementing logic.
+
 const sortAsc = (records) => [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
 
 const calculateMonthlyAverage = (records = [], monthKey = getCurrentMonthKey()) => {

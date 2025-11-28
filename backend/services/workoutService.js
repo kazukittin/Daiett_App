@@ -1,5 +1,8 @@
 import { store, isValidDateString } from "../data/store.js";
 
+// Workout planning, validation, and summaries live here so React components rely on
+// the API rather than duplicating business rules in the browser.
+
 const sanitizeMenu = (menu) => ({
   name: menu?.name?.trim() || "",
   type: menu?.type === "seconds" ? "seconds" : "reps",

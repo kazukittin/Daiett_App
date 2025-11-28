@@ -13,6 +13,7 @@ const PERIOD_OPTIONS = [
 ];
 
 export default function IntakeDashboard() {
+  // Reuse backend-provided trend data (weights + calories) instead of computing on the client.
   const { trend, period, setPeriod } = useWeightTrend(PERIOD_OPTIONS[0].key);
   const [todaySummary, setTodaySummary] = useState({ totalCalories: 0, records: [] });
   const todayISO = getTodayISO();

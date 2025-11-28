@@ -16,6 +16,7 @@ const DAILY_TARGET_CALORIES = 2000;
 export default function HomeDashboard() {
   const navigate = useNavigate();
 
+  // Weight summaries and trend data come from backend APIs via hooks.
   const { weightRecords, latestRecord, targetWeight } = useWeightRecords();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
   const { trend, period, setPeriod } = useWeightTrend();

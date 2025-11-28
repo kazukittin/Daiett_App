@@ -1,5 +1,8 @@
 import { store, isValidDateString } from "../data/store.js";
 
+// Meal totals and validation are owned by the backend so the frontend only submits
+// user input and renders the returned summaries.
+
 export const getMealRecords = (range = {}) => store.listMealRecords(range);
 
 export const addMealRecord = (payload) => {
