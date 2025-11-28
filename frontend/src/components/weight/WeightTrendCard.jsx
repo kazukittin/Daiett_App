@@ -2,13 +2,15 @@ import React, { useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
-  Line,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
+  Area,
+  BarChart,
+  ReferenceLine,
 } from "recharts";
 import Card from "../ui/Card";
 import { getMonthKey } from "../../utils/date";
@@ -16,7 +18,7 @@ import { getMonthKey } from "../../utils/date";
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間", days: 7 },
   { key: "30d", label: "1か月", days: 30 },
-  { key: "12m", label: "12か月", months: 12 },
+  { key: "1y", label: "1年間", months: 12 },
 ];
 
 /**
@@ -48,7 +50,7 @@ const formatMonthTick = (value) => {
   return `${year}/${month}`;
 };
 
-const formatLabel = (value, period) => (period === "12m" ? formatMonthTick(value) : formatDayTick(value));
+const formatLabel = (value, period) => (period === "1y" ? formatMonthTick(value) : formatDayTick(value));
 
 const dateKeyFromDate = (date) => {
   const y = date.getFullYear();
@@ -106,6 +108,24 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
   const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
   const hasCalorieData = Array.isArray(calorieTrends) && calorieTrends.length > 0;
 
+  const weightStats = useMemo(() => {
+    if (!records.length) return { latest: null, diff: null };
+
+    const sorted = [...records]
+      .map((record) => ({ ...record, weight: Number(record.weight) }))
+      .filter((record) => Number.isFinite(record.weight))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const startWeight = sorted[0]?.weight ?? null;
+    const latestWeight = sorted[sorted.length - 1]?.weight ?? null;
+    const diff =
+      startWeight !== null && latestWeight !== null && Number.isFinite(startWeight) && Number.isFinite(latestWeight)
+        ? +(latestWeight - startWeight).toFixed(1)
+        : null;
+
+    return { latest: latestWeight ?? null, diff };
+  }, [records]);
+
   const latestDate = useMemo(() => {
     const dates = [
       ...records.map((record) => new Date(record.date)),
@@ -148,7 +168,7 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
       )
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    if (period === "12m") {
+    if (period === "1y") {
       const startMonth = new Date(latestDate.getFullYear(), latestDate.getMonth() - 11, 1);
       const monthlySummary = new Map();
 
@@ -224,6 +244,27 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
     return rows;
   }, [latestDate, records, calorieTrends, period, monthKeys, hasCalorieData]);
 
+  const calorieStats = useMemo(() => {
+    if (!hasCalorieData || !chartData.length) return { avgIntake: null, avgBurned: null, diff: null };
+
+    const validRows = chartData.filter(
+      (row) => Number.isFinite(row.intakeCalories) && Number.isFinite(row.burnedCalories),
+    );
+    if (!validRows.length) return { avgIntake: null, avgBurned: null, diff: null };
+
+    const totals = validRows.reduce(
+      (acc, row) => ({
+        intake: acc.intake + row.intakeCalories,
+        burned: acc.burned + row.burnedCalories,
+      }),
+      { intake: 0, burned: 0 },
+    );
+
+    const avgIntake = Math.round(totals.intake / validRows.length);
+    const avgBurned = Math.round(totals.burned / validRows.length);
+    return { avgIntake, avgBurned, diff: avgIntake - avgBurned };
+  }, [chartData, hasCalorieData]);
+
   const renderRangeButtons = () => (
     <div className="trend-range-toggle">
       {PERIOD_OPTIONS.map((option) => (
@@ -244,51 +285,99 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
 
   return (
     <Card title="体重 & カロリートレンド" action={renderRangeButtons()} className="weight-trend-card">
+      <div className="trend-stats">
+        <div className="trend-stat">
+          <p className="trend-stat-label">最新の体重</p>
+          <strong className="trend-stat-value">{weightStats.latest ? `${weightStats.latest} kg` : "-"}</strong>
+          {weightStats.diff !== null && (
+            <span className={`trend-pill ${weightStats.diff <= 0 ? "positive" : "negative"}`}>
+              {weightStats.diff > 0 ? "+" : ""}
+              {weightStats.diff} kg
+            </span>
+          )}
+        </div>
+        <div className="trend-divider" aria-hidden />
+        <div className="trend-stat">
+          <p className="trend-stat-label">平均摂取 / 消費</p>
+          <strong className="trend-stat-value">
+            {calorieStats.avgIntake !== null && calorieStats.avgBurned !== null
+              ? `${calorieStats.avgIntake} / ${calorieStats.avgBurned} kcal`
+              : "-"}
+          </strong>
+          {calorieStats.diff !== null && (
+            <span className={`trend-pill ${calorieStats.diff <= 0 ? "positive" : "negative"}`}>
+              差分 {calorieStats.diff > 0 ? "+" : ""}
+              {calorieStats.diff} kcal
+            </span>
+          )}
+        </div>
+      </div>
+
       {noData ? (
         <div className="trend-placeholder">まだデータがありません。体重やカロリーを記録してみましょう。</div>
       ) : (
-        <ResponsiveContainer width="100%" height={280}>
-          <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-            <XAxis dataKey="date" tickFormatter={tickFormatter} />
-            <YAxis yAxisId="left" unit=" kg" tickCount={6} />
-            <YAxis yAxisId="right" orientation="right" unit=" kcal" tickCount={6} />
-            <Tooltip content={<TrendTooltip period={period} />} />
-            <Legend />
-            {hasCalorieData && (
-              <>
-                <Bar
-                  yAxisId="right"
-                  dataKey="intakeCalories"
-                  name={period === "12m" ? "月間摂取" : "摂取カロリー"}
-                  fill="#3b82f6"
-                  radius={[6, 6, 0, 0]}
-                  barSize={20}
+        <div className="trend-chart-grid">
+          <div className="trend-section">
+            <div className="trend-section-header">
+              <h3 className="trend-subtitle">体重の推移</h3>
+              <p className="muted small">ラインのみで変化を確認</p>
+            </div>
+            <ResponsiveContainer width="100%" height={240}>
+              <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis dataKey="date" tickFormatter={tickFormatter} />
+                <YAxis unit=" kg" tickCount={6} domain={["auto", "auto"]} />
+                <Tooltip content={<TrendTooltip period={period} />} />
+                <Area
+                  type="monotone"
+                  dataKey="weight"
+                  name={period === "1y" ? "平均体重" : "体重"}
+                  stroke="var(--color-primary)"
+                  fill="rgba(59,130,246,0.12)"
+                  strokeWidth={3}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 6 }}
+                  connectNulls
                 />
-                <Bar
-                  yAxisId="right"
-                  dataKey="burnedCalories"
-                  name={period === "12m" ? "月間消費" : "消費カロリー"}
-                  fill="#f6c343"
-                  radius={[6, 6, 0, 0]}
-                  barSize={20}
-                />
-              </>
-            )}
-            <Line
-              yAxisId="left"
-              type="monotone"
-              dataKey="weight"
-              name={period === "12m" ? "平均体重" : "体重"}
-              stroke="var(--color-primary)"
-              strokeWidth={3}
-              dot={{ r: 4 }}
-              activeDot={{ r: 6 }}
-              connectNulls
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          {hasCalorieData && (
+            <div className="trend-section">
+              <div className="trend-section-header">
+                <h3 className="trend-subtitle">摂取・消費カロリー</h3>
+                <p className="muted small">棒グラフで日/週/月ごとのバランス</p>
+              </div>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="date" tickFormatter={tickFormatter} />
+                  <YAxis unit=" kcal" tickCount={6} />
+                  <Tooltip content={<TrendTooltip period={period} />} />
+                  <Legend />
+                  <ReferenceLine y={0} stroke="var(--color-border-strong)" />
+                  <Bar
+                    dataKey="intakeCalories"
+                    name={period === "1y" ? "月間摂取" : "摂取カロリー"}
+                    fill="#3b82f6"
+                    radius={[6, 6, 0, 0]}
+                    barSize={28}
+                  />
+                  <Bar
+                    dataKey="burnedCalories"
+                    name={period === "1y" ? "月間消費" : "消費カロリー"}
+                    fill="#10b981"
+                    radius={[6, 6, 0, 0]}
+                    barSize={28}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
       )}
+
       {!hasCalorieData && !noData && (
         <p className="muted" style={{ margin: 0 }}>
           カロリーデータがありません。追加すると棒グラフが表示されます。
