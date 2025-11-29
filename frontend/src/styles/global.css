@@ -398,6 +398,11 @@ body {
   gap: var(--spacing-md);
 }
 
+.weekday-settings-grid.compact {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-sm);
+}
+
 .weekday-settings-block {
   background: #f8fafc;
   border-radius: var(--radius-lg);
@@ -457,10 +462,18 @@ body {
   gap: var(--spacing-sm);
 }
 
+.menu-add-panel.spacious {
+  padding: var(--spacing-lg);
+}
+
 .menu-add-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--spacing-sm);
+}
+
+.menu-add-grid.wide {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .menu-add-actions {
@@ -478,6 +491,12 @@ body {
   max-height: 420px;
   overflow: auto;
   padding-right: 4px;
+}
+
+.weekday-menu-list.simple {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .input-hint {
@@ -502,6 +521,73 @@ body {
   border-radius: var(--radius-md);
   text-align: center;
   color: var(--color-text-muted);
+}
+
+.workout-menu-add-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.workout-menu-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.weekday-settings-block.compact-list {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.workout-menu-row {
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.workout-menu-row.editing {
+  background: #fff8f0;
+  border-color: #f59e0b;
+}
+
+.workout-menu-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.workout-menu-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.workout-menu-title {
+  font-weight: 700;
+}
+
+.workout-menu-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+  align-items: center;
+}
+
+.workout-menu-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
 .menu-entry {
@@ -1660,6 +1746,19 @@ a {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--spacing-lg);
+}
+
+.dashboard-chart {
+  width: 100%;
+  min-height: 260px;
+  height: 260px;
+  padding: 8px 16px 16px;
+  box-sizing: border-box;
+}
+
+.dashboard-chart .recharts-wrapper,
+.dashboard-chart .recharts-responsive-container {
+  overflow: visible !important;
 }
 
 .trend-section {

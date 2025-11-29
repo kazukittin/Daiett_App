@@ -12,6 +12,28 @@ const PERIOD_OPTIONS = [
   { key: "1y", label: "1年間" },
 ];
 
+const CalorieTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) return null;
+  const intake = payload.find((entry) => entry.dataKey === "intakeCalories")?.value ?? 0;
+  const burned = payload.find((entry) => entry.dataKey === "burnedCalories")?.value ?? 0;
+  const diff = intake - burned;
+
+  return (
+    <div className="chart-tooltip">
+      <p className="chart-tooltip-label">{label}</p>
+      <p>
+        摂取: <strong>{intake}</strong> kcal
+      </p>
+      <p>
+        消費: <strong>{burned}</strong> kcal
+      </p>
+      <p>
+        差分: <strong>{diff}</strong> kcal
+      </p>
+    </div>
+  );
+};
+
 export default function IntakeDashboard() {
   // Reuse backend-provided trend data (weights + calories) instead of computing on the client.
   const { trend, period, setPeriod } = useWeightTrend(PERIOD_OPTIONS[0].key);
@@ -25,7 +47,17 @@ export default function IntakeDashboard() {
       .catch((error) => console.error("Failed to load meal summary", error));
   }, [todayISO]);
 
-  const chartData = useMemo(() => trend?.rows ?? [], [trend]);
+  const chartData = useMemo(() => {
+    const rows = trend?.rows ?? [];
+    // 揃ったキーで摂取/消費を返し、バーが欠けないよう0埋めする。
+    return [...rows]
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map((row) => ({
+        ...row,
+        intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
+        burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
+      }));
+  }, [trend]);
   const todayMeals = todaySummary.records || [];
   const mealBreakdown = useMemo(() => {
     return todayMeals.reduce((acc, meal) => {
@@ -143,8 +175,8 @@ export default function IntakeDashboard() {
                   <BarChart data={chartData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="date" />
-                    <YAxis unit=" kcal" />
-                    <Tooltip />
+                    <YAxis unit=" kcal" allowDecimals={false} />
+                    <Tooltip content={<CalorieTooltip />} />
                     <Legend />
                     <Bar dataKey="intakeCalories" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
                     <Bar dataKey="burnedCalories" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />

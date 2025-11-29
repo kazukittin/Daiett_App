@@ -7,47 +7,37 @@ import { useFitbitToday } from "../../hooks/useFitbitToday.js";
 import { getWorkoutSettings, saveWorkoutSettings as saveWorkoutSettingsApi } from "../../api/workouts.js";
 
 const createEmptyMenu = () => ({ name: "", type: "reps", value: "", sets: "" });
+const menuKey = (weekday, index) => `${weekday}-${index}`;
 
-const WeekdayMenuBlock = ({
-  label,
-  weekday,
-  menus,
-  draft,
-  addError,
-  expanded,
-  onToggleExpand,
-  onDraftChange,
-  onAddMenu,
-  onMenuChange,
-  onRemoveMenu,
-}) => (
-  <div className="weekday-settings-block">
-    <div className="weekday-settings-header">
-      <div className="weekday-header-left">
-        <div className="weekday-label">{label}</div>
-        <div className="weekday-meta-row">
-          <span className="menu-count-chip">{menus.length}件のメニュー</span>
-          <p className="muted small">よく使うメニューを登録すると追加がスムーズです。</p>
-        </div>
-      </div>
-      <div className="weekday-header-actions">
-        <button type="button" className="ds-button ghost" onClick={() => onToggleExpand(weekday)}>
-          {expanded ? "折りたたむ" : "一覧を開く"}
-        </button>
-        <button type="button" className="ds-button secondary" onClick={() => onAddMenu(weekday)}>
-          メニューを追加
-        </button>
+// 新規追加フォームは1枚のカードにまとめ、既存リストとの差を明確化。
+const WorkoutMenuAddForm = ({ draft, weekday, onWeekdayChange, onDraftChange, onAddMenu, addError }) => (
+  <div className="workout-menu-add-card">
+    <div className="section-header">
+      <div>
+        <h3 className="section-title">新しいワークアウトメニューを追加</h3>
+        <p className="muted small">よく使うメニューを登録しておくと、追加がスムーズになります。</p>
       </div>
     </div>
 
-    <div className="menu-add-panel">
-      <div className="menu-add-grid">
+    <div className="menu-add-panel spacious">
+      <div className="menu-add-grid wide">
+        <div className="menu-field">
+          <label className="menu-label">曜日</label>
+          <select value={weekday} onChange={(event) => onWeekdayChange(Number(event.target.value))}>
+            {weekdayLabels.map((label, index) => (
+              <option key={label} value={index}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="menu-field">
           <label className="menu-label">メニュー名</label>
           <input
             type="text"
             value={draft?.name ?? ""}
-            onChange={(event) => onDraftChange(weekday, "name", event.target.value)}
+            onChange={(event) => onDraftChange("name", event.target.value)}
             placeholder="例: ウォーキング / スクワット"
           />
           <p className="input-hint">名前は必須です。重複登録はできません。</p>
@@ -55,10 +45,7 @@ const WeekdayMenuBlock = ({
 
         <div className="menu-field">
           <label className="menu-label">タイプ</label>
-          <select
-            value={draft?.type ?? "reps"}
-            onChange={(event) => onDraftChange(weekday, "type", event.target.value)}
-          >
+          <select value={draft?.type ?? "reps"} onChange={(event) => onDraftChange("type", event.target.value)}>
             <option value="reps">回数</option>
             <option value="seconds">秒</option>
           </select>
@@ -71,7 +58,7 @@ const WeekdayMenuBlock = ({
             min="0"
             inputMode="numeric"
             value={draft?.value ?? ""}
-            onChange={(event) => onDraftChange(weekday, "value", event.target.value)}
+            onChange={(event) => onDraftChange("value", event.target.value)}
             placeholder={draft?.type === "seconds" ? "30" : "10"}
           />
         </div>
@@ -83,7 +70,7 @@ const WeekdayMenuBlock = ({
             min="0"
             inputMode="numeric"
             value={draft?.sets ?? ""}
-            onChange={(event) => onDraftChange(weekday, "sets", event.target.value)}
+            onChange={(event) => onDraftChange("sets", event.target.value)}
             placeholder="3"
           />
         </div>
@@ -91,89 +78,173 @@ const WeekdayMenuBlock = ({
 
       <div className="menu-add-actions">
         {addError && <span className="form-error inline-error">{addError}</span>}
-        <button type="button" className="ds-button primary" onClick={() => onAddMenu(weekday)}>
+        <button type="button" className="ds-button primary" onClick={onAddMenu}>
           メニューを追加
         </button>
       </div>
     </div>
+  </div>
+);
 
-    {expanded && (
-      <div className="weekday-menu-list">
-        {menus.length === 0 && <div className="empty-menu-state">まだメニューがありません</div>}
-
-        {menus.map((menu, index) => (
-          <div key={`${label}-${index}`} className="menu-entry">
-            <div className="menu-row">
-              <label className="menu-label">メニュー名</label>
-              <input
-                type="text"
-                value={menu.name}
-                onChange={(event) => onMenuChange(weekday, index, "name", event.target.value)}
-                placeholder="例: プッシュアップ"
-              />
-            </div>
-
-            <div className="menu-row menu-row-grid">
-              <div className="menu-field">
-                <label className="menu-label">タイプ</label>
-                <select
-                  value={menu.type}
-                  onChange={(event) => onMenuChange(weekday, index, "type", event.target.value)}
-                >
-                  <option value="reps">回数</option>
-                  <option value="seconds">秒</option>
-                </select>
-              </div>
-
-              <div className="menu-field">
-                <label className="menu-label">{menu.type === "seconds" ? "秒" : "回数"}</label>
-                <input
-                  type="number"
-                  min="0"
-                  inputMode="numeric"
-                  value={menu.value}
-                  onChange={(event) => onMenuChange(weekday, index, "value", event.target.value)}
-                />
-              </div>
-
-              <div className="menu-field">
-                <label className="menu-label">セット数</label>
-                <input
-                  type="number"
-                  min="0"
-                  inputMode="numeric"
-                  value={menu.sets}
-                  onChange={(event) => onMenuChange(weekday, index, "sets", event.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="menu-actions">
-              <button
-                type="button"
-                className="ds-button ghost danger-text"
-                onClick={() => onRemoveMenu(weekday, index)}
-              >
-                削除
-              </button>
-            </div>
-          </div>
-        ))}
+const WorkoutMenuRow = ({
+  weekday,
+  index,
+  menu,
+  draft,
+  isEditing,
+  onEdit,
+  onChange,
+  onSave,
+  onCancel,
+  onDelete,
+}) => (
+  <div className={`workout-menu-row ${isEditing ? "editing" : ""}`}>
+    <div className="workout-menu-row-main">
+      <div className="workout-menu-heading">
+        <div className="workout-menu-title">{menu.name || "名称未設定"}</div>
+        <div className="workout-menu-type muted small">{menu.type === "seconds" ? "時間メニュー" : "回数メニュー"}</div>
       </div>
-    )}
+
+      {isEditing ? (
+        <div className="menu-row menu-row-grid">
+          <div className="menu-field">
+            <label className="menu-label">メニュー名</label>
+            <input
+              type="text"
+              value={draft?.name ?? ""}
+              onChange={(event) => onChange(weekday, index, "name", event.target.value)}
+            />
+          </div>
+          <div className="menu-field">
+            <label className="menu-label">タイプ</label>
+            <select
+              value={draft?.type ?? "reps"}
+              onChange={(event) => onChange(weekday, index, "type", event.target.value)}
+            >
+              <option value="reps">回数</option>
+              <option value="seconds">秒</option>
+            </select>
+          </div>
+          <div className="menu-field">
+            <label className="menu-label">{draft?.type === "seconds" ? "秒" : "回数"}</label>
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={draft?.value ?? ""}
+              onChange={(event) => onChange(weekday, index, "value", event.target.value)}
+            />
+          </div>
+          <div className="menu-field">
+            <label className="menu-label">セット数</label>
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={draft?.sets ?? ""}
+              onChange={(event) => onChange(weekday, index, "sets", event.target.value)}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="workout-menu-meta">
+          <div>
+            <span className="muted small">タイプ</span>
+            <strong>{menu.type === "seconds" ? "時間" : "回数"}</strong>
+          </div>
+          <div>
+            <span className="muted small">{menu.type === "seconds" ? "目安の秒数" : "目安の回数"}</span>
+            <strong>{menu.value || 0}</strong>
+          </div>
+          <div>
+            <span className="muted small">セット数</span>
+            <strong>{menu.sets || 0}</strong>
+          </div>
+        </div>
+      )}
+    </div>
+
+    <div className="workout-menu-actions">
+      {isEditing ? (
+        <>
+          <button type="button" className="ds-button secondary" onClick={() => onSave(weekday, index)}>
+            保存
+          </button>
+          <button type="button" className="ds-button ghost" onClick={() => onCancel(weekday, index)}>
+            キャンセル
+          </button>
+        </>
+      ) : (
+        <>
+          <button type="button" className="ds-button ghost" onClick={() => onEdit(weekday, index)}>
+            編集
+          </button>
+          <button type="button" className="ds-button ghost danger-text" onClick={() => onDelete(weekday, index)}>
+            削除
+          </button>
+        </>
+      )}
+    </div>
+  </div>
+);
+
+const WorkoutMenuList = ({
+  label,
+  weekday,
+  menus,
+  editingMenus,
+  editDrafts,
+  onEdit,
+  onDraftChange,
+  onSave,
+  onCancel,
+  onDelete,
+}) => (
+  <div className="weekday-settings-block compact-list">
+    <div className="weekday-settings-header">
+      <div className="weekday-header-left">
+        <div className="weekday-label">{label}</div>
+        <div className="weekday-meta-row">
+          <span className="menu-count-chip">{menus.length}件のメニュー</span>
+          <p className="muted small">登録済みメニューはここから編集できます。</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="weekday-menu-list simple">
+      {menus.length === 0 && <div className="empty-menu-state">まだメニューがありません</div>}
+      {menus.map((menu, index) => {
+        const key = menuKey(weekday, index);
+        const isEditing = !!editingMenus[key];
+        const draft = isEditing ? editDrafts[key] : menu;
+        return (
+          <WorkoutMenuRow
+            key={key}
+            weekday={weekday}
+            index={index}
+            menu={menu}
+            draft={draft}
+            isEditing={isEditing}
+            onEdit={onEdit}
+            onChange={onDraftChange}
+            onSave={onSave}
+            onCancel={onCancel}
+            onDelete={onDelete}
+          />
+        );
+      })}
+    </div>
   </div>
 );
 
 export default function WorkoutSettings() {
   const [plans, setPlans] = useState(() => ({}));
   const [saveStatus, setSaveStatus] = useState("");
-  const [newMenuDrafts, setNewMenuDrafts] = useState(() =>
-    weekdayLabels.reduce((acc, _, index) => ({ ...acc, [index]: createEmptyMenu() }), {}),
-  );
-  const [addErrors, setAddErrors] = useState({});
-  const [expandedWeekdays, setExpandedWeekdays] = useState(() =>
-    weekdayLabels.reduce((acc, _, index) => ({ ...acc, [index]: false }), {}),
-  );
+  const [newMenuDraft, setNewMenuDraft] = useState(createEmptyMenu());
+  const [addError, setAddError] = useState("");
+  const [selectedWeekday, setSelectedWeekday] = useState(0);
+  const [editingMenus, setEditingMenus] = useState({});
+  const [editDrafts, setEditDrafts] = useState({});
 
   const { data: fitbitData, loading: fitbitLoading, error: fitbitError, refresh } = useFitbitToday();
 
@@ -183,51 +254,91 @@ export default function WorkoutSettings() {
       .catch((error) => console.error("Failed to load workout settings", error));
   }, []);
 
-  const handleAddMenu = (weekday) => {
-    const draft = newMenuDrafts?.[weekday] ?? createEmptyMenu();
+  const handleAddMenu = () => {
+    const draft = newMenuDraft ?? createEmptyMenu();
     const trimmedName = (draft.name || "").trim();
-    const prevMenus = plans?.[weekday]?.menus ?? [];
+    const prevMenus = plans?.[selectedWeekday]?.menus ?? [];
 
     if (!trimmedName) {
-      setAddErrors((prev) => ({ ...prev, [weekday]: "メニュー名を入力してください" }));
+      setAddError("メニュー名を入力してください");
       return;
     }
 
     const isDuplicate = prevMenus.some((menu) => (menu.name || "").trim() === trimmedName);
-
     if (isDuplicate) {
-      setAddErrors((prev) => ({ ...prev, [weekday]: "同じ名前がすでに登録されています" }));
+      setAddError("同じ名前がすでに登録されています");
       return;
     }
 
     setPlans((prev) => ({
       ...prev,
-      [weekday]: { menus: [...prevMenus, { ...draft, name: trimmedName }] },
+      [selectedWeekday]: { menus: [...prevMenus, { ...draft, name: trimmedName }] },
     }));
-    setNewMenuDrafts((prev) => ({ ...prev, [weekday]: createEmptyMenu() }));
-    setAddErrors((prev) => ({ ...prev, [weekday]: "" }));
-    setExpandedWeekdays((prev) => ({ ...prev, [weekday]: true }));
+    setNewMenuDraft(createEmptyMenu());
+    setAddError("");
   };
 
-  const handleDraftChange = (weekday, field, value) => {
-    setNewMenuDrafts((prev) => ({
-      ...prev,
-      [weekday]: { ...(prev?.[weekday] ?? createEmptyMenu()), [field]: value },
-    }));
-    setAddErrors((prev) => ({ ...prev, [weekday]: "" }));
+  const handleDraftChange = (field, value) => {
+    setNewMenuDraft((prev) => ({ ...prev, [field]: value }));
+    setAddError("");
   };
 
-  const handleToggleExpand = (weekday) => {
-    setExpandedWeekdays((prev) => ({ ...prev, [weekday]: !prev?.[weekday] }));
+  const handleEditDraftChange = (weekday, index, field, value) => {
+    const key = menuKey(weekday, index);
+    setEditDrafts((prev) => ({ ...prev, [key]: { ...(prev[key] ?? {}), [field]: value } }));
   };
 
-  const handleMenuChange = (weekday, menuIndex, field, value) => {
+  const handleStartEdit = (weekday, index) => {
+    const currentMenu = plans?.[weekday]?.menus?.[index];
+    if (!currentMenu) return;
+    const key = menuKey(weekday, index);
+    setEditingMenus((prev) => ({ ...prev, [key]: true }));
+    setEditDrafts((prev) => ({ ...prev, [key]: { ...currentMenu } }));
+  };
+
+  const handleCancelEdit = (weekday, index) => {
+    const key = menuKey(weekday, index);
+    setEditingMenus((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setEditDrafts((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const handleSaveMenu = (weekday, index) => {
+    const key = menuKey(weekday, index);
+    const draft = editDrafts[key];
+    if (!draft) return;
+    const trimmedName = (draft.name || "").trim();
+    if (!trimmedName) return;
+
     setPlans((prev) => {
       const prevMenus = prev?.[weekday]?.menus ?? [];
-      const updatedMenus = prevMenus.map((menu, index) =>
-        index === menuIndex ? { ...menu, [field]: value } : menu,
+      if (!prevMenus[index]) return prev;
+      const isDuplicate = prevMenus.some(
+        (menu, idx) => idx !== index && (menu.name || "").trim() === trimmedName,
+      );
+      if (isDuplicate) return prev;
+      const updatedMenus = prevMenus.map((menu, idx) =>
+        idx === index ? { ...menu, ...draft, name: trimmedName } : menu,
       );
       return { ...prev, [weekday]: { menus: updatedMenus } };
+    });
+
+    setEditingMenus((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setEditDrafts((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
     });
   };
 
@@ -237,6 +348,7 @@ export default function WorkoutSettings() {
       const nextMenus = prevMenus.filter((_, index) => index !== menuIndex);
       return { ...prev, [weekday]: { menus: nextMenus } };
     });
+    handleCancelEdit(weekday, menuIndex);
   };
 
   const handleSave = () => {
@@ -276,26 +388,42 @@ export default function WorkoutSettings() {
                 曜日ごとに固定のワークアウトメニューを登録しておくと、毎日のプランをすぐに確認できます。
               </p>
 
-              <div className="weekday-settings-grid">
-                {weekdayLabels.map((label, weekday) => {
-                  const menus = plans?.[weekday]?.menus ?? [];
-                  return (
-                    <WeekdayMenuBlock
-                      key={label}
-                      label={label}
-                      weekday={weekday}
-                      menus={menus}
-                      draft={newMenuDrafts?.[weekday]}
-                      addError={addErrors?.[weekday]}
-                      expanded={expandedWeekdays?.[weekday] ?? false}
-                      onToggleExpand={handleToggleExpand}
-                      onDraftChange={handleDraftChange}
-                      onAddMenu={handleAddMenu}
-                      onMenuChange={handleMenuChange}
-                      onRemoveMenu={handleRemoveMenu}
-                    />
-                  );
-                })}
+              <WorkoutMenuAddForm
+                draft={newMenuDraft}
+                weekday={selectedWeekday}
+                addError={addError}
+                onDraftChange={handleDraftChange}
+                onWeekdayChange={setSelectedWeekday}
+                onAddMenu={handleAddMenu}
+              />
+
+              <div className="workout-menu-list-section">
+                <div className="section-header">
+                  <div>
+                    <h3 className="section-title">登録済みメニュー</h3>
+                    <p className="muted small">保存済みメニューは「編集」から内容を更新できます。</p>
+                  </div>
+                </div>
+                <div className="weekday-settings-grid compact">
+                  {weekdayLabels.map((label, weekday) => {
+                    const menus = plans?.[weekday]?.menus ?? [];
+                    return (
+                      <WorkoutMenuList
+                        key={label}
+                        label={label}
+                        weekday={weekday}
+                        menus={menus}
+                        editingMenus={editingMenus}
+                        editDrafts={editDrafts}
+                        onEdit={handleStartEdit}
+                        onDraftChange={handleEditDraftChange}
+                        onSave={handleSaveMenu}
+                        onCancel={handleCancelEdit}
+                        onDelete={handleRemoveMenu}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             </Card>
 

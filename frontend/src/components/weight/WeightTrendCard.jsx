@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -81,8 +81,20 @@ const TrendTooltip = ({ active, payload, label, period }) => {
  * 体重とカロリーをまとめて表示するトレンドチャート。
  */
 const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, onPeriodChange }) => {
-  const chartData = trend?.rows ?? [];
-  const hasCalorieData = chartData.some((row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories));
+  const rawRows = trend?.rows ?? [];
+  const hasCalorieData = rawRows.some(
+    (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
+  );
+  // Ensure both intake and burned calories exist per row so the stacked bars always align.
+  const chartData = useMemo(() => {
+    return [...rawRows]
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map((row) => ({
+        ...row,
+        intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
+        burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
+      }));
+  }, [rawRows]);
   const weightStats = trend?.weightStats ?? { latest: null, diff: null };
   const calorieStats = trend?.calorieStats ?? { avgIntake: null, avgBurned: null, diff: null };
 
@@ -143,25 +155,28 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
               <h3 className="trend-subtitle">体重の推移</h3>
               <p className="muted small">ラインのみで変化を確認</p>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="date" tickFormatter={tickFormatter} />
-                <YAxis unit=" kg" tickCount={6} domain={["auto", "auto"]} />
-                <Tooltip content={<TrendTooltip period={period} />} />
-                <Area
-                  type="monotone"
-                  dataKey="weight"
-                  name={period === "1y" ? "平均体重" : "体重"}
-                  stroke="var(--color-primary)"
-                  fill="rgba(59,130,246,0.12)"
-                  strokeWidth={3}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 6 }}
-                  connectNulls
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+            {/* 固定高さのコンテナで軸やツールチップが途切れないようにする */}
+            <div className="dashboard-chart">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="date" tickFormatter={tickFormatter} />
+                  <YAxis unit=" kg" tickCount={6} domain={["auto", "auto"]} />
+                  <Tooltip content={<TrendTooltip period={period} />} />
+                  <Area
+                    type="monotone"
+                    dataKey="weight"
+                    name={period === "1y" ? "平均体重" : "体重"}
+                    stroke="var(--color-primary)"
+                    fill="rgba(59,130,246,0.12)"
+                    strokeWidth={3}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 6 }}
+                    connectNulls
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {hasCalorieData && (
@@ -170,30 +185,33 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
                 <h3 className="trend-subtitle">摂取・消費カロリー</h3>
                 <p className="muted small">棒グラフで日/週/月ごとのバランス</p>
               </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="date" tickFormatter={tickFormatter} />
-                  <YAxis unit=" kcal" tickCount={6} />
-                  <Tooltip content={<TrendTooltip period={period} />} />
-                  <Legend />
-                  <ReferenceLine y={0} stroke="var(--color-border-strong)" />
-                  <Bar
-                    dataKey="intakeCalories"
-                    name={period === "1y" ? "月間摂取" : "摂取カロリー"}
-                    fill="#3b82f6"
-                    radius={[6, 6, 0, 0]}
-                    barSize={28}
-                  />
-                  <Bar
-                    dataKey="burnedCalories"
-                    name={period === "1y" ? "月間消費" : "消費カロリー"}
-                    fill="#10b981"
-                    radius={[6, 6, 0, 0]}
-                    barSize={28}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {/* データキーを揃えた状態でバーを並べ、背の高いツールチップも収まる余白を確保 */}
+              <div className="dashboard-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="date" tickFormatter={tickFormatter} />
+                    <YAxis unit=" kcal" tickCount={6} />
+                    <Tooltip content={<TrendTooltip period={period} />} />
+                    <Legend />
+                    <ReferenceLine y={0} stroke="var(--color-border-strong)" />
+                    <Bar
+                      dataKey="intakeCalories"
+                      name={period === "1y" ? "月間摂取" : "摂取カロリー"}
+                      fill="#3b82f6"
+                      radius={[6, 6, 0, 0]}
+                      barSize={28}
+                    />
+                    <Bar
+                      dataKey="burnedCalories"
+                      name={period === "1y" ? "月間消費" : "消費カロリー"}
+                      fill="#10b981"
+                      radius={[6, 6, 0, 0]}
+                      barSize={28}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
         </div>
