@@ -3,6 +3,9 @@ import cors from "cors";
 import axios from "axios";
 import dotenv from "dotenv";
 import { clearTokens, loadTokens, saveTokens } from "./fitbitTokenStore.js";
+import weightRoutes from "./routes/weightRoutes.js";
+import mealRoutes from "./routes/mealRoutes.js";
+import workoutRoutes from "./routes/workoutRoutes.js";
 
 dotenv.config();
 
@@ -14,6 +17,10 @@ const REDIRECT_URI = process.env.FITBIT_REDIRECT_URI;
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/weight", weightRoutes);
+app.use("/api/meals", mealRoutes);
+app.use("/api/workouts", workoutRoutes);
 
 const AUTHORIZE_URL = "https://www.fitbit.com/oauth2/authorize";
 const TOKEN_URL = "https://api.fitbit.com/oauth2/token";
@@ -191,6 +198,12 @@ app.get("/api/fitbit/today", async (req, res) => {
     console.error("Failed to fetch Fitbit data", error?.response?.data || error.message);
     res.status(500).json({ connected: false, message: "Fitbitデータの取得に失敗しました" });
   }
+});
+
+app.use((err, req, res, next) => {
+  const status = err.status || 500;
+  const message = err.message || "Server error";
+  res.status(status).json({ message });
 });
 
 app.listen(PORT, () => {

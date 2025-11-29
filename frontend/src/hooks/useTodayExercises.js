@@ -1,31 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getTodayISO } from "../utils/date.js";
-import { EXERCISES_UPDATED_EVENT, loadExercises } from "../services/exerciseStorage.js";
+import { addWorkoutRecord, getWorkoutSummary } from "../api/workouts";
 
 export function useTodayExercises() {
   const todayKey = getTodayISO();
-  const [records, setRecords] = useState(() => loadExercises());
+  const [summary, setSummary] = useState({ records: [], totalCalories: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const response = await getWorkoutSummary({ date: todayKey });
+      setSummary(response);
+      setError(null);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const handleUpdate = () => setRecords(loadExercises());
-
-    window.addEventListener("storage", handleUpdate);
-    window.addEventListener(EXERCISES_UPDATED_EVENT, handleUpdate);
-
-    return () => {
-      window.removeEventListener("storage", handleUpdate);
-      window.removeEventListener(EXERCISES_UPDATED_EVENT, handleUpdate);
-    };
+    refresh();
   }, []);
 
-  const todayExercises = useMemo(() => records.filter((record) => record.date === todayKey), [records, todayKey]);
+  const addExercise = async (payload) => {
+    await addWorkoutRecord(payload);
+    await refresh();
+  };
 
-  const totalCalories = useMemo(
-    () => todayExercises.reduce((total, exercise) => total + (Number(exercise.calories) || 0), 0),
-    [todayExercises],
-  );
-
-  return { todayExercises, totalCalories };
+  return { todayExercises: summary.records, totalCalories: summary.totalCalories, loading, error, refresh, addExercise };
 }

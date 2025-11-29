@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -13,28 +13,16 @@ import {
   ReferenceLine,
 } from "recharts";
 import Card from "../ui/Card";
-import { getMonthKey } from "../../utils/date";
+import { MOCK_CALORIE_TRENDS, MOCK_WEIGHT_RECORDS } from "../../mock/mockCalorieTrends.js";
+
+// ダッシュボードの見切れチェック用にモックデータを使う切り替えを用意。
+const USE_MOCK_DATA = true;
 
 const PERIOD_OPTIONS = [
-  { key: "7d", label: "1週間", days: 7 },
-  { key: "30d", label: "1か月", days: 30 },
-  { key: "1y", label: "1年間", months: 12 },
+  { key: "7d", label: "1週間" },
+  { key: "30d", label: "1か月" },
+  { key: "1y", label: "1年間" },
 ];
-
-/**
- * @typedef {Object} WeightRecord
- * @property {string} date - ISO date string (YYYY-MM-DD)
- * @property {number} weight
- *
- * @typedef {Object} CalorieTrend
- * @property {string} date - ISO date string (YYYY-MM-DD)
- * @property {number} intakeCalories
- * @property {number} burnedCalories
- *
- * @typedef {Object} WeightTrendCardProps
- * @property {WeightRecord[]} records
- * @property {CalorieTrend[]} [calorieTrends]
- */
 
 const formatDayTick = (value) => {
   const date = new Date(value);
@@ -51,13 +39,6 @@ const formatMonthTick = (value) => {
 };
 
 const formatLabel = (value, period) => (period === "1y" ? formatMonthTick(value) : formatDayTick(value));
-
-const dateKeyFromDate = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
 
 /**
  * Custom tooltip showing weight and calorie balance for the hovered date/month.
@@ -102,168 +83,59 @@ const TrendTooltip = ({ active, payload, label, period }) => {
 
 /**
  * 体重とカロリーをまとめて表示するトレンドチャート。
- * @param {WeightTrendCardProps} props
  */
-const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
-  const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
-  const hasCalorieData = Array.isArray(calorieTrends) && calorieTrends.length > 0;
+const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, onPeriodChange }) => {
+  const mockRows = useMemo(() => {
+    // 体重・摂取・消費を日付でマージしたモックデータ。
+    const byDate = new Map();
+    MOCK_CALORIE_TRENDS.forEach((row) => {
+      byDate.set(row.date, { ...row });
+    });
+    MOCK_WEIGHT_RECORDS.forEach((row) => {
+      const existing = byDate.get(row.date) ?? {};
+      byDate.set(row.date, { ...existing, date: row.date, weight: row.weight });
+    });
+    return Array.from(byDate.values());
+  }, []);
+
+  const mergedRows = useMemo(() => {
+    if (USE_MOCK_DATA) return mockRows;
+    return trend?.rows ?? records ?? [];
+  }, [mockRows, records, trend]);
+
+  const hasCalorieData = mergedRows.some(
+    (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
+  );
+  // Ensure both intake and burned calories exist per row so the stacked bars always align.
+  const chartData = useMemo(() => {
+    return [...mergedRows]
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map((row) => ({
+        ...row,
+        intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
+        burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
+      }));
+  }, [mergedRows]);
 
   const weightStats = useMemo(() => {
-    if (!records.length) return { latest: null, diff: null };
-
-    const sorted = [...records]
-      .map((record) => ({ ...record, weight: Number(record.weight) }))
-      .filter((record) => Number.isFinite(record.weight))
+    if (!chartData.length) return { latest: null, diff: null };
+    const sorted = [...chartData]
+      .filter((row) => Number.isFinite(row.weight))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const startWeight = sorted[0]?.weight ?? null;
-    const latestWeight = sorted[sorted.length - 1]?.weight ?? null;
-    const diff =
-      startWeight !== null && latestWeight !== null && Number.isFinite(startWeight) && Number.isFinite(latestWeight)
-        ? +(latestWeight - startWeight).toFixed(1)
-        : null;
-
-    return { latest: latestWeight ?? null, diff };
-  }, [records]);
-
-  const latestDate = useMemo(() => {
-    const dates = [
-      ...records.map((record) => new Date(record.date)),
-      ...calorieTrends.map((trend) => new Date(trend.date)),
-    ].filter((date) => !Number.isNaN(date.getTime()));
-
-    if (!dates.length) return null;
-    return new Date(Math.max(...dates.map((date) => date.getTime())));
-  }, [records, calorieTrends]);
-
-  const monthKeys = useMemo(() => {
-    if (!latestDate) return [];
-    return Array.from({ length: 12 }).map((_, index) => {
-      const date = new Date(latestDate.getFullYear(), latestDate.getMonth() - (11 - index), 1);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      return `${year}-${month}`;
-    });
-  }, [latestDate]);
-
-  const chartData = useMemo(() => {
-    if (!latestDate) return [];
-
-    const sortedWeights = [...records]
-      .map((record) => ({ ...record, weight: Number(record.weight) }))
-      .filter((record) => Number.isFinite(record.weight) && !Number.isNaN(new Date(record.date)))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const sortedCalories = [...calorieTrends]
-      .map((trend) => ({
-        ...trend,
-        intakeCalories: Number(trend.intakeCalories),
-        burnedCalories: Number(trend.burnedCalories),
-      }))
-      .filter(
-        (trend) =>
-          Number.isFinite(trend.intakeCalories) &&
-          Number.isFinite(trend.burnedCalories) &&
-          !Number.isNaN(new Date(trend.date)),
-      )
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    if (period === "1y") {
-      const startMonth = new Date(latestDate.getFullYear(), latestDate.getMonth() - 11, 1);
-      const monthlySummary = new Map();
-
-      sortedWeights
-        .filter((record) => new Date(record.date) >= startMonth)
-        .forEach((record) => {
-          const key = getMonthKey(record.date);
-          const current = monthlySummary.get(key) ?? { weightTotal: 0, weightCount: 0, intake: 0, burned: 0 };
-          monthlySummary.set(key, {
-            weightTotal: current.weightTotal + record.weight,
-            weightCount: current.weightCount + 1,
-            intake: current.intake,
-            burned: current.burned,
-          });
-        });
-
-      sortedCalories
-        .filter((trend) => new Date(trend.date) >= startMonth)
-        .forEach((trend) => {
-          const key = getMonthKey(trend.date);
-          const current = monthlySummary.get(key) ?? { weightTotal: 0, weightCount: 0, intake: 0, burned: 0 };
-          monthlySummary.set(key, {
-            ...current,
-            intake: current.intake + trend.intakeCalories,
-            burned: current.burned + trend.burnedCalories,
-          });
-        });
-
-      return monthKeys.map((key) => {
-        const summary = monthlySummary.get(key);
-        return {
-          date: key,
-          weight: summary && summary.weightCount ? +(summary.weightTotal / summary.weightCount).toFixed(1) : null,
-          intakeCalories: summary?.intake ?? null, // 月次は合計カロリーを表示
-          burnedCalories: summary?.burned ?? null,
-        };
-      });
-    }
-
-    const days = period === "7d" ? 7 : 30;
-    const startDate = new Date(latestDate);
-    startDate.setDate(startDate.getDate() - (days - 1));
-
-    const weightByDate = new Map();
-    sortedWeights
-      .filter((record) => new Date(record.date) >= startDate)
-      .forEach((record) => {
-        weightByDate.set(record.date, record.weight);
-      });
-
-    const calorieByDate = new Map();
-    sortedCalories
-      .filter((trend) => new Date(trend.date) >= startDate)
-      .forEach((trend) => {
-        calorieByDate.set(trend.date, {
-          intakeCalories: trend.intakeCalories,
-          burnedCalories: trend.burnedCalories,
-        });
-      });
-
-    const rows = [];
-    for (let cursor = new Date(startDate); cursor <= latestDate; cursor.setDate(cursor.getDate() + 1)) {
-      const key = dateKeyFromDate(cursor);
-      const calorie = calorieByDate.get(key);
-      rows.push({
-        date: key,
-        weight: weightByDate.get(key) ?? null,
-        intakeCalories: calorie?.intakeCalories ?? (hasCalorieData ? null : undefined),
-        burnedCalories: calorie?.burnedCalories ?? (hasCalorieData ? null : undefined),
-      });
-    }
-
-    return rows;
-  }, [latestDate, records, calorieTrends, period, monthKeys, hasCalorieData]);
+    if (!sorted.length) return trend?.weightStats ?? { latest: null, diff: null };
+    const first = sorted[0].weight;
+    const last = sorted[sorted.length - 1].weight;
+    return { latest: last, diff: Number((last - first).toFixed(1)) };
+  }, [chartData, trend?.weightStats]);
 
   const calorieStats = useMemo(() => {
-    if (!hasCalorieData || !chartData.length) return { avgIntake: null, avgBurned: null, diff: null };
-
-    const validRows = chartData.filter(
-      (row) => Number.isFinite(row.intakeCalories) && Number.isFinite(row.burnedCalories),
-    );
-    if (!validRows.length) return { avgIntake: null, avgBurned: null, diff: null };
-
-    const totals = validRows.reduce(
-      (acc, row) => ({
-        intake: acc.intake + row.intakeCalories,
-        burned: acc.burned + row.burnedCalories,
-      }),
-      { intake: 0, burned: 0 },
-    );
-
-    const avgIntake = Math.round(totals.intake / validRows.length);
-    const avgBurned = Math.round(totals.burned / validRows.length);
+    const intakeSum = chartData.reduce((sum, row) => sum + (Number(row.intakeCalories) || 0), 0);
+    const burnedSum = chartData.reduce((sum, row) => sum + (Number(row.burnedCalories) || 0), 0);
+    if (!chartData.length) return trend?.calorieStats ?? { avgIntake: null, avgBurned: null, diff: null };
+    const avgIntake = Math.round(intakeSum / chartData.length);
+    const avgBurned = Math.round(burnedSum / chartData.length);
     return { avgIntake, avgBurned, diff: avgIntake - avgBurned };
-  }, [chartData, hasCalorieData]);
+  }, [chartData, trend?.calorieStats]);
 
   const renderRangeButtons = () => (
     <div className="trend-range-toggle">
@@ -271,7 +143,7 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
         <button
           key={option.key}
           type="button"
-          onClick={() => setPeriod(option.key)}
+          onClick={() => onPeriodChange?.(option.key)}
           className={`trend-range-button ${period === option.key ? "active" : ""}`}
         >
           {option.label}
@@ -322,25 +194,34 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
               <h3 className="trend-subtitle">体重の推移</h3>
               <p className="muted small">ラインのみで変化を確認</p>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="date" tickFormatter={tickFormatter} />
-                <YAxis unit=" kg" tickCount={6} domain={["auto", "auto"]} />
-                <Tooltip content={<TrendTooltip period={period} />} />
-                <Area
-                  type="monotone"
-                  dataKey="weight"
-                  name={period === "1y" ? "平均体重" : "体重"}
-                  stroke="var(--color-primary)"
-                  fill="rgba(59,130,246,0.12)"
-                  strokeWidth={3}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 6 }}
-                  connectNulls
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+            {/* 固定高さのコンテナで軸やツールチップが途切れないようにする */}
+            <div className="dashboard-chart">
+              <ResponsiveContainer width="100%" height={260}>
+                <ComposedChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="date" tickFormatter={tickFormatter} />
+                  <YAxis
+                    tickCount={6}
+                    domain={["auto", "auto"]}
+                    width={56}
+                    tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
+                    label={{ value: "kg", angle: -90, position: "insideLeft", offset: 10 }}
+                  />
+                  <Tooltip content={<TrendTooltip period={period} />} />
+                  <Area
+                    type="monotone"
+                    dataKey="weight"
+                    name={period === "1y" ? "平均体重" : "体重"}
+                    stroke="var(--color-primary)"
+                    fill="rgba(59,130,246,0.12)"
+                    strokeWidth={3}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 6 }}
+                    connectNulls
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {hasCalorieData && (
@@ -349,30 +230,38 @@ const WeightTrendCard = ({ records = [], calorieTrends = [] }) => {
                 <h3 className="trend-subtitle">摂取・消費カロリー</h3>
                 <p className="muted small">棒グラフで日/週/月ごとのバランス</p>
               </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="date" tickFormatter={tickFormatter} />
-                  <YAxis unit=" kcal" tickCount={6} />
-                  <Tooltip content={<TrendTooltip period={period} />} />
-                  <Legend />
-                  <ReferenceLine y={0} stroke="var(--color-border-strong)" />
-                  <Bar
-                    dataKey="intakeCalories"
-                    name={period === "1y" ? "月間摂取" : "摂取カロリー"}
-                    fill="#3b82f6"
-                    radius={[6, 6, 0, 0]}
-                    barSize={28}
-                  />
-                  <Bar
-                    dataKey="burnedCalories"
-                    name={period === "1y" ? "月間消費" : "消費カロリー"}
-                    fill="#10b981"
-                    radius={[6, 6, 0, 0]}
-                    barSize={28}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {/* データキーを揃えた状態でバーを並べ、背の高いツールチップも収まる余白を確保 */}
+              <div className="dashboard-chart">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="date" tickFormatter={tickFormatter} />
+                    <YAxis
+                      tickCount={6}
+                      width={56}
+                      tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
+                      label={{ value: "kcal", angle: -90, position: "insideLeft", offset: 10 }}
+                    />
+                    <Tooltip content={<TrendTooltip period={period} />} />
+                    <Legend />
+                    <ReferenceLine y={0} stroke="var(--color-border-strong)" />
+                    <Bar
+                      dataKey="intakeCalories"
+                      name={period === "1y" ? "月間摂取" : "摂取カロリー"}
+                      fill="#3b82f6"
+                      radius={[6, 6, 0, 0]}
+                      barSize={28}
+                    />
+                    <Bar
+                      dataKey="burnedCalories"
+                      name={period === "1y" ? "月間消費" : "消費カロリー"}
+                      fill="#10b981"
+                      radius={[6, 6, 0, 0]}
+                      barSize={28}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
         </div>

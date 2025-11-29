@@ -1,51 +1,65 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { getMealSummary } from "../../api/meals.js";
+import { useWeightTrend } from "../../hooks/useWeightTrend.js";
+import { getTodayISO } from "../../utils/date.js";
+import { MOCK_CALORIE_TRENDS } from "../../mock/mockCalorieTrends.js";
 
-const sampleMeals = [
-  { label: "朝食", calories: 320 },
-  { label: "昼食", calories: 540 },
-  { label: "夕食", calories: 340 },
-];
+// グラフの見切れ・データ欠けを確認するためのモード。後で false に戻す。
+const USE_MOCK_DATA = false;
 
-const foodLog = [
-  "ごはん 150g — 252 kcal",
-  "味噌汁 — 80 kcal",
-  "サラダ — 120 kcal",
-];
+const normalizeCalorieTrends = (rows = []) =>
+  rows
+    .slice()
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((row) => ({
+      date: row.date,
+      intakeCalories: Number.isFinite(row.intakeCalories)
+        ? row.intakeCalories
+        : Number.isFinite(row.intake)
+          ? row.intake
+          : 0,
+      burnedCalories: Number.isFinite(row.burnedCalories)
+        ? row.burnedCalories
+        : Number.isFinite(row.burned)
+          ? row.burned
+          : 0,
+    }));
 
-const weeklyCalories = [
-  { label: "月", intake: 1500, burned: 350 },
-  { label: "火", intake: 1620, burned: 400 },
-  { label: "水", intake: 1380, burned: 320 },
-  { label: "木", intake: 1490, burned: 380 },
-  { label: "金", intake: 1700, burned: 450 },
-  { label: "土", intake: 1820, burned: 500 },
-  { label: "日", intake: 1600, burned: 420 },
-];
+// Merge separate intake/burned arrays by date to guarantee both keys exist for Recharts bars.
+const mergeCalorieTrends = (intakeList = [], burnedList = []) => {
+  const map = new Map();
 
-const monthlyCalories = [
-  { label: "1週目", intake: 10750, burned: 2500 },
-  { label: "2週目", intake: 11200, burned: 2680 },
-  { label: "3週目", intake: 10420, burned: 2400 },
-  { label: "4週目", intake: 11050, burned: 2550 },
-];
+  intakeList.forEach((d) => {
+    map.set(d.date, {
+      date: d.date,
+      intakeCalories: Number.isFinite(d.intakeCalories)
+        ? d.intakeCalories
+        : Number.isFinite(d.intake)
+          ? d.intake
+          : 0,
+      burnedCalories: 0,
+    });
+  });
 
-const yearlyCalories = [
-  { label: "1月", intake: 45000, burned: 9800 },
-  { label: "2月", intake: 43000, burned: 9500 },
-  { label: "3月", intake: 47000, burned: 10200 },
-  { label: "4月", intake: 45500, burned: 9900 },
-  { label: "5月", intake: 46800, burned: 10000 },
-  { label: "6月", intake: 46200, burned: 9950 },
-  { label: "7月", intake: 48000, burned: 10300 },
-  { label: "8月", intake: 47500, burned: 10150 },
-  { label: "9月", intake: 46000, burned: 9800 },
-  { label: "10月", intake: 47200, burned: 10050 },
-  { label: "11月", intake: 45800, burned: 9700 },
-  { label: "12月", intake: 48500, burned: 10400 },
-];
+  burnedList.forEach((d) => {
+    const existing = map.get(d.date) ?? {
+      date: d.date,
+      intakeCalories: 0,
+      burnedCalories: 0,
+    };
+    existing.burnedCalories = Number.isFinite(d.burnedCalories)
+      ? d.burnedCalories
+      : Number.isFinite(d.burned)
+        ? d.burned
+        : 0;
+    map.set(d.date, existing);
+  });
+
+  return normalizeCalorieTrends(Array.from(map.values()));
+};
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
@@ -53,21 +67,85 @@ const PERIOD_OPTIONS = [
   { key: "1y", label: "1年間" },
 ];
 
+const CalorieTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) return null;
+  const intake = payload.find((entry) => entry.dataKey === "intakeCalories")?.value ?? 0;
+  const burned = payload.find((entry) => entry.dataKey === "burnedCalories")?.value ?? 0;
+  const diff = intake - burned;
+
+  return (
+    <div className="chart-tooltip">
+      <p className="chart-tooltip-label">{label}</p>
+      <p>
+        摂取: <strong>{intake}</strong> kcal
+      </p>
+      <p>
+        消費: <strong>{burned}</strong> kcal
+      </p>
+      <p>
+        差分: <strong>{diff}</strong> kcal
+      </p>
+    </div>
+  );
+};
+
 export default function IntakeDashboard() {
-  const [period, setPeriod] = useState(PERIOD_OPTIONS[0].key);
+  // Reuse backend-provided trend data (weights + calories) instead of computing on the client.
+  const { trend, period, setPeriod } = useWeightTrend(PERIOD_OPTIONS[0].key);
+  const [todaySummary, setTodaySummary] = useState({ totalCalories: 0, records: [] });
+  const todayISO = getTodayISO();
+  const DAILY_GOAL = 1500;
 
-  const trendData = useMemo(() => {
-    if (period === "1y") return yearlyCalories;
-    if (period === "30d") return monthlyCalories;
-    return weeklyCalories;
-  }, [period]);
+  useEffect(() => {
+    getMealSummary({ date: todayISO })
+      .then((summary) => setTodaySummary(summary))
+      .catch((error) => console.error("Failed to load meal summary", error));
+  }, [todayISO]);
 
-  const xKey = period === "7d" ? "label" : "label";
+  const chartData = useMemo(() => {
+    // 本来はバックエンドから取得した trend.rows を使うが、
+    // ダミーデータでバーの見栄えを確認できるようにする。
+    if (USE_MOCK_DATA) {
+      return normalizeCalorieTrends(MOCK_CALORIE_TRENDS);
+    }
+
+    // Prefer a combined trend payload; otherwise merge separate intake/burned series to keep both bars visible.
+    const combinedRows = Array.isArray(trend?.rows) ? normalizeCalorieTrends(trend.rows) : [];
+    const hasBothKeys = combinedRows.some((row) => Number.isFinite(row.intakeCalories))
+      && combinedRows.some((row) => Number.isFinite(row.burnedCalories));
+
+    if (hasBothKeys) {
+      return combinedRows;
+    }
+
+    const intakeList = normalizeCalorieTrends(trend?.intakeTrends || trend?.calorieIntake || []);
+    const burnedList = normalizeCalorieTrends(trend?.burnedTrends || trend?.calorieBurned || []);
+
+    return mergeCalorieTrends(intakeList, burnedList);
+  }, [trend]);
+
+  useEffect(() => {
+    console.log("[CalorieBalanceChart] merged data", chartData);
+  }, [chartData]);
+
+  // ダミーデータでも消費カロリーの合計/平均を確認しやすいように計算例を残しておく。
+  const totalBurnedMock = useMemo(
+    () => chartData.reduce((sum, row) => sum + (Number(row.burnedCalories) || 0), 0),
+    [chartData],
+  );
+  const averageBurnedMock = chartData.length ? Math.round(totalBurnedMock / chartData.length) : 0;
+  const todayMeals = todaySummary.records || [];
+  const mealBreakdown = useMemo(() => {
+    return todayMeals.reduce((acc, meal) => {
+      const prev = acc[meal.mealType] || 0;
+      return { ...acc, [meal.mealType]: prev + (Number(meal.totalCalories) || 0) };
+    }, {});
+  }, [todayMeals]);
   const subtitle =
     period === "7d"
       ? "曜日ごとの摂取/消費を比較"
       : period === "30d"
-        ? "週ごとの合計で増減を把握"
+        ? "日別の合計推移"
         : "月ごとの推移で年間バランスを確認";
 
   const renderRangeButtons = () => (
@@ -105,14 +183,17 @@ export default function IntakeDashboard() {
             <Card title="今日の摂取カロリー" className="intake-summary-card">
               <div className="intake-summary">
                 <div className="metric-highlight">
-                  <h2>1,200 kcal</h2>
-                  <small>1,500 kcal の目標まであと 300 kcal</small>
+                  <h2>{todaySummary.totalCalories} kcal</h2>
+                  <small>{DAILY_GOAL} kcal の目標まであと {Math.max(DAILY_GOAL - todaySummary.totalCalories, 0)} kcal</small>
                 </div>
                 <div className="intake-progress">
-                  <div className="intake-progress-bar" style={{ width: "80%" }} />
+                  <div
+                    className="intake-progress-bar"
+                    style={{ width: `${Math.min((todaySummary.totalCalories / DAILY_GOAL) * 100, 100)}%` }}
+                  />
                   <div className="intake-progress-label">
                     <span>進捗</span>
-                    <strong>80%</strong>
+                    <strong>{Math.min(Math.round((todaySummary.totalCalories / DAILY_GOAL) * 100), 100)}%</strong>
                   </div>
                 </div>
               </div>
@@ -122,10 +203,11 @@ export default function IntakeDashboard() {
                   <h3>食事の内訳</h3>
                 </div>
                 <ul className="summary-list">
-                  {sampleMeals.map((meal) => (
-                    <li key={meal.label} className="summary-item">
-                      <span>{meal.label}</span>
-                      <strong>{meal.calories} kcal</strong>
+                  {Object.keys(mealBreakdown).length === 0 && <li className="muted">まだ食事が登録されていません。</li>}
+                  {Object.entries(mealBreakdown).map(([mealType, calories]) => (
+                    <li key={mealType} className="summary-item">
+                      <span>{mealType}</span>
+                      <strong>{calories} kcal</strong>
                     </li>
                   ))}
                 </ul>
@@ -138,11 +220,23 @@ export default function IntakeDashboard() {
                   <h3>今日の記録</h3>
                   <p className="small muted">最近追加した食品の一覧</p>
                 </div>
-                <ul className="upcoming-list">
-                  {foodLog.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+                {todayMeals.length === 0 ? (
+                  <p className="muted">今日の食事はまだ登録されていません。</p>
+                ) : (
+                  <ul className="upcoming-list">
+                    {todayMeals.map((meal) => (
+                      <li key={meal.id}>
+                        <div className="meal-log-row">
+                          <div>
+                            <strong>{meal.mealType}</strong>
+                            <div className="muted small">{meal.memo}</div>
+                          </div>
+                          <div>{meal.totalCalories} kcal</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </Card>
           </div>
@@ -154,17 +248,27 @@ export default function IntakeDashboard() {
               </div>
               <div className="intake-chart-area">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trendData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
+                  <BarChart data={chartData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey={xKey} />
-                    <YAxis unit=" kcal" />
-                    <Tooltip />
+                    <XAxis dataKey="date" />
+                    <YAxis
+                      allowDecimals={false}
+                      width={56}
+                      tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
+                      label={{ value: "kcal", angle: -90, position: "insideLeft", offset: 8 }}
+                    />
+                    <Tooltip content={<CalorieTooltip />} />
                     <Legend />
-                    <Bar dataKey="intake" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
-                    <Bar dataKey="burned" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="intakeCalories" name="摂取カロリー" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="burnedCalories" name="消費カロリー" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              {USE_MOCK_DATA && (
+                <p className="muted small" style={{ marginBottom: 0 }}>
+                  モックデータ: 消費合計 {totalBurnedMock} kcal / 平均 {averageBurnedMock} kcal
+                </p>
+              )}
             </Card>
           </div>
         </section>

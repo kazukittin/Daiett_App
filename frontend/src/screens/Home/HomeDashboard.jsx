@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import WeightTrendCard from "../../components/weight/WeightTrendCard.jsx";
@@ -6,8 +6,9 @@ import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import TodayMealHighlight from "../../components/meals/TodayMealHighlight.jsx";
 import TodaySummaryCard from "../../components/summary/TodaySummaryCard.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
-import { useMealEntries } from "../../hooks/useMealEntries.js";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
+import { useWeightTrend } from "../../hooks/useWeightTrend.js";
+import { getMealSummary } from "../../api/meals.js";
 import { getTodayISO } from "../../utils/date.js";
 
 const DAILY_TARGET_CALORIES = 2000;
@@ -15,23 +16,22 @@ const DAILY_TARGET_CALORIES = 2000;
 export default function HomeDashboard() {
   const navigate = useNavigate();
 
+  // Weight summaries and trend data come from backend APIs via hooks.
   const { weightRecords, latestRecord, targetWeight } = useWeightRecords();
-  const { mealEntries } = useMealEntries();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
+  const { trend, period, setPeriod } = useWeightTrend();
   const todayKey = getTodayISO();
-  const calorieTrends = []; // TODO: wire calorie trend data when available
+  const [mealSummary, setMealSummary] = useState({ records: [], totalCalories: 0 });
 
-  const todayMealEntries = useMemo(
-    () => mealEntries.filter((entry) => entry.date === todayKey),
-    [mealEntries, todayKey],
-  );
+  useEffect(() => {
+    getMealSummary({ date: todayKey })
+      .then((summary) => setMealSummary(summary))
+      .catch((error) => console.error("Failed to load meal summary", error));
+  }, [todayKey]);
 
-  const todayIntakeCalories = useMemo(
-    () => todayMealEntries.reduce((total, entry) => total + (Number(entry.totalCalories) || 0), 0),
-    [todayMealEntries],
-  );
-
-  const remainingCalories = DAILY_TARGET_CALORIES - todayIntakeCalories + todayBurnCalories;
+  const todayMealEntries = mealSummary.records || [];
+  const todayIntakeCalories = mealSummary.totalCalories || 0;
+  const remainingCalories = DAILY_TARGET_CALORIES - todayIntakeCalories + (todayBurnCalories || 0);
 
   const handleAddWeightClick = () => {
     navigate("/weight/new");
@@ -63,7 +63,12 @@ export default function HomeDashboard() {
           </div>
 
           <div className="dashboard-bottom single-column">
-            <WeightTrendCard records={weightRecords} calorieTrends={calorieTrends} />
+            <WeightTrendCard
+              records={weightRecords}
+              trend={trend}
+              period={period}
+              onPeriodChange={setPeriod}
+            />
           </div>
         </section>
       </main>
