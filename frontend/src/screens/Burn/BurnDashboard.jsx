@@ -61,6 +61,15 @@ export default function BurnDashboard() {
   );
 
   const maxValue = Math.max(...chartSeries.values, 1);
+  const yTicks = useMemo(() => {
+    const step = Math.max(10, Math.ceil(maxValue / 4));
+    const ticks = [];
+    for (let value = 0; value <= maxValue; value += step) {
+      ticks.push(value);
+    }
+    if (ticks[ticks.length - 1] !== maxValue) ticks.push(maxValue);
+    return ticks.reverse();
+  }, [maxValue]);
 
   return (
     <div className="app-shell">
@@ -74,11 +83,11 @@ export default function BurnDashboard() {
               <p className="muted">どれくらい動けているかをすぐ確認し、必要なら運動を追加しましょう。</p>
             </div>
             <div className="header-actions">
-              <button type="button" className="ds-button secondary" onClick={() => navigate("/settings/workout")}>
-                設定を見直す
+              <button type="button" className="ds-button ghost" onClick={() => navigate("/exercises/history")}>
+                運動履歴を開く
               </button>
-              <button type="button" className="ds-button primary" onClick={() => navigate("/exercises/add")}>
-                運動を記録
+              <button type="button" className="ds-button secondary" onClick={() => navigate("/settings/workouts")}>
+                設定を見直す
               </button>
             </div>
           </header>
@@ -140,27 +149,43 @@ export default function BurnDashboard() {
                   ))}
                 </div>
               </div>
-              <div
-                className="fake-chart"
-                style={{ gridTemplateColumns: `repeat(${chartSeries.values.length}, minmax(0, 1fr))` }}
-              >
-                {chartSeries.values.map((value, index) => (
-                  <div
-                    key={`${chartSeries.labels[index]}-${index}`}
-                    className="bar"
-                    style={{ height: `${Math.round((value / maxValue) * 100)}%` }}
-                    title={`${chartSeries.labels[index]}: ${value} kcal`}
-                  />
-                ))}
+              <div className="burn-chart-with-axes">
+                <div className="axis-label y-axis">消費カロリー（kcal）</div>
+                <div className="burn-chart-body">
+                  <div className="burn-y-ticks">
+                    {yTicks.map((tick) => (
+                      <div key={tick} className="tick-row">
+                        <span className="tick-label">{tick}</span>
+                        <span className="tick-line" aria-hidden="true" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="burn-bars-area">
+                    <div
+                      className="fake-chart"
+                      style={{ gridTemplateColumns: `repeat(${chartSeries.values.length}, minmax(0, 1fr))` }}
+                    >
+                      {chartSeries.values.map((value, index) => (
+                        <div
+                          key={`${chartSeries.labels[index]}-${index}`}
+                          className="bar"
+                          style={{ height: `${Math.round((value / maxValue) * 100)}%` }}
+                          title={`${chartSeries.labels[index]}: ${value} kcal`}
+                        />
+                      ))}
+                    </div>
+                    <div
+                      className="bar-labels"
+                      style={{ gridTemplateColumns: `repeat(${chartSeries.labels.length}, minmax(0, 1fr))` }}
+                    >
+                      {chartSeries.labels.map((label) => (
+                        <span key={label}>{label}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div
-                className="bar-labels"
-                style={{ gridTemplateColumns: `repeat(${chartSeries.labels.length}, minmax(0, 1fr))` }}
-              >
-                {chartSeries.labels.map((label) => (
-                  <span key={label}>{label}</span>
-                ))}
-              </div>
+              <div className="axis-label x-axis">日にち</div>
             </Card>
 
             <TodayWorkout />

@@ -1,12 +1,51 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { useDailyFixedWorkoutPlan } from "../../hooks/useDailyFixedWorkoutPlan.js";
-import { weekdayLabels } from "../../utils/date.js";
+import { getTodayISO, weekdayLabels } from "../../utils/date.js";
+
+const buildMenuKey = (menu, index) => `${menu?.name || "menu"}-${index}`;
+
+const estimateCalories = (menu) => {
+  const sets = Number(menu.sets) || 1;
+  if (menu.type === "seconds") {
+    const minutes = ((Number(menu.value) || 0) * sets) / 60;
+    return Math.max(20, Math.round(minutes * 8));
+  }
+  const reps = Number(menu.value) || 0;
+  return Math.max(20, Math.round(reps * sets * 0.5));
+};
+
+const estimateDuration = (menu) => {
+  const sets = Number(menu.sets) || 1;
+  if (menu.type === "seconds") {
+    return Math.max(1, Math.round(((Number(menu.value) || 0) * sets) / 60));
+  }
+  const reps = Number(menu.value) || 0;
+  return Math.max(5, Math.round((reps * sets) / 10));
+};
 
 export default function TodayWorkout() {
-  const { todayExercises, totalCalories } = useTodayExercises();
+  const { todayExercises, totalCalories, addExercise } = useTodayExercises();
   const { menus: defaultMenus, weekday } = useDailyFixedWorkoutPlan();
   const hasDefaultPlan = defaultMenus.length > 0;
+  const [completedMenuKeys, setCompletedMenuKeys] = useState(() => new Set());
+
+  const handleCompleteMenu = async (menu, index) => {
+    const key = buildMenuKey(menu, index);
+    if (completedMenuKeys.has(key)) return;
+
+    const payload = {
+      date: getTodayISO(),
+      type: menu.name || "固定メニュー",
+      duration: estimateDuration(menu),
+      calories: estimateCalories(menu),
+      memo: "固定ワークアウトを実施",
+      meta: "fixed",
+    };
+
+    await addExercise(payload);
+    setCompletedMenuKeys((prev) => new Set(prev).add(key));
+  };
 
   return (
     <section className="card today-workout-card">
@@ -30,13 +69,20 @@ export default function TodayWorkout() {
           <ul className="fixed-workout-list">
             {defaultMenus.map((menu, index) => (
               <li key={`${menu.name}-${index}`} className="fixed-workout-item">
-                <div>
-                  <div className="fixed-workout-title">{menu.name || "メニュー名未設定"}</div>
-                  <div className="fixed-workout-meta">
-                    {menu.type === "seconds" ? `${menu.value} 秒` : `${menu.value} 回`} ／
-                    セット数 {menu.sets}
+                <label className="fixed-workout-check">
+                  <input
+                    type="checkbox"
+                    onChange={() => handleCompleteMenu(menu, index)}
+                    disabled={completedMenuKeys.has(buildMenuKey(menu, index))}
+                  />
+                  <div>
+                    <div className="fixed-workout-title">{menu.name || "メニュー名未設定"}</div>
+                    <div className="fixed-workout-meta">
+                      {menu.type === "seconds" ? `${menu.value} 秒` : `${menu.value} 回`} ／
+                      セット数 {menu.sets}
+                    </div>
                   </div>
-                </div>
+                </label>
               </li>
             ))}
           </ul>
