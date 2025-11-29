@@ -61,6 +61,15 @@ export default function BurnDashboard() {
   );
 
   const maxValue = Math.max(...chartSeries.values, 1);
+  const yTicks = useMemo(() => {
+    const step = Math.max(10, Math.ceil(maxValue / 4));
+    const ticks = [];
+    for (let value = 0; value <= maxValue; value += step) {
+      ticks.push(value);
+    }
+    if (ticks[ticks.length - 1] !== maxValue) ticks.push(maxValue);
+    return ticks.reverse();
+  }, [maxValue]);
 
   return (
     <div className="app-shell">
@@ -143,26 +152,36 @@ export default function BurnDashboard() {
               <div className="burn-chart-with-axes">
                 <div className="axis-label y-axis">消費カロリー（kcal）</div>
                 <div className="burn-chart-body">
-                  <div
-                    className="fake-chart"
-                    style={{ gridTemplateColumns: `repeat(${chartSeries.values.length}, minmax(0, 1fr))` }}
-                  >
-                    {chartSeries.values.map((value, index) => (
-                      <div
-                        key={`${chartSeries.labels[index]}-${index}`}
-                        className="bar"
-                        style={{ height: `${Math.round((value / maxValue) * 100)}%` }}
-                        title={`${chartSeries.labels[index]}: ${value} kcal`}
-                      />
+                  <div className="burn-y-ticks">
+                    {yTicks.map((tick) => (
+                      <div key={tick} className="tick-row">
+                        <span className="tick-label">{tick}</span>
+                        <span className="tick-line" aria-hidden="true" />
+                      </div>
                     ))}
                   </div>
-                  <div
-                    className="bar-labels"
-                    style={{ gridTemplateColumns: `repeat(${chartSeries.labels.length}, minmax(0, 1fr))` }}
-                  >
-                    {chartSeries.labels.map((label) => (
-                      <span key={label}>{label}</span>
-                    ))}
+                  <div className="burn-bars-area">
+                    <div
+                      className="fake-chart"
+                      style={{ gridTemplateColumns: `repeat(${chartSeries.values.length}, minmax(0, 1fr))` }}
+                    >
+                      {chartSeries.values.map((value, index) => (
+                        <div
+                          key={`${chartSeries.labels[index]}-${index}`}
+                          className="bar"
+                          style={{ height: `${Math.round((value / maxValue) * 100)}%` }}
+                          title={`${chartSeries.labels[index]}: ${value} kcal`}
+                        />
+                      ))}
+                    </div>
+                    <div
+                      className="bar-labels"
+                      style={{ gridTemplateColumns: `repeat(${chartSeries.labels.length}, minmax(0, 1fr))` }}
+                    >
+                      {chartSeries.labels.map((label) => (
+                        <span key={label}>{label}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
