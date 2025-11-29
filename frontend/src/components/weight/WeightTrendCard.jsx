@@ -13,10 +13,6 @@ import {
   ReferenceLine,
 } from "recharts";
 import Card from "../ui/Card";
-import { MOCK_CALORIE_TRENDS, MOCK_WEIGHT_RECORDS } from "../../mock/mockCalorieTrends.js";
-
-// ダッシュボードの見切れチェック用にモックデータを使う切り替えを用意。
-const USE_MOCK_DATA = true;
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
@@ -85,37 +81,35 @@ const TrendTooltip = ({ active, payload, label, period }) => {
  * 体重とカロリーをまとめて表示するトレンドチャート。
  */
 const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, onPeriodChange }) => {
-  const mockRows = useMemo(() => {
-    // 体重・摂取・消費を日付でマージしたモックデータ。
-    const byDate = new Map();
-    MOCK_CALORIE_TRENDS.forEach((row) => {
-      byDate.set(row.date, { ...row });
-    });
-    MOCK_WEIGHT_RECORDS.forEach((row) => {
-      const existing = byDate.get(row.date) ?? {};
-      byDate.set(row.date, { ...existing, date: row.date, weight: row.weight });
-    });
-    return Array.from(byDate.values());
-  }, []);
-
   const mergedRows = useMemo(() => {
-    if (USE_MOCK_DATA) return mockRows;
     return trend?.rows ?? records ?? [];
-  }, [mockRows, records, trend]);
+  }, [records, trend]);
 
-  const hasCalorieData = mergedRows.some(
+  // 実データ（体重またはカロリー）が存在する行だけをグラフに反映する
+  const filteredRows = useMemo(
+    () =>
+      mergedRows.filter(
+        (row) =>
+          Number.isFinite(row?.weight) ||
+          Number.isFinite(row?.intakeCalories) ||
+          Number.isFinite(row?.burnedCalories),
+      ),
+    [mergedRows],
+  );
+
+  const hasCalorieData = filteredRows.some(
     (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
   );
   // Ensure both intake and burned calories exist per row so the stacked bars always align.
   const chartData = useMemo(() => {
-    return [...mergedRows]
+    return [...filteredRows]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .map((row) => ({
         ...row,
         intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
         burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
       }));
-  }, [mergedRows]);
+  }, [filteredRows]);
 
   const weightStats = useMemo(() => {
     if (!chartData.length) return { latest: null, diff: null };

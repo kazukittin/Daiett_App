@@ -5,10 +5,6 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { getMealSummary } from "../../api/meals.js";
 import { useWeightTrend } from "../../hooks/useWeightTrend.js";
 import { getTodayISO } from "../../utils/date.js";
-import { MOCK_CALORIE_TRENDS } from "../../mock/mockCalorieTrends.js";
-
-// グラフの見切れ・データ欠けを確認するためのモード。後で false に戻す。
-const USE_MOCK_DATA = false;
 
 const normalizeCalorieTrends = (rows = []) =>
   rows
@@ -103,37 +99,30 @@ export default function IntakeDashboard() {
   }, [todayISO]);
 
   const chartData = useMemo(() => {
-    // 本来はバックエンドから取得した trend.rows を使うが、
-    // ダミーデータでバーの見栄えを確認できるようにする。
-    if (USE_MOCK_DATA) {
-      return normalizeCalorieTrends(MOCK_CALORIE_TRENDS);
-    }
-
     // Prefer a combined trend payload; otherwise merge separate intake/burned series to keep both bars visible.
     const combinedRows = Array.isArray(trend?.rows) ? normalizeCalorieTrends(trend.rows) : [];
-    const hasBothKeys = combinedRows.some((row) => Number.isFinite(row.intakeCalories))
-      && combinedRows.some((row) => Number.isFinite(row.burnedCalories));
+    const filteredCombined = combinedRows.filter(
+      (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
+    );
+    const hasBothKeys = filteredCombined.some((row) => Number.isFinite(row.intakeCalories))
+      && filteredCombined.some((row) => Number.isFinite(row.burnedCalories));
 
     if (hasBothKeys) {
-      return combinedRows;
+      return filteredCombined;
     }
 
     const intakeList = normalizeCalorieTrends(trend?.intakeTrends || trend?.calorieIntake || []);
     const burnedList = normalizeCalorieTrends(trend?.burnedTrends || trend?.calorieBurned || []);
 
-    return mergeCalorieTrends(intakeList, burnedList);
+    const merged = mergeCalorieTrends(intakeList, burnedList);
+
+    return merged.filter((row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories));
   }, [trend]);
 
   useEffect(() => {
     console.log("[CalorieBalanceChart] merged data", chartData);
   }, [chartData]);
 
-  // ダミーデータでも消費カロリーの合計/平均を確認しやすいように計算例を残しておく。
-  const totalBurnedMock = useMemo(
-    () => chartData.reduce((sum, row) => sum + (Number(row.burnedCalories) || 0), 0),
-    [chartData],
-  );
-  const averageBurnedMock = chartData.length ? Math.round(totalBurnedMock / chartData.length) : 0;
   const todayMeals = todaySummary.records || [];
   const mealBreakdown = useMemo(() => {
     return todayMeals.reduce((acc, meal) => {
@@ -260,11 +249,6 @@ export default function IntakeDashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              {USE_MOCK_DATA && (
-                <p className="muted small" style={{ marginBottom: 0 }}>
-                  モックデータ: 消費合計 {totalBurnedMock} kcal / 平均 {averageBurnedMock} kcal
-                </p>
-              )}
             </Card>
           </div>
         </section>

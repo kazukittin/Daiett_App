@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { addWeightRecord as addWeightRecordApi, getWeightRecords, getWeightSummary } from "../api/weight";
 
-export const TARGET_WEIGHT = 60;
+export const TARGET_WEIGHT = null;
 
 export const useWeightRecords = () => {
   const [records, setRecords] = useState([]);
