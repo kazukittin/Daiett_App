@@ -10,6 +10,16 @@ import { MOCK_CALORIE_TRENDS } from "../../mock/mockCalorieTrends.js";
 // グラフの見切れ・データ欠けを確認するためのモード。後で false に戻す。
 const USE_MOCK_DATA = true;
 
+const normalizeCalorieTrends = (rows = []) =>
+  rows
+    .slice()
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((row) => ({
+      date: row.date,
+      intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
+      burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
+    }));
+
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
   { key: "30d", label: "1か月" },
@@ -55,14 +65,12 @@ export default function IntakeDashboard() {
     // 本来はバックエンドから取得した trend.rows を使うが、
     // ダミーデータでバーの見栄えを確認できるようにする。
     const baseRows = USE_MOCK_DATA ? MOCK_CALORIE_TRENDS : trend?.rows ?? [];
-    return [...baseRows]
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .map((row) => ({
-        ...row,
-        intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
-        burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
-      }));
+    return normalizeCalorieTrends(baseRows);
   }, [trend]);
+
+  useEffect(() => {
+    console.log("[CalorieBalanceChart] normalized data", chartData);
+  }, [chartData]);
 
   // ダミーデータでも消費カロリーの合計/平均を確認しやすいように計算例を残しておく。
   const totalBurnedMock = useMemo(
@@ -187,11 +195,16 @@ export default function IntakeDashboard() {
                   <BarChart data={chartData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="date" />
-                    <YAxis unit=" kcal" allowDecimals={false} />
+                    <YAxis
+                      allowDecimals={false}
+                      width={56}
+                      tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
+                      label={{ value: "kcal", angle: -90, position: "insideLeft", offset: 8 }}
+                    />
                     <Tooltip content={<CalorieTooltip />} />
                     <Legend />
-                    <Bar dataKey="intakeCalories" name="摂取" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
-                    <Bar dataKey="burnedCalories" name="消費" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="intakeCalories" name="摂取カロリー" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="burnedCalories" name="消費カロリー" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -200,7 +200,13 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
                 <ComposedChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="date" tickFormatter={tickFormatter} />
-                  <YAxis unit=" kg" tickCount={6} domain={["auto", "auto"]} />
+                  <YAxis
+                    tickCount={6}
+                    domain={["auto", "auto"]}
+                    width={56}
+                    tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
+                    label={{ value: "kg", angle: -90, position: "insideLeft", offset: 10 }}
+                  />
                   <Tooltip content={<TrendTooltip period={period} />} />
                   <Area
                     type="monotone"
@@ -230,7 +236,12 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
                   <BarChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="date" tickFormatter={tickFormatter} />
-                    <YAxis unit=" kcal" tickCount={6} />
+                    <YAxis
+                      tickCount={6}
+                      width={56}
+                      tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
+                      label={{ value: "kcal", angle: -90, position: "insideLeft", offset: 10 }}
+                    />
                     <Tooltip content={<TrendTooltip period={period} />} />
                     <Legend />
                     <ReferenceLine y={0} stroke="var(--color-border-strong)" />

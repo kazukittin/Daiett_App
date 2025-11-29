@@ -1761,6 +1761,12 @@ a {
   overflow: visible !important;
 }
 
+/* Prevent kcal/kg tick labels from wrapping awkwardly on narrow dashboards */
+.dashboard-chart .recharts-cartesian-axis-tick tspan,
+.intake-chart-area .recharts-cartesian-axis-tick tspan {
+  white-space: nowrap;
+}
+
 .trend-section {
   display: flex;
   flex-direction: column;
