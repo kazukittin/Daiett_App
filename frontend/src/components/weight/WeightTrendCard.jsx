@@ -13,6 +13,10 @@ import {
   ReferenceLine,
 } from "recharts";
 import Card from "../ui/Card";
+import { MOCK_CALORIE_TRENDS, MOCK_WEIGHT_RECORDS } from "../../mock/mockCalorieTrends.js";
+
+// ダッシュボードの見切れチェック用にモックデータを使う切り替えを用意。
+const USE_MOCK_DATA = true;
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
@@ -81,22 +85,57 @@ const TrendTooltip = ({ active, payload, label, period }) => {
  * 体重とカロリーをまとめて表示するトレンドチャート。
  */
 const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, onPeriodChange }) => {
-  const rawRows = trend?.rows ?? [];
-  const hasCalorieData = rawRows.some(
+  const mockRows = useMemo(() => {
+    // 体重・摂取・消費を日付でマージしたモックデータ。
+    const byDate = new Map();
+    MOCK_CALORIE_TRENDS.forEach((row) => {
+      byDate.set(row.date, { ...row });
+    });
+    MOCK_WEIGHT_RECORDS.forEach((row) => {
+      const existing = byDate.get(row.date) ?? {};
+      byDate.set(row.date, { ...existing, date: row.date, weight: row.weight });
+    });
+    return Array.from(byDate.values());
+  }, []);
+
+  const mergedRows = useMemo(() => {
+    if (USE_MOCK_DATA) return mockRows;
+    return trend?.rows ?? records ?? [];
+  }, [mockRows, records, trend]);
+
+  const hasCalorieData = mergedRows.some(
     (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
   );
   // Ensure both intake and burned calories exist per row so the stacked bars always align.
   const chartData = useMemo(() => {
-    return [...rawRows]
+    return [...mergedRows]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .map((row) => ({
         ...row,
         intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
         burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
       }));
-  }, [rawRows]);
-  const weightStats = trend?.weightStats ?? { latest: null, diff: null };
-  const calorieStats = trend?.calorieStats ?? { avgIntake: null, avgBurned: null, diff: null };
+  }, [mergedRows]);
+
+  const weightStats = useMemo(() => {
+    if (!chartData.length) return { latest: null, diff: null };
+    const sorted = [...chartData]
+      .filter((row) => Number.isFinite(row.weight))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (!sorted.length) return trend?.weightStats ?? { latest: null, diff: null };
+    const first = sorted[0].weight;
+    const last = sorted[sorted.length - 1].weight;
+    return { latest: last, diff: Number((last - first).toFixed(1)) };
+  }, [chartData, trend?.weightStats]);
+
+  const calorieStats = useMemo(() => {
+    const intakeSum = chartData.reduce((sum, row) => sum + (Number(row.intakeCalories) || 0), 0);
+    const burnedSum = chartData.reduce((sum, row) => sum + (Number(row.burnedCalories) || 0), 0);
+    if (!chartData.length) return trend?.calorieStats ?? { avgIntake: null, avgBurned: null, diff: null };
+    const avgIntake = Math.round(intakeSum / chartData.length);
+    const avgBurned = Math.round(burnedSum / chartData.length);
+    return { avgIntake, avgBurned, diff: avgIntake - avgBurned };
+  }, [chartData, trend?.calorieStats]);
 
   const renderRangeButtons = () => (
     <div className="trend-range-toggle">
@@ -157,7 +196,7 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
             </div>
             {/* 固定高さのコンテナで軸やツールチップが途切れないようにする */}
             <div className="dashboard-chart">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={260}>
                 <ComposedChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="date" tickFormatter={tickFormatter} />
@@ -187,7 +226,7 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
               </div>
               {/* データキーを揃えた状態でバーを並べ、背の高いツールチップも収まる余白を確保 */}
               <div className="dashboard-chart">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="date" tickFormatter={tickFormatter} />

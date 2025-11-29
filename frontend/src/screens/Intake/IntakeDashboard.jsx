@@ -5,6 +5,10 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { getMealSummary } from "../../api/meals.js";
 import { useWeightTrend } from "../../hooks/useWeightTrend.js";
 import { getTodayISO } from "../../utils/date.js";
+import { MOCK_CALORIE_TRENDS } from "../../mock/mockCalorieTrends.js";
+
+// グラフの見切れ・データ欠けを確認するためのモード。後で false に戻す。
+const USE_MOCK_DATA = true;
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
@@ -48,9 +52,10 @@ export default function IntakeDashboard() {
   }, [todayISO]);
 
   const chartData = useMemo(() => {
-    const rows = trend?.rows ?? [];
-    // 揃ったキーで摂取/消費を返し、バーが欠けないよう0埋めする。
-    return [...rows]
+    // 本来はバックエンドから取得した trend.rows を使うが、
+    // ダミーデータでバーの見栄えを確認できるようにする。
+    const baseRows = USE_MOCK_DATA ? MOCK_CALORIE_TRENDS : trend?.rows ?? [];
+    return [...baseRows]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .map((row) => ({
         ...row,
@@ -58,6 +63,13 @@ export default function IntakeDashboard() {
         burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
       }));
   }, [trend]);
+
+  // ダミーデータでも消費カロリーの合計/平均を確認しやすいように計算例を残しておく。
+  const totalBurnedMock = useMemo(
+    () => chartData.reduce((sum, row) => sum + (Number(row.burnedCalories) || 0), 0),
+    [chartData],
+  );
+  const averageBurnedMock = chartData.length ? Math.round(totalBurnedMock / chartData.length) : 0;
   const todayMeals = todaySummary.records || [];
   const mealBreakdown = useMemo(() => {
     return todayMeals.reduce((acc, meal) => {
@@ -183,6 +195,11 @@ export default function IntakeDashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              {USE_MOCK_DATA && (
+                <p className="muted small" style={{ marginBottom: 0 }}>
+                  モックデータ: 消費合計 {totalBurnedMock} kcal / 平均 {averageBurnedMock} kcal
+                </p>
+              )}
             </Card>
           </div>
         </section>
