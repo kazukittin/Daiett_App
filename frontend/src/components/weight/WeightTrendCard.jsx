@@ -85,19 +85,31 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
     return trend?.rows ?? records ?? [];
   }, [records, trend]);
 
-  const hasCalorieData = mergedRows.some(
+  // 実データ（体重またはカロリー）が存在する行だけをグラフに反映する
+  const filteredRows = useMemo(
+    () =>
+      mergedRows.filter(
+        (row) =>
+          Number.isFinite(row?.weight) ||
+          Number.isFinite(row?.intakeCalories) ||
+          Number.isFinite(row?.burnedCalories),
+      ),
+    [mergedRows],
+  );
+
+  const hasCalorieData = filteredRows.some(
     (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
   );
   // Ensure both intake and burned calories exist per row so the stacked bars always align.
   const chartData = useMemo(() => {
-    return [...mergedRows]
+    return [...filteredRows]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .map((row) => ({
         ...row,
         intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
         burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
       }));
-  }, [mergedRows]);
+  }, [filteredRows]);
 
   const weightStats = useMemo(() => {
     if (!chartData.length) return { latest: null, diff: null };

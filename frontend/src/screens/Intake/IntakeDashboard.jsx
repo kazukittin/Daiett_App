@@ -101,17 +101,22 @@ export default function IntakeDashboard() {
   const chartData = useMemo(() => {
     // Prefer a combined trend payload; otherwise merge separate intake/burned series to keep both bars visible.
     const combinedRows = Array.isArray(trend?.rows) ? normalizeCalorieTrends(trend.rows) : [];
-    const hasBothKeys = combinedRows.some((row) => Number.isFinite(row.intakeCalories))
-      && combinedRows.some((row) => Number.isFinite(row.burnedCalories));
+    const filteredCombined = combinedRows.filter(
+      (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
+    );
+    const hasBothKeys = filteredCombined.some((row) => Number.isFinite(row.intakeCalories))
+      && filteredCombined.some((row) => Number.isFinite(row.burnedCalories));
 
     if (hasBothKeys) {
-      return combinedRows;
+      return filteredCombined;
     }
 
     const intakeList = normalizeCalorieTrends(trend?.intakeTrends || trend?.calorieIntake || []);
     const burnedList = normalizeCalorieTrends(trend?.burnedTrends || trend?.calorieBurned || []);
 
-    return mergeCalorieTrends(intakeList, burnedList);
+    const merged = mergeCalorieTrends(intakeList, burnedList);
+
+    return merged.filter((row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories));
   }, [trend]);
 
   useEffect(() => {
