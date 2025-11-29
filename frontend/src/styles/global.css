@@ -964,6 +964,8 @@ a {
 
 .burn-chart-card .fake-chart {
   margin-top: var(--spacing-md);
+  min-height: 180px;
+  align-items: end;
 }
 
 .dashboard-middle {
