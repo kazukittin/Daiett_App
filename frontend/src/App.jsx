@@ -10,6 +10,7 @@ import ExerciseHistory from "./screens/Exercises/ExerciseHistory.jsx";
 import AddExercise from "./screens/Exercises/AddExercise.jsx";
 import AddWeight from "./screens/Weight/AddWeight.jsx";
 import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
+import CalorieAdvisor from "./components/CalorieAdvisor.jsx";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
       <Route path="/weight/new" element={<AddWeight />} />
       <Route path="/exercises/new" element={<AddExercise />} />
       <Route path="/settings/workouts" element={<WorkoutSettings />} />
+      <Route path="/calories" element={<CalorieAdvisor />} />
     </Routes>
   );
 }
