@@ -1,5 +1,15 @@
 import React, { useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import CalorieAdvisor from "./components/CalorieAdvisor.jsx";
+import HomeDashboard from "./screens/Home/HomeDashboard.jsx";
+import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
+import BurnDashboard from "./screens/Burn/BurnDashboard.jsx";
+import AddMeal from "./screens/Meals/AddMeal.jsx";
+import MealHistory from "./screens/Meals/MealHistory.jsx";
+import ExerciseHistory from "./screens/Exercises/ExerciseHistory.jsx";
+import AddExercise from "./screens/Exercises/AddExercise.jsx";
+import AddWeight from "./screens/Weight/AddWeight.jsx";
+import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
 
 function Header({ view, onChange }) {
   const baseButtonStyle = {
@@ -78,8 +88,17 @@ function HomeView() {
         boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
       }}
     >
-      <h2 style={{ marginTop: 0 }}>ホーム</h2>
-      <p style={{ marginBottom: 0 }}>ここに既存のホーム画面が来る想定です。</p>
+      <Routes>
+        <Route path="/" element={<HomeDashboard />} />
+        <Route path="/intake" element={<IntakeDashboard />} />
+        <Route path="/burn" element={<BurnDashboard />} />
+        <Route path="/meals/new" element={<AddMeal />} />
+        <Route path="/meals/history" element={<MealHistory />} />
+        <Route path="/exercises/history" element={<ExerciseHistory />} />
+        <Route path="/weight/new" element={<AddWeight />} />
+        <Route path="/exercises/new" element={<AddExercise />} />
+        <Route path="/settings/workouts" element={<WorkoutSettings />} />
+      </Routes>
     </section>
   );
 }
