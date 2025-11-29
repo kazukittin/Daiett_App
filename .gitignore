@@ -1,47 +1,42 @@
-# --- Node / npm ---
+# ───────────────
+# Node Modules
+# ───────────────
 node_modules/
+
+# ───────────────
+# Logs / Temp
+# ───────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+backend/logs/
 
-# --- Build output ---
-dist/
-dist-ssr/
-*.local
-
-# --- Environment files ---
+# ───────────────
+# Environment Files
+# ───────────────
 .env
-.env.local
-.env.*.local
+*.env
+backend/.env
+frontend/.env
 
-# --- Editor / OS files ---
-.vscode/
-.idea/
-*.swp
-*.swo
+# ───────────────
+# Build / Output
+# ───────────────
+frontend/dist/
+backend/dist/
+
+# ───────────────
+# System Files (OS)
+# ───────────────
 .DS_Store
 Thumbs.db
 
-# --- Cache ---
-.cache/
-vite-cache/
-.eslintcache
-stylelintcache/
-*.tsbuildinfo
+# ───────────────
+# IDE / Editor
+# ───────────────
+.vscode/
+.idea/
 
-# --- Logs ---
-logs/
+# optional
 *.log
-*.log.*
-
-# --- Optional: Test outputs ---
-coverage/
-
-# --- If accidentally added ---
-frontend/node_modules/
-frontend/dist/
-
-# --- Node modules ---
-**/node_modules/
-
