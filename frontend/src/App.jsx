@@ -40,11 +40,10 @@ function Header({ view, onChange }) {
     >
       <div
         style={{
-          maxWidth: 960,
-          margin: "0 auto",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          width: "100%",
         }}
       >
         <div>
@@ -80,26 +79,17 @@ function Header({ view, onChange }) {
 
 function HomeView() {
   return (
-    <section
-      style={{
-        background: "#fff",
-        padding: "20px",
-        borderRadius: 10,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-      }}
-    >
-      <Routes>
-        <Route path="/" element={<HomeDashboard />} />
-        <Route path="/intake" element={<IntakeDashboard />} />
-        <Route path="/burn" element={<BurnDashboard />} />
-        <Route path="/meals/new" element={<AddMeal />} />
-        <Route path="/meals/history" element={<MealHistory />} />
-        <Route path="/exercises/history" element={<ExerciseHistory />} />
-        <Route path="/weight/new" element={<AddWeight />} />
-        <Route path="/exercises/new" element={<AddExercise />} />
-        <Route path="/settings/workouts" element={<WorkoutSettings />} />
-      </Routes>
-    </section>
+    <Routes>
+      <Route path="/" element={<HomeDashboard />} />
+      <Route path="/intake" element={<IntakeDashboard />} />
+      <Route path="/burn" element={<BurnDashboard />} />
+      <Route path="/meals/new" element={<AddMeal />} />
+      <Route path="/meals/history" element={<MealHistory />} />
+      <Route path="/exercises/history" element={<ExerciseHistory />} />
+      <Route path="/weight/new" element={<AddWeight />} />
+      <Route path="/exercises/new" element={<AddExercise />} />
+      <Route path="/settings/workouts" element={<WorkoutSettings />} />
+    </Routes>
   );
 }
 
@@ -121,7 +111,7 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: "#f3f4f6" }}>
       <Header view={view} onChange={setView} />
-      <main style={{ maxWidth: 960, margin: "24px auto", padding: "0 16px" }}>
+      <main style={{ padding: "16px 24px" }}>
         {view === "home" ? <HomeView /> : <CalorieView />}
       </main>
     </div>
