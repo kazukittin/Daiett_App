@@ -74,11 +74,8 @@ export default function BurnDashboard() {
               <p className="muted">どれくらい動けているかをすぐ確認し、必要なら運動を追加しましょう。</p>
             </div>
             <div className="header-actions">
-              <button type="button" className="ds-button secondary" onClick={() => navigate("/settings/workout")}>
+              <button type="button" className="ds-button secondary" onClick={() => navigate("/settings/workouts")}>                
                 設定を見直す
-              </button>
-              <button type="button" className="ds-button primary" onClick={() => navigate("/exercises/add")}>
-                運動を記録
               </button>
             </div>
           </header>

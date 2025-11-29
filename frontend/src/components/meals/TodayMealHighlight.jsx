@@ -32,10 +32,9 @@ export default function TodayMealHighlight({ meals, totalCalories }) {
       title="今日の食事ハイライト"
       action={
         <div className="meal-highlight-actions">
-          <Button variant="ghost" onClick={() => navigate("/intake")}>
+          <Button variant="ghost" onClick={() => navigate("/meals/history")}>            
             食事履歴をもっと見る
           </Button>
-          <Button onClick={() => navigate("/meals/new")}>🍙 食事を追加</Button>
         </div>
       }
     >
@@ -50,7 +49,7 @@ export default function TodayMealHighlight({ meals, totalCalories }) {
 
       {latestMeals.length === 0 ? (
         <p className="muted">
-          まだ今日の食事が登録されていません。🍙 ボタンから追加してみましょう。
+          まだ今日の食事が登録されていません。食事履歴から過去の記録を確認できます。
         </p>
       ) : (
         <ul className="meal-highlight-list">

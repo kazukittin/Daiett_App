@@ -173,10 +173,6 @@ export default function IntakeDashboard() {
               <h1 className="page-title">摂取カロリー</h1>
               <p className="muted">今日の食事と摂取量をひと目で確認できます</p>
             </div>
-            <div className="intake-actions">
-              <button type="button" className="btn secondary">食品を検索</button>
-              <button type="button" className="btn primary">食事を追加</button>
-            </div>
           </header>
 
           <div className="intake-grid">
