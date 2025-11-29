@@ -8,7 +8,7 @@ import { getTodayISO } from "../../utils/date.js";
 import { MOCK_CALORIE_TRENDS } from "../../mock/mockCalorieTrends.js";
 
 // グラフの見切れ・データ欠けを確認するためのモード。後で false に戻す。
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 const normalizeCalorieTrends = (rows = []) =>
   rows
@@ -16,9 +16,50 @@ const normalizeCalorieTrends = (rows = []) =>
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .map((row) => ({
       date: row.date,
-      intakeCalories: Number.isFinite(row.intakeCalories) ? row.intakeCalories : 0,
-      burnedCalories: Number.isFinite(row.burnedCalories) ? row.burnedCalories : 0,
+      intakeCalories: Number.isFinite(row.intakeCalories)
+        ? row.intakeCalories
+        : Number.isFinite(row.intake)
+          ? row.intake
+          : 0,
+      burnedCalories: Number.isFinite(row.burnedCalories)
+        ? row.burnedCalories
+        : Number.isFinite(row.burned)
+          ? row.burned
+          : 0,
     }));
+
+// Merge separate intake/burned arrays by date to guarantee both keys exist for Recharts bars.
+const mergeCalorieTrends = (intakeList = [], burnedList = []) => {
+  const map = new Map();
+
+  intakeList.forEach((d) => {
+    map.set(d.date, {
+      date: d.date,
+      intakeCalories: Number.isFinite(d.intakeCalories)
+        ? d.intakeCalories
+        : Number.isFinite(d.intake)
+          ? d.intake
+          : 0,
+      burnedCalories: 0,
+    });
+  });
+
+  burnedList.forEach((d) => {
+    const existing = map.get(d.date) ?? {
+      date: d.date,
+      intakeCalories: 0,
+      burnedCalories: 0,
+    };
+    existing.burnedCalories = Number.isFinite(d.burnedCalories)
+      ? d.burnedCalories
+      : Number.isFinite(d.burned)
+        ? d.burned
+        : 0;
+    map.set(d.date, existing);
+  });
+
+  return normalizeCalorieTrends(Array.from(map.values()));
+};
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
@@ -64,12 +105,27 @@ export default function IntakeDashboard() {
   const chartData = useMemo(() => {
     // 本来はバックエンドから取得した trend.rows を使うが、
     // ダミーデータでバーの見栄えを確認できるようにする。
-    const baseRows = USE_MOCK_DATA ? MOCK_CALORIE_TRENDS : trend?.rows ?? [];
-    return normalizeCalorieTrends(baseRows);
+    if (USE_MOCK_DATA) {
+      return normalizeCalorieTrends(MOCK_CALORIE_TRENDS);
+    }
+
+    // Prefer a combined trend payload; otherwise merge separate intake/burned series to keep both bars visible.
+    const combinedRows = Array.isArray(trend?.rows) ? normalizeCalorieTrends(trend.rows) : [];
+    const hasBothKeys = combinedRows.some((row) => Number.isFinite(row.intakeCalories))
+      && combinedRows.some((row) => Number.isFinite(row.burnedCalories));
+
+    if (hasBothKeys) {
+      return combinedRows;
+    }
+
+    const intakeList = normalizeCalorieTrends(trend?.intakeTrends || trend?.calorieIntake || []);
+    const burnedList = normalizeCalorieTrends(trend?.burnedTrends || trend?.calorieBurned || []);
+
+    return mergeCalorieTrends(intakeList, burnedList);
   }, [trend]);
 
   useEffect(() => {
-    console.log("[CalorieBalanceChart] normalized data", chartData);
+    console.log("[CalorieBalanceChart] merged data", chartData);
   }, [chartData]);
 
   // ダミーデータでも消費カロリーの合計/平均を確認しやすいように計算例を残しておく。
