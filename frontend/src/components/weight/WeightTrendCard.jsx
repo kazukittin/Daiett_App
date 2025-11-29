@@ -13,10 +13,6 @@ import {
   ReferenceLine,
 } from "recharts";
 import Card from "../ui/Card";
-import { MOCK_CALORIE_TRENDS, MOCK_WEIGHT_RECORDS } from "../../mock/mockCalorieTrends.js";
-
-// ダッシュボードの見切れチェック用にモックデータを使う切り替えを用意。
-const USE_MOCK_DATA = true;
 
 const PERIOD_OPTIONS = [
   { key: "7d", label: "1週間" },
@@ -85,23 +81,9 @@ const TrendTooltip = ({ active, payload, label, period }) => {
  * 体重とカロリーをまとめて表示するトレンドチャート。
  */
 const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, onPeriodChange }) => {
-  const mockRows = useMemo(() => {
-    // 体重・摂取・消費を日付でマージしたモックデータ。
-    const byDate = new Map();
-    MOCK_CALORIE_TRENDS.forEach((row) => {
-      byDate.set(row.date, { ...row });
-    });
-    MOCK_WEIGHT_RECORDS.forEach((row) => {
-      const existing = byDate.get(row.date) ?? {};
-      byDate.set(row.date, { ...existing, date: row.date, weight: row.weight });
-    });
-    return Array.from(byDate.values());
-  }, []);
-
   const mergedRows = useMemo(() => {
-    if (USE_MOCK_DATA) return mockRows;
     return trend?.rows ?? records ?? [];
-  }, [mockRows, records, trend]);
+  }, [records, trend]);
 
   const hasCalorieData = mergedRows.some(
     (row) => Number.isFinite(row.intakeCalories) || Number.isFinite(row.burnedCalories),
