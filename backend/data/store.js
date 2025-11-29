@@ -2,29 +2,10 @@ const createEmptyWeekPlan = () =>
   Array.from({ length: 7 }).reduce((acc, _, index) => ({ ...acc, [index]: { menus: [] } }), {});
 
 const data = {
-  targetWeight: 60,
-  weights: [
-    { date: "2024-01-08", weight: 63.2 },
-    { date: "2024-01-09", weight: 63.4 },
-    { date: "2024-01-10", weight: 63.0 },
-    { date: "2024-01-11", weight: 62.9 },
-  ],
-  meals: [
-    {
-      id: 1,
-      mealType: "breakfast",
-      date: "2024-01-11",
-      memo: "野菜多め",
-      foods: [
-        { name: "ごはん", portion: "150g", calories: 252 },
-        { name: "味噌汁", portion: "1杯", calories: 80 },
-      ],
-      totalCalories: 332,
-    },
-  ],
-  exercises: [
-    { id: 1, date: "2024-01-11", type: "ウォーキング", duration: 30, calories: 150 },
-  ],
+  targetWeight: null,
+  weights: [],
+  meals: [],
+  exercises: [],
   workoutSettings: createEmptyWeekPlan(),
 };
 
