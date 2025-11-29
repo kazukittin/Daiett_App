@@ -968,6 +968,39 @@ a {
   align-items: end;
 }
 
+.burn-chart-with-axes {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-md);
+  align-items: stretch;
+  margin-top: var(--spacing-md);
+}
+
+.burn-chart-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.axis-label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.axis-label.y-axis {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.axis-label.x-axis {
+  text-align: center;
+  margin-top: var(--spacing-sm);
+}
+
 .dashboard-middle {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
@@ -1998,6 +2031,78 @@ a {
 }
 
 .meal-history-memo {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.exercise-history-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.exercise-history-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-sm);
+  min-width: 320px;
+}
+
+.exercise-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.exercise-history-row {
+  border: 1px solid var(--color-border-strong);
+  border-radius: 14px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.exercise-history-meta {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-weight: 600;
+}
+
+.exercise-history-date {
+  color: var(--color-text-muted);
+}
+
+.exercise-history-type {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  font-size: 0.9rem;
+}
+
+.exercise-history-calories {
+  color: var(--color-primary);
+}
+
+.exercise-history-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.5;
+}
+
+.exercise-history-duration {
+  font-weight: 600;
+}
+
+.exercise-history-memo {
   color: var(--color-text-muted);
   font-size: 0.95rem;
 }
