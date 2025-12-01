@@ -9,6 +9,7 @@ import workoutRoutes from "./routes/workoutRoutes.js";
 import calorieRoutes from "./routes/calorieRoutes.js";
 import calorieProfileRoutes from "./routes/calorieProfileRoutes.js";
 import foodSetRoutes from "./routes/foodSetRoutes.js";
+import { getWorkoutSummaryForDate } from "./services/workoutService.js";
 
 dotenv.config();
 
@@ -112,10 +113,10 @@ const ensureValidToken = async () => {
   return tokens;
 };
 
-const fetchTodayActivities = async (accessToken) => {
-  const today = new Date();
-  const iso = today.toISOString().split("T")[0];
-  const response = await axios.get(`https://api.fitbit.com/1/user/-/activities/date/${iso}.json`, {
+const getTodayISO = () => new Date().toISOString().split("T")[0];
+
+const fetchTodayActivities = async (accessToken, date = getTodayISO()) => {
+  const response = await axios.get(`https://api.fitbit.com/1/user/-/activities/date/${date}.json`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -204,6 +205,54 @@ app.get("/api/fitbit/today", async (req, res) => {
     console.error("Failed to fetch Fitbit data", error?.response?.data || error.message);
     res.status(500).json({ connected: false, message: "Fitbitデータの取得に失敗しました" });
   }
+});
+
+const stepsToCalories = (steps) => {
+  const kcalPerStep = 0.04;
+  const baseCalories = Number.isFinite(steps) ? steps * kcalPerStep : 0;
+  return Math.round(baseCalories);
+};
+
+app.get("/api/calories/today", async (req, res) => {
+  const today = getTodayISO();
+  const { totalCalories: baseCalories = 0 } = getWorkoutSummaryForDate(today) || {};
+
+  let steps = 0;
+  let fitbitStepsCalories = 0;
+  let fitbitConnected = false;
+  let tokens = null;
+
+  try {
+    tokens = await ensureValidToken();
+    const summary = await fetchTodayActivities(tokens.accessToken, today);
+    const lastSync = new Date().toISOString();
+    saveTokens({ ...tokens, lastSync });
+
+    steps = Number(summary.steps) || 0;
+    fitbitStepsCalories = stepsToCalories(steps);
+    fitbitConnected = true;
+  } catch (error) {
+    const message = error?.message || "Fitbitデータの取得に失敗しました";
+    console.error("/api/calories/today error", error?.response?.data || message);
+    return res.json({
+      baseCalories,
+      fitbitStepsCalories: 0,
+      totalCalories: baseCalories,
+      steps: 0,
+      fitbitConnected,
+      message,
+    });
+  }
+
+  const totalCalories = baseCalories + fitbitStepsCalories;
+
+  res.json({
+    baseCalories,
+    fitbitStepsCalories,
+    totalCalories,
+    steps,
+    fitbitConnected,
+  });
 });
 
 app.use((err, req, res, next) => {
