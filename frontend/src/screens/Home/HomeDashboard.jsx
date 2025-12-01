@@ -11,7 +11,7 @@ import { getTodayISO } from "../../utils/date.js";
 
 const DAILY_TARGET_CALORIES = 2000;
 
-export default function HomeDashboard() {
+export default function HomeDashboard({ onEditProfile }) {
   // Weight summaries and trend data come from backend APIs via hooks.
   const { weightRecords, latestRecord, targetWeight } = useWeightRecords();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
@@ -41,6 +41,7 @@ export default function HomeDashboard() {
           remainingCalories={remainingCalories}
           currentWeight={latestRecord?.weight ?? null}
           targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
+          onEditProfile={onEditProfile}
         />
       </div>
 

@@ -4,6 +4,7 @@ import Sidebar from "./components/layout/Sidebar.jsx";
 import CalorieProfileSetup from "./components/CalorieProfileSetup.jsx";
 import CalorieProfileSummary from "./components/CalorieProfileSummary.jsx";
 import WeightDialog from "./components/WeightDialog.jsx";
+import FitbitConnectCard from "./components/fitbit/FitbitConnectCard.jsx";
 import { fetchCalorieProfile, clearCalorieProfile } from "./api/calorieProfileApi.js";
 import HomeDashboard from "./screens/Home/HomeDashboard.jsx";
 import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
@@ -15,10 +16,10 @@ import AddExercise from "./screens/Exercises/AddExercise.jsx";
 import AddWeight from "./screens/Weight/AddWeight.jsx";
 import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
 
-function HomeView() {
+function HomeView({ onEditProfile }) {
   return (
     <Routes>
-      <Route path="/" element={<HomeDashboard />} />
+      <Route path="/" element={<HomeDashboard onEditProfile={onEditProfile} />} />
       <Route path="/intake" element={<IntakeDashboard />} />
       <Route path="/burn" element={<BurnDashboard />} />
       <Route path="/meals/new" element={<AddMeal />} />
@@ -31,7 +32,7 @@ function HomeView() {
   );
 }
 
-function ProfileView({ profile, profileLoaded, onProfileSaved, onEdit, error, onOpenWeightDialog, infoMessage }) {
+function ProfileView({ profile, profileLoaded, onProfileSaved, onEdit, error, infoMessage }) {
   return (
     <section>
       <h2 style={{ marginTop: 0 }}>プロファイル編集</h2>
@@ -51,25 +52,10 @@ function ProfileView({ profile, profileLoaded, onProfileSaved, onEdit, error, on
       {profileLoaded && profile && (
         <>
           <CalorieProfileSummary profile={profile} onEdit={onEdit} />
-          <div style={{ marginTop: 12 }}>
-            <button
-              type="button"
-              onClick={onOpenWeightDialog}
-              style={{
-                padding: "10px 14px",
-                borderRadius: 6,
-                border: "none",
-                background: "#2563eb",
-                color: "#fff",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              体重を追加
-            </button>
-          </div>
+          <FitbitConnectCard />
         </>
       )}
+      {profileLoaded && !profile && <FitbitConnectCard />}
     </section>
   );
 }
@@ -143,7 +129,7 @@ export default function App() {
         }}
       />
       <main style={{ flex: 1, padding: "16px 24px" }}>
-        {view === "home" && <HomeView />}
+        {view === "home" && <HomeView onEditProfile={() => setView("profile")} />}
         {view === "profile" && (
           <ProfileView
             profile={profile}
@@ -151,7 +137,6 @@ export default function App() {
             onProfileSaved={handleProfileSaved}
             onEdit={handleEditProfile}
             error={profileError}
-            onOpenWeightDialog={handleAddWeightClick}
             infoMessage={calorieNotice}
           />
         )}

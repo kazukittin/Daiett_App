@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const menu = [
   { label: "ホーム", view: "home", path: "/" },
-  { label: "プロファイル編集", view: "profile" },
   { label: "摂取カロリー", path: "/intake" },
   { label: "消費カロリー", path: "/burn" },
   { label: "ワークアウト設定", path: "/settings/workouts" },

@@ -21,6 +21,7 @@ export default function TodaySummaryCard({
   remainingCalories,
   currentWeight,
   targetWeight,
+  onEditProfile,
 }) {
   const balanceIsNegative = remainingCalories < 0;
   const balanceLabel = balanceIsNegative ? "オーバー" : "残り";
@@ -35,9 +36,16 @@ export default function TodaySummaryCard({
           <h2>今日のサマリー</h2>
           <p className="muted">目標 {dailyTargetCalories} kcal</p>
         </div>
-        <span className={`today-summary-pill ${balanceIsNegative ? "negative" : "positive"}`}>
-          {balanceLabel} {Math.abs(remainingCalories)} kcal
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className={`today-summary-pill ${balanceIsNegative ? "negative" : "positive"}`}>
+            {balanceLabel} {Math.abs(remainingCalories)} kcal
+          </span>
+          {onEditProfile && (
+            <button type="button" className="ds-button secondary" onClick={onEditProfile}>
+              プロファイル編集
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="today-summary-grid">
