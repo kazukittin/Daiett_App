@@ -126,7 +126,7 @@ export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded })
     <div style={cardStyle}>
       <h3 style={{ margin: "0 0 12px" }}>カロリープロファイル設定</h3>
       <p style={{ margin: "0 0 12px", color: "#4b5563", lineHeight: 1.6 }}>
-        目標や活動レベルなどの基礎情報を登録しておくと、体重を記録するたびに自動で消費カロリーと目標摂取カロリーを計算します。
+        目標や活動レベルなどの基礎情報を登録しておくと、体重を記録するたびに自動で消費カロリーを計算します。
       </p>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
         <label style={labelStyle}>

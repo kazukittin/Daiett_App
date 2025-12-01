@@ -21,7 +21,6 @@ const defaultData = {
     activityLevel: null,
     goal: null,
     targetWeight: null,
-    targetIntakeCalories: null,
     targetBurnCalories: null,
     unit: "kg",
     theme: "light",

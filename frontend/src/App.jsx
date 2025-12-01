@@ -31,7 +31,7 @@ function ProfileView({
     <section>
       <h2 style={{ marginTop: 0 }}>プロファイル編集</h2>
       <p style={{ color: "#374151", lineHeight: 1.6 }}>
-        プロファイル登録後は、モーダルの体重入力から毎日の推定消費カロリーと目標摂取カロリーを計算できます。
+        プロファイル登録後は、モーダルの体重入力から毎日の推定消費カロリーを計算できます。
       </p>
       {infoMessage && (
         <div style={{ background: "#fef3c7", border: "1px solid #fcd34d", padding: 10, borderRadius: 8, marginTop: 8 }}>

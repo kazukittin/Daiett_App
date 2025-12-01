@@ -3,7 +3,6 @@ import React from "react";
 /**
  * @typedef TodaySummaryCardProps
  * @property {number} todayIntake
- * @property {number} targetIntake
  * @property {number} todayBurn
  * @property {number} targetBurn
  * @property {number} currentWeight
@@ -18,7 +17,6 @@ import React from "react";
  */
 export default function TodaySummaryCard({
   todayIntake,
-  targetIntake,
   todayBurn,
   targetBurn,
   currentWeight,
@@ -70,8 +68,6 @@ export default function TodaySummaryCard({
           <h3 style={titleStyle}>摂取カロリー</h3>
           <div style={labelStyle}>今日の記録：</div>
           <div style={valueStyle}>{formatKcal(todayIntake)}</div>
-          <div style={labelStyle}>目標摂取カロリー：</div>
-          <div style={valueStyle}>{formatKcal(targetIntake)}</div>
         </div>
 
         <div style={cardStyle}>
