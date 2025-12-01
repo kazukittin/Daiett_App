@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar.jsx";
 import CalorieProfileSetup from "./components/CalorieProfileSetup.jsx";
 import CalorieProfileSummary from "./components/CalorieProfileSummary.jsx";
@@ -15,22 +15,6 @@ import ExerciseHistory from "./screens/Exercises/ExerciseHistory.jsx";
 import AddExercise from "./screens/Exercises/AddExercise.jsx";
 import AddWeight from "./screens/Weight/AddWeight.jsx";
 import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
-
-function HomeView({ onEditProfile, profile }) {
-  return (
-    <Routes>
-      <Route path="/" element={<HomeDashboard onEditProfile={onEditProfile} profile={profile} />} />
-      <Route path="/intake" element={<IntakeDashboard />} />
-      <Route path="/burn" element={<BurnDashboard />} />
-      <Route path="/meals/new" element={<AddMeal />} />
-      <Route path="/meals/history" element={<MealHistory />} />
-      <Route path="/exercises/history" element={<ExerciseHistory />} />
-      <Route path="/weight/new" element={<AddWeight />} />
-      <Route path="/exercises/new" element={<AddExercise />} />
-      <Route path="/settings/workouts" element={<WorkoutSettings />} />
-    </Routes>
-  );
-}
 
 function ProfileView({
   profile,
@@ -76,13 +60,22 @@ function ProfileView({
 }
 
 export default function App() {
-  const [view, setView] = useState("home");
+  const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [calorieNotice, setCalorieNotice] = useState("");
+
+  const activeView = useMemo(() => {
+    if (location.pathname.startsWith("/profile")) return "profile";
+    if (location.pathname.startsWith("/intake")) return "intake";
+    if (location.pathname.startsWith("/burn")) return "burn";
+    if (location.pathname.startsWith("/settings/workouts")) return "settings/workouts";
+    return "home";
+  }, [location.pathname]);
 
   useEffect(() => {
     let active = true;
@@ -119,12 +112,12 @@ export default function App() {
   const handleEditProfile = () => {
     setProfileError("");
     setIsEditingProfile(true);
-    setView("profile");
+    navigate("/profile");
   };
 
   const handleAddWeightClick = () => {
     if (!profileLoaded || !profile) {
-      setView("profile");
+      navigate("/profile");
       setCalorieNotice("まずカロリープロファイルを登録してください。");
       return;
     }
@@ -134,28 +127,47 @@ export default function App() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f3f4f6" }}>
       <Sidebar
-        activeView={view}
+        activeView={activeView}
         onAddWeightClick={handleAddWeightClick}
         onNavigate={(nextView) => {
-          setView(nextView);
+          if (nextView === "profile") {
+            setIsEditingProfile(false);
+            navigate("/profile");
+            return;
+          }
+          navigate(nextView === "home" ? "/" : nextView);
         }}
       />
       <main style={{ flex: 1, padding: "16px 24px" }}>
-        {view === "home" && (
-          <HomeView onEditProfile={() => setView("profile")} profile={profile} />
-        )}
-        {view === "profile" && (
-          <ProfileView
-            profile={profile}
-            profileLoaded={profileLoaded}
-            onProfileSaved={handleProfileSaved}
-            onEdit={handleEditProfile}
-            error={profileError}
-            infoMessage={calorieNotice}
-            isEditing={isEditingProfile}
-            onFinishEdit={() => setIsEditingProfile(false)}
+        <Routes>
+          <Route
+            path="/"
+            element={<HomeDashboard onEditProfile={handleEditProfile} profile={profile} />}
           />
-        )}
+          <Route path="/intake" element={<IntakeDashboard />} />
+          <Route path="/burn" element={<BurnDashboard />} />
+          <Route path="/meals/new" element={<AddMeal />} />
+          <Route path="/meals/history" element={<MealHistory />} />
+          <Route path="/exercises/history" element={<ExerciseHistory />} />
+          <Route path="/weight/new" element={<AddWeight />} />
+          <Route path="/exercises/new" element={<AddExercise />} />
+          <Route path="/settings/workouts" element={<WorkoutSettings />} />
+          <Route
+            path="/profile"
+            element={
+              <ProfileView
+                profile={profile}
+                profileLoaded={profileLoaded}
+                onProfileSaved={handleProfileSaved}
+                onEdit={handleEditProfile}
+                error={profileError}
+                infoMessage={calorieNotice}
+                isEditing={isEditingProfile}
+                onFinishEdit={() => setIsEditingProfile(false)}
+              />
+            }
+          />
+        </Routes>
       </main>
 
       {isWeightModalOpen && (
