@@ -20,6 +20,7 @@ function ProfileView({
   profile,
   profileLoaded,
   onProfileSaved,
+  onProfileLoaded,
   onEdit,
   error,
   infoMessage,
@@ -45,7 +46,7 @@ function ProfileView({
             onProfileSaved(next);
             onFinishEdit?.();
           }}
-          onProfileLoaded={onProfileSaved}
+          onProfileLoaded={onProfileLoaded}
         />
       )}
       {profileLoaded && profile && !isEditing && (
@@ -164,6 +165,13 @@ export default function App() {
     setIsProfileDialogOpen(false);
   };
 
+  const handleProfileLoaded = (loadedProfile) => {
+    if (!loadedProfile) return;
+    setProfile(loadedProfile);
+    setProfileError("");
+    setProfileLoaded(true);
+  };
+
   const handleEditProfile = () => {
     setProfileError("");
     setIsEditingProfile(true);
@@ -215,6 +223,7 @@ export default function App() {
                 profile={profile}
                 profileLoaded={profileLoaded}
                 onProfileSaved={handleProfileSaved}
+                onProfileLoaded={handleProfileLoaded}
                 onEdit={handleEditProfile}
                 error={profileError}
                 infoMessage={calorieNotice}
