@@ -1,30 +1,5 @@
-import { promises as fs } from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import { addMealRecord } from "./mealService.js";
-import { isValidDateString } from "../data/store.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_FILE = path.join(__dirname, "..", "data", "foodSets.json");
-
-const ensureFile = async () => {
-  try {
-    await fs.access(DATA_FILE);
-  } catch (error) {
-    await fs.writeFile(DATA_FILE, "[]", "utf-8");
-  }
-};
-
-const readSets = async () => {
-  await ensureFile();
-  const raw = await fs.readFile(DATA_FILE, "utf-8");
-  return JSON.parse(raw || "[]");
-};
-
-const writeSets = async (sets) => {
-  await fs.writeFile(DATA_FILE, JSON.stringify(sets, null, 2), "utf-8");
-};
+import { isValidDateString, store } from "../data/store.js";
 
 const validateItems = (items) => {
   if (!Array.isArray(items) || !items.length) {
@@ -70,38 +45,21 @@ const validatePayload = (payload) => {
   return { name, description, items, totalCalories };
 };
 
-export const listFoodSets = async () => readSets();
+export const listFoodSets = async () => store.listFoodSets();
 
-export const createFoodSet = async (payload) => {
-  const next = validatePayload(payload);
-  const sets = await readSets();
-  const id = `fs_${Date.now().toString(36)}`;
-  const created = { id, ...next };
-  sets.push(created);
-  await writeSets(sets);
-  return created;
-};
+export const createFoodSet = async (payload) => store.addFoodSet(validatePayload(payload));
 
 export const updateFoodSet = async (id, payload) => {
-  const sets = await readSets();
-  const index = sets.findIndex((item) => item.id === id);
-  if (index === -1) {
+  const updated = store.updateFoodSet(id, validatePayload(payload));
+  if (!updated) {
     const error = new Error("指定されたセットが見つかりません");
     error.status = 404;
     throw error;
   }
-
-  const updated = { id, ...validatePayload(payload) };
-  sets[index] = updated;
-  await writeSets(sets);
   return updated;
 };
 
-export const deleteFoodSet = async (id) => {
-  const sets = await readSets();
-  const next = sets.filter((item) => item.id !== id);
-  await writeSets(next);
-};
+export const deleteFoodSet = async (id) => store.deleteFoodSet(id);
 
 export const applyFoodSet = async (id, { date, mealType }) => {
   if (!date || !isValidDateString(date)) {
@@ -115,7 +73,7 @@ export const applyFoodSet = async (id, { date, mealType }) => {
     throw error;
   }
 
-  const sets = await readSets();
+  const sets = await listFoodSets();
   const target = sets.find((item) => item.id === id);
   if (!target) {
     const error = new Error("指定されたセットが見つかりません");
