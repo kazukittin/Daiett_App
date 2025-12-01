@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { useDailyFixedWorkoutPlan } from "../../hooks/useDailyFixedWorkoutPlan.js";
 import { getTodayISO, weekdayLabels } from "../../utils/date.js";
+import { completeTodayWorkout, getTodayWorkoutStatus } from "../../api/workouts.js";
 
 const buildMenuKey = (menu, index) => `${menu?.name || "menu"}-${index}`;
 
@@ -36,7 +37,25 @@ export default function TodayWorkout() {
   const { todayExercises, totalCalories, addExercise } = useTodayExercises();
   const { menus: defaultMenus, weekday } = useDailyFixedWorkoutPlan();
   const hasDefaultPlan = defaultMenus.length > 0;
+  const [completedToday, setCompletedToday] = useState(false);
   const [completedMenuKeys, setCompletedMenuKeys] = useState(() => new Set());
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const loadStatus = async () => {
+      try {
+        const status = await getTodayWorkoutStatus();
+        if (!isMounted) return;
+        setCompletedToday(Boolean(status.completed));
+      } catch (error) {
+        console.error("Failed to load workout status", error);
+      }
+    };
+    loadStatus();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     const completed = new Set();
@@ -49,10 +68,19 @@ export default function TodayWorkout() {
         completed.add(key);
       }
     });
+
+    if (completedToday) {
+      defaultMenus.forEach((menu, index) => {
+        completed.add(buildMenuKey(menu, index));
+      });
+    }
+
     setCompletedMenuKeys(completed);
-  }, [defaultMenus, todayExercises]);
+  }, [defaultMenus, todayExercises, completedToday]);
 
   const handleCompleteMenu = async (menu, index) => {
+    if (completedToday) return;
+
     const key = buildMenuKey(menu, index);
     if (completedMenuKeys.has(key)) return;
 
@@ -66,7 +94,9 @@ export default function TodayWorkout() {
     };
 
     await addExercise(payload);
-    setCompletedMenuKeys((prev) => new Set(prev).add(key));
+    await completeTodayWorkout();
+    setCompletedToday(true);
+    setCompletedMenuKeys(new Set(defaultMenus.map((item, idx) => buildMenuKey(item, idx))));
   };
 
   return (
@@ -91,7 +121,7 @@ export default function TodayWorkout() {
           <ul className="fixed-workout-list">
             {defaultMenus.map((menu, index) => {
               const key = buildMenuKey(menu, index);
-              const isCompleted = completedMenuKeys.has(key);
+              const isCompleted = completedMenuKeys.has(key) || completedToday;
               return (
                 <li key={key} className="fixed-workout-item">
                   <label className="fixed-workout-check">

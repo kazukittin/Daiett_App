@@ -89,3 +89,16 @@ export const getWorkoutSummaryForDate = (date) => {
   const totalCalories = records.reduce((sum, record) => sum + (Number(record.calories) || 0), 0);
   return { date, records, totalCalories };
 };
+
+const getTodayISO = () => new Date().toISOString().split("T")[0];
+
+export const getTodayWorkoutStatus = () => {
+  const today = getTodayISO();
+  const completed = store.isWorkoutCompletedOn(today);
+  return { date: today, completed };
+};
+
+export const markTodayWorkoutComplete = () => {
+  const today = getTodayISO();
+  return store.markWorkoutCompleted(today);
+};

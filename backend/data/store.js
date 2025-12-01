@@ -8,6 +8,7 @@ const data = {
   exercises: [],
   workoutSettings: createEmptyWeekPlan(),
   workoutTypes: [],
+  workoutCompletionDates: [],
 };
 
 const isValidDateString = (value) => {
@@ -89,6 +90,15 @@ export const store = {
     const before = data.workoutTypes.length;
     data.workoutTypes = data.workoutTypes.filter((type) => type.id !== id);
     return data.workoutTypes.length < before;
+  },
+
+  isWorkoutCompletedOn: (date) => data.workoutCompletionDates.includes(date),
+
+  markWorkoutCompleted: (date) => {
+    if (!data.workoutCompletionDates.includes(date)) {
+      data.workoutCompletionDates.push(date);
+    }
+    return { date, completed: true };
   },
 };
 

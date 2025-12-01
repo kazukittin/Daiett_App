@@ -5,6 +5,8 @@ import {
   getWorkoutSettings,
   saveWorkoutSettings,
   getWorkoutSummaryForDate,
+  getTodayWorkoutStatus,
+  markTodayWorkoutComplete,
 } from "../services/workoutService.js";
 import {
   listWorkoutTypes,
@@ -85,6 +87,16 @@ router.delete("/types/:id", (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+router.get("/today/status", (req, res) => {
+  const status = getTodayWorkoutStatus();
+  res.json(status);
+});
+
+router.post("/today/complete", (req, res) => {
+  const status = markTodayWorkoutComplete();
+  res.status(201).json(status);
 });
 
 export default router;
