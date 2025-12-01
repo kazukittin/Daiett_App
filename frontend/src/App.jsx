@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import CalorieProfileSetup from "./components/CalorieProfileSetup.jsx";
-import { clearCalorieProfile, getCalorieProfile } from "./utils/calorieProfile";
+import CalorieProfileSummary from "./components/CalorieProfileSummary.jsx";
+import WeightLog from "./components/WeightLog.jsx";
+import { fetchCalorieProfile, clearCalorieProfile } from "./api/calorieProfileApi.js";
+import { useWeightRecords } from "./hooks/useWeightRecords.js";
 import HomeDashboard from "./screens/Home/HomeDashboard.jsx";
 import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
 import BurnDashboard from "./screens/Burn/BurnDashboard.jsx";
@@ -78,7 +81,7 @@ function Header({ view, onChange }) {
   );
 }
 
-function HomeView() {
+function HomeView({ profile }) {
   return (
     <Routes>
       <Route path="/" element={<HomeDashboard />} />
@@ -87,86 +90,46 @@ function HomeView() {
       <Route path="/meals/new" element={<AddMeal />} />
       <Route path="/meals/history" element={<MealHistory />} />
       <Route path="/exercises/history" element={<ExerciseHistory />} />
-      <Route path="/weight/new" element={<AddWeight />} />
+      <Route path="/weight/new" element={<AddWeight profile={profile} />} />
       <Route path="/exercises/new" element={<AddExercise />} />
       <Route path="/settings/workouts" element={<WorkoutSettings />} />
     </Routes>
   );
 }
 
-function SummaryCard({ profile, onEdit }) {
-  const rowStyle = { display: "flex", justifyContent: "space-between", margin: "6px 0" };
-  const labelStyle = { color: "#6b7280" };
+function CalorieWeightSection({ profile }) {
+  const { addWeightRecord, latestRecord, previousRecord } = useWeightRecords();
 
   return (
-    <div
-      style={{
-        maxWidth: 480,
-        margin: "16px auto",
-        padding: 16,
-        background: "#fff",
-        borderRadius: 10,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-      }}
-    >
-      <h3 style={{ margin: "0 0 8px" }}>登録済みプロファイル</h3>
-      <p style={{ margin: "0 0 12px", color: "#4b5563" }}>
-        以下の設定を使って、体重を記録するたびに自動計算します。
-      </p>
-      <div style={{ display: "grid", gap: 4 }}>
-        <div style={rowStyle}>
-          <span style={labelStyle}>身長</span>
-          <strong>{profile.heightCm} cm</strong>
-        </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>年齢</span>
-          <strong>{profile.age} 歳</strong>
-        </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>性別</span>
-          <strong>{profile.sex === "male" ? "男性" : "女性"}</strong>
-        </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>活動レベル</span>
-          <strong>{profile.activityLevel}</strong>
-        </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>目標</span>
-          <strong>
-            {profile.goal === "lose" ? "減量" : profile.goal === "gain" ? "増量" : "維持"}
-          </strong>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onEdit}
-        style={{
-          marginTop: 12,
-          padding: "10px 12px",
-          borderRadius: 8,
-          border: "1px solid #d1d5db",
-          background: "#f3f4f6",
-          cursor: "pointer",
-        }}
-      >
-        プロファイルを編集する
-      </button>
+    <div style={{ marginTop: 16 }}>
+      <h3 style={{ margin: "8px 0 12px" }}>体重を記録して今日の目安を確認</h3>
+      <WeightLog
+        onSave={addWeightRecord}
+        latestRecord={latestRecord}
+        previousRecord={previousRecord}
+        profile={profile}
+      />
     </div>
   );
 }
 
-function CalorieView({ profile, onProfileSaved, onEdit }) {
+function CalorieView({ profile, profileLoaded, onProfileSaved, onEdit, error }) {
   return (
     <section>
       <h2 style={{ marginTop: 0 }}>カロリー診断</h2>
       <p style={{ color: "#374151", lineHeight: 1.6 }}>
         現在の体重を記録するたびに、登録したプロファイルを使って推定消費カロリーと目標摂取カロリーを自動計算します。
       </p>
-      {profile ? (
-        <SummaryCard profile={profile} onEdit={onEdit} />
-      ) : (
-        <CalorieProfileSetup onProfileSaved={onProfileSaved} />
+      {!profileLoaded && <div>プロファイルを読み込み中です...</div>}
+      {error && <div style={{ color: "#b91c1c", marginTop: 8 }}>{error}</div>}
+      {profileLoaded && !profile && !error && (
+        <CalorieProfileSetup onProfileSaved={onProfileSaved} onProfileLoaded={onProfileSaved} />
+      )}
+      {profileLoaded && profile && (
+        <>
+          <CalorieProfileSummary profile={profile} onEdit={onEdit} />
+          <CalorieWeightSection profile={profile} />
+        </>
       )}
     </section>
   );
@@ -174,12 +137,44 @@ function CalorieView({ profile, onProfileSaved, onEdit }) {
 
 export default function App() {
   const [view, setView] = useState("home");
-  const [profile, setProfile] = useState(() => getCalorieProfile());
+  const [profile, setProfile] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileError, setProfileError] = useState("");
 
-  const handleProfileSaved = (nextProfile) => setProfile(nextProfile);
-  const handleEditProfile = () => {
-    clearCalorieProfile();
-    setProfile(null);
+  useEffect(() => {
+    let active = true;
+    fetchCalorieProfile()
+      .then((data) => {
+        if (!active) return;
+        setProfile(data);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setProfileError(err.message || "プロファイルの取得に失敗しました。");
+      })
+      .finally(() => {
+        if (active) setProfileLoaded(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleProfileSaved = (nextProfile) => {
+    setProfile(nextProfile);
+    setProfileError("");
+    setProfileLoaded(true);
+  };
+
+  const handleEditProfile = async () => {
+    setProfileError("");
+    try {
+      await clearCalorieProfile();
+      setProfile(null);
+    } catch (err) {
+      setProfileError(err.message || "プロファイルの削除に失敗しました。");
+    }
   };
 
   return (
@@ -187,12 +182,14 @@ export default function App() {
       <Header view={view} onChange={setView} />
       <main style={{ padding: "16px 24px" }}>
         {view === "home" ? (
-          <HomeView />
+          <HomeView profile={profile} />
         ) : (
           <CalorieView
             profile={profile}
+            profileLoaded={profileLoaded}
             onProfileSaved={handleProfileSaved}
             onEdit={handleEditProfile}
+            error={profileError}
           />
         )}
       </main>

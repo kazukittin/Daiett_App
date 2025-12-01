@@ -3,7 +3,7 @@ import Sidebar from "../../components/layout/Sidebar.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
 import WeightLog from "../../components/WeightLog.jsx";
 
-export default function AddWeight() {
+export default function AddWeight({ profile }) {
   const { addWeightRecord, latestRecord, previousRecord } = useWeightRecords();
 
   const latestWeight = latestRecord?.weight ?? null;
@@ -27,6 +27,7 @@ export default function AddWeight() {
               onSave={addWeightRecord}
               latestRecord={latestRecord}
               previousRecord={previousRecord}
+              profile={profile}
             />
 
             <aside className="ds-card compact info-card">

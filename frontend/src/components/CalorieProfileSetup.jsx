@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { saveCalorieProfile } from "../utils/calorieProfile";
+import React, { useEffect, useState } from "react";
+import { fetchCalorieProfile, saveCalorieProfile } from "../api/calorieProfileApi.js";
 
 const cardStyle = {
   maxWidth: 480,
   margin: "16px auto",
   padding: 16,
   background: "#fff",
-  borderRadius: 10,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+  borderRadius: 8,
+  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
 };
 
 const labelStyle = {
@@ -43,16 +43,37 @@ const initialState = {
   goal: "maintain",
 };
 
-export default function CalorieProfileSetup({ onProfileSaved }) {
+export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded }) {
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetchCalorieProfile()
+      .then((profile) => {
+        if (!active) return;
+        if (profile) {
+          onProfileLoaded?.(profile);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [onProfileLoaded]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const heightCm = Number(form.heightCm);
     const age = Number(form.age);
@@ -74,10 +95,21 @@ export default function CalorieProfileSetup({ onProfileSaved }) {
       goal: form.goal,
     };
 
-    saveCalorieProfile(profile);
+    setSaving(true);
     setError("");
-    onProfileSaved?.(profile);
+    try {
+      const saved = await saveCalorieProfile(profile);
+      onProfileSaved?.(saved);
+    } catch (err) {
+      setError(err.message || "プロファイルの保存に失敗しました。");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return <div style={cardStyle}>プロファイルを確認しています...</div>;
+  }
 
   return (
     <div style={cardStyle}>
@@ -145,8 +177,8 @@ export default function CalorieProfileSetup({ onProfileSaved }) {
           </select>
         </label>
 
-        <button type="submit" style={buttonStyle}>
-          プロファイルを保存する
+        <button type="submit" style={buttonStyle} disabled={saving}>
+          {saving ? "保存中..." : "プロファイルを保存する"}
         </button>
       </form>
 

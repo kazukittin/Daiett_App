@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import WeightTrackerCard from "./weight/WeightTrackerCard.jsx";
-import { getCalorieProfile } from "../utils/calorieProfile";
 
 const resultBoxStyle = {
   marginTop: 16,
@@ -21,7 +20,7 @@ const errorStyle = {
   color: "#b91c1c",
 };
 
-export default function WeightLog({ onSave, latestRecord, previousRecord }) {
+export default function WeightLog({ onSave, latestRecord, previousRecord, profile }) {
   const [calorieResult, setCalorieResult] = useState(null);
   const [calorieError, setCalorieError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +36,6 @@ export default function WeightLog({ onSave, latestRecord, previousRecord }) {
       return;
     }
 
-    const profile = getCalorieProfile();
     if (!profile) {
       setCalorieError("カロリープロファイルが未設定です。カロリー診断ページで設定してください。");
       return;
