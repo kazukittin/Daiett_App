@@ -22,10 +22,11 @@ export default function WeightDialog({ onClose, onSaved }) {
 
     setLoading(true);
     try {
+      const today = new Date().toISOString().slice(0, 10);
       const response = await fetch("http://localhost:4000/api/weight/records", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weightKg: weightValue, timeOfDay }),
+        body: JSON.stringify({ weight: weightValue, date: today, timeOfDay }),
       });
 
       if (!response.ok) {
