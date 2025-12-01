@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Card from "../../components/ui/Card.jsx";
-import { getMealHistory } from "../../api/meals.js";
+import { getMealRecords } from "../../api/meals.js";
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -12,8 +12,14 @@ export default function MealHistory() {
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    getMealHistory()
-      .then((data) => setHistory(data || []))
+    getMealRecords()
+      .then((data) => {
+        if (data && Array.isArray(data.records)) {
+          setHistory(data.records);
+        } else {
+          setHistory(Array.isArray(data) ? data : []);
+        }
+      })
       .catch(() => setHistory([]));
   }, []);
 
