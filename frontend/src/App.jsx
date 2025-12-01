@@ -59,6 +59,59 @@ function ProfileView({
   );
 }
 
+function ProfileEditDialog({ open, onClose, onProfileSaved }) {
+  if (!open) return null;
+
+  const backdropStyle = {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.45)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    zIndex: 999,
+  };
+
+  const dialogStyle = {
+    width: "min(520px, 100%)",
+    maxHeight: "90vh",
+    overflow: "auto",
+    background: "#fff",
+    borderRadius: 12,
+    boxShadow: "0 12px 32px rgba(0,0,0,0.2)",
+  };
+
+  return (
+    <div style={backdropStyle}>
+      <div style={dialogStyle}>
+        <div style={{ display: "flex", justifyContent: "flex-end", padding: 8 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: 18,
+              cursor: "pointer",
+              padding: "4px 8px",
+            }}
+            aria-label="閉じる"
+          >
+            ×
+          </button>
+        </div>
+        <CalorieProfileSetup
+          onProfileSaved={(next) => {
+            onProfileSaved?.(next);
+            onClose?.();
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,6 +119,7 @@ export default function App() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [calorieNotice, setCalorieNotice] = useState("");
 
@@ -107,11 +161,13 @@ export default function App() {
     setProfileLoaded(true);
     setCalorieNotice("");
     setIsEditingProfile(false);
+    setIsProfileDialogOpen(false);
   };
 
   const handleEditProfile = () => {
     setProfileError("");
     setIsEditingProfile(true);
+    setIsProfileDialogOpen(true);
     navigate("/profile");
   };
 
@@ -178,6 +234,15 @@ export default function App() {
           }}
         />
       )}
+
+      <ProfileEditDialog
+        open={isProfileDialogOpen}
+        onClose={() => {
+          setIsProfileDialogOpen(false);
+          setIsEditingProfile(false);
+        }}
+        onProfileSaved={handleProfileSaved}
+      />
     </div>
   );
 }
