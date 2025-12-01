@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import Button from "../../components/ui/Button.jsx";
 import MealTypeTabs from "../../components/meals/MealTypeTabs.jsx";
 import { useMealEntries } from "../../hooks/useMealEntries.js";
 import { getTodayISO } from "../../utils/date.js";
+import FoodSetManager from "../../components/food/FoodSetManager.jsx";
 
 const createFoodRow = () => ({ id: Date.now(), name: "", portion: "", calories: "" });
 
@@ -73,135 +73,107 @@ export default function AddMeal() {
   };
 
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="main-shell">
+    <section className="page add-meal-page">
+      <header className="page-header meal-page-header">
+        <div>
+          <p className="eyebrow">摂取カロリー</p>
+          <h1 className="page-title">食事を追加して今日の摂取を管理</h1>
+          <p className="muted">食事タイプと日付を選んで、食べたものをリストアップしましょう。カロリーの合計は自動で計算されます。</p>
+        </div>
+        <div className="header-actions">
+          <div className="total-calorie-chip">
+            合計カロリー <strong>{totalCalories}</strong> kcal
+          </div>
+          <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
+            戻る
+          </Button>
+        </div>
+      </header>
 
-        <section className="page add-meal-page">
-          <header className="page-header meal-page-header">
-            <div>
-              <p className="eyebrow">摂取カロリー</p>
-              <h1 className="page-title">食事を追加して今日の摂取を管理</h1>
-              <p className="muted">食事タイプと日付を選んで、食べたものをリストアップしましょう。カロリーの合計は自動で計算されます。</p>
-            </div>
-            <div className="header-actions">
-              <div className="total-calorie-chip">
-                合計カロリー <strong>{totalCalories}</strong> kcal
+      <div className="add-meal-layout">
+        <Card title="入力フォーム" className="meal-form-card">
+          <form className="weight-form" onSubmit={handleSubmit}>
+            <div className="form-grid">
+              <div className="form-control">
+                <label>食事タイプ</label>
+                <MealTypeTabs value={mealType} onChange={setMealType} />
               </div>
-              <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
-                戻る
+
+              <div className="form-control">
+                <label>日付</label>
+                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+              </div>
+            </div>
+
+            <div className="form-control">
+              <div className="field-header">
+                <label>食品リスト</label>
+                <Button type="button" variant="ghost" onClick={addFoodRow}>
+                  ＋ 食品を追加
+                </Button>
+              </div>
+              <div className="foods-table">
+                <div className="foods-header">
+                  <span>食品名</span>
+                  <span>分量</span>
+                  <span>カロリー (kcal)</span>
+                  <span>操作</span>
+                </div>
+                {foods.map((food) => (
+                  <div key={food.id} className="food-row">
+                    <input
+                      value={food.name}
+                      onChange={(event) => handleFoodChange(food.id, "name", event.target.value)}
+                      placeholder="例: サラダ"
+                    />
+                    <input
+                      value={food.portion}
+                      onChange={(event) => handleFoodChange(food.id, "portion", event.target.value)}
+                      placeholder="例: 1人前"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      value={food.calories}
+                      onChange={(event) => handleFoodChange(food.id, "calories", event.target.value)}
+                      placeholder="200"
+                    />
+                    <Button type="button" variant="ghost" onClick={() => removeFoodRow(food.id)} disabled={foods.length === 1}>
+                      削除
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-control">
+              <label>メモ (任意)</label>
+              <textarea value={memo} onChange={(event) => setMemo(event.target.value)} placeholder="気づいたことなど" />
+            </div>
+
+            {formError && <p className="form-error">{formError}</p>}
+
+            <div className="form-actions">
+              <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
+                キャンセル
+              </Button>
+              <Button type="submit" variant="primary">
+                追加する
               </Button>
             </div>
-          </header>
+          </form>
+        </Card>
 
-          <div className="add-meal-layout">
-            <Card title="入力フォーム" className="meal-form-card">
-              <form className="weight-form" onSubmit={handleSubmit}>
-                <div className="form-grid">
-                  <div className="form-control">
-                    <label>食事タイプ</label>
-                    <MealTypeTabs value={mealType} onChange={setMealType} />
-                  </div>
+        <Card title="入力のコツ" className="meal-tips-card">
+          <ul className="tip-list">
+            <li>カロリーが不明な場合はざっくりでもOK</li>
+            <li>分量は「1皿」「1個」などわかりやすい単位で</li>
+            <li>後から編集できるのでまずは記録を残すのがおすすめ</li>
+          </ul>
+        </Card>
+      </div>
 
-                  <div className="form-control">
-                    <label>日付</label>
-                    <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-                  </div>
-                </div>
-
-                <div className="form-control">
-                  <div className="field-header">
-                    <label>食品リスト</label>
-                    <Button type="button" variant="ghost" onClick={addFoodRow}>
-                      ＋ 食品を追加
-                    </Button>
-                  </div>
-                  <div className="foods-table">
-                    <div className="foods-header">
-                      <span>食品名</span>
-                      <span>量</span>
-                      <span>カロリー(kcal)</span>
-                      <span></span>
-                    </div>
-
-                    {foods.map((food) => (
-                      <div className="foods-row" key={food.id}>
-                        <input
-                          className="meal-input"
-                          type="text"
-                          placeholder="例）ごはん"
-                          value={food.name}
-                          onChange={(event) => handleFoodChange(food.id, "name", event.target.value)}
-                        />
-                        <input
-                          className="meal-input"
-                          type="text"
-                          placeholder="150g"
-                          value={food.portion}
-                          onChange={(event) => handleFoodChange(food.id, "portion", event.target.value)}
-                        />
-                        <input
-                          className="meal-input"
-                          type="number"
-                          inputMode="numeric"
-                          placeholder="250"
-                          value={food.calories}
-                          onChange={(event) => handleFoodChange(food.id, "calories", event.target.value)}
-                        />
-                        <button type="button" className="food-remove-btn" onClick={() => removeFoodRow(food.id)}>
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="form-control">
-                  <label>メモ</label>
-                  <textarea
-                    rows="3"
-                    value={memo}
-                    onChange={(event) => setMemo(event.target.value)}
-                    placeholder="例）調味料少なめ"
-                  />
-                </div>
-
-                {formError && <div className="form-error">{formError}</div>}
-
-                <div className="flex-between">
-                  <div className="total-calorie-display">
-                    合計カロリー： <span>{totalCalories}</span> kcal
-                  </div>
-                  <div className="add-meal-actions">
-                    <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
-                      キャンセル
-                    </Button>
-                    <Button type="submit">保存して戻る</Button>
-                  </div>
-                </div>
-              </form>
-            </Card>
-
-            <aside className="ds-card compact info-card">
-              <div className="ds-card-title">入力のコツ</div>
-              <ul className="summary-list">
-                <li className="summary-item">
-                  <span>食品を分けて入力</span>
-                  <strong>カロリーが正確に</strong>
-                </li>
-                <li className="summary-item">
-                  <span>カロリー不明なとき</span>
-                  <strong>目安でもOK</strong>
-                </li>
-                <li className="summary-item">
-                  <span>メモ欄</span>
-                  <strong>味付け/気づきを残す</strong>
-                </li>
-              </ul>
-            </aside>
-          </div>
-        </section>
-      </main>
-    </div>
+      <FoodSetManager onApplied={() => navigate("/intake")}></FoodSetManager>
+    </section>
   );
 }

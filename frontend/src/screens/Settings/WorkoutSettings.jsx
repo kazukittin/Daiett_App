@@ -1,9 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
-import Sidebar from "../../components/layout/Sidebar.jsx";
+import React, { useEffect, useState } from "react";
 import Card from "../../components/ui/Card.jsx";
 import { weekdayLabels } from "../../utils/date.js";
-import { startFitbitAuth } from "../../services/fitbitApi.js";
-import { useFitbitToday } from "../../hooks/useFitbitToday.js";
 import { getWorkoutSettings, saveWorkoutSettings as saveWorkoutSettingsApi } from "../../api/workouts.js";
 
 const createEmptyMenu = () => ({ name: "", type: "reps", value: "", sets: "" });
@@ -246,7 +243,6 @@ export default function WorkoutSettings() {
   const [editingMenus, setEditingMenus] = useState({});
   const [editDrafts, setEditDrafts] = useState({});
 
-  const { data: fitbitData, loading: fitbitLoading, error: fitbitError, refresh } = useFitbitToday();
 
   useEffect(() => {
     getWorkoutSettings()
@@ -361,133 +357,67 @@ export default function WorkoutSettings() {
       .catch(() => setSaveStatus("保存に失敗しました"));
   };
 
-  const fitbitSummary = useMemo(() => fitbitData?.summary, [fitbitData]);
-
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="main-shell">
-        <section className="page settings-page workout-settings-page">
-          <header className="page-header settings-header">
-            <div>
-              <p className="eyebrow">ワークアウト設定</p>
-              <h1 className="page-title">毎日のプランと連携をまとめて管理</h1>
-              <p className="muted">曜日ごとの固定メニューとFitbit連携を確認して、運動の計画をスムーズに。</p>
+    <section className="page settings-page workout-settings-page">
+      <header className="page-header settings-header">
+        <div>
+          <p className="eyebrow">ワークアウト設定</p>
+          <h1 className="page-title">毎日のプランと連携をまとめて管理</h1>
+          <p className="muted">曜日ごとの固定メニューとFitbit連携を確認して、運動の計画をスムーズに。</p>
+        </div>
+        <div className="header-actions">
+          {saveStatus && <span className="save-status">{saveStatus}</span>}
+          <button type="button" className="ds-button primary" onClick={handleSave}>
+            設定を保存
+          </button>
+        </div>
+      </header>
+
+      <div className="settings-grid">
+        <Card title="デイリー固定ワークアウト設定" className="daily-plan-card">
+          <p className="muted">
+            曜日ごとに固定のワークアウトメニューを登録しておくと、毎日のプランをすぐに確認できます。
+          </p>
+
+          <WorkoutMenuAddForm
+            draft={newMenuDraft}
+            weekday={selectedWeekday}
+            addError={addError}
+            onDraftChange={handleDraftChange}
+            onWeekdayChange={setSelectedWeekday}
+            onAddMenu={handleAddMenu}
+          />
+
+          <div className="workout-menu-list-section">
+            <div className="section-header">
+              <div>
+                <h3 className="section-title">登録済みメニュー</h3>
+                <p className="muted small">保存済みメニューは「編集」から内容を更新できます。</p>
+              </div>
             </div>
-            <div className="header-actions">
-              {saveStatus && <span className="save-status">{saveStatus}</span>}
-              <button type="button" className="ds-button primary" onClick={handleSave}>
-                設定を保存
-              </button>
+            <div className="weekday-settings-grid compact">
+              {weekdayLabels.map((label, weekday) => {
+                const menus = plans?.[weekday]?.menus ?? [];
+                return (
+                  <WorkoutMenuList
+                    key={label}
+                    label={label}
+                    weekday={weekday}
+                    menus={menus}
+                    editingMenus={editingMenus}
+                    editDrafts={editDrafts}
+                    onEdit={handleStartEdit}
+                    onDraftChange={handleEditDraftChange}
+                    onSave={handleSaveMenu}
+                    onCancel={handleCancelEdit}
+                    onDelete={handleRemoveMenu}
+                  />
+                );
+              })}
             </div>
-          </header>
-
-          <div className="settings-grid">
-            <Card title="デイリー固定ワークアウト設定" className="daily-plan-card">
-              <p className="muted">
-                曜日ごとに固定のワークアウトメニューを登録しておくと、毎日のプランをすぐに確認できます。
-              </p>
-
-              <WorkoutMenuAddForm
-                draft={newMenuDraft}
-                weekday={selectedWeekday}
-                addError={addError}
-                onDraftChange={handleDraftChange}
-                onWeekdayChange={setSelectedWeekday}
-                onAddMenu={handleAddMenu}
-              />
-
-              <div className="workout-menu-list-section">
-                <div className="section-header">
-                  <div>
-                    <h3 className="section-title">登録済みメニュー</h3>
-                    <p className="muted small">保存済みメニューは「編集」から内容を更新できます。</p>
-                  </div>
-                </div>
-                <div className="weekday-settings-grid compact">
-                  {weekdayLabels.map((label, weekday) => {
-                    const menus = plans?.[weekday]?.menus ?? [];
-                    return (
-                      <WorkoutMenuList
-                        key={label}
-                        label={label}
-                        weekday={weekday}
-                        menus={menus}
-                        editingMenus={editingMenus}
-                        editDrafts={editDrafts}
-                        onEdit={handleStartEdit}
-                        onDraftChange={handleEditDraftChange}
-                        onSave={handleSaveMenu}
-                        onCancel={handleCancelEdit}
-                        onDelete={handleRemoveMenu}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            </Card>
-
-            <Card title="Fitbit連携" className="fitbit-card">
-              <div className="fitbit-header">
-                <p className="muted">Fitbitアカウントを連携すると、今日のアクティビティデータを自動で取得できます。</p>
-                <button type="button" className="ds-button secondary" onClick={refresh}>
-                  再読み込み
-                </button>
-              </div>
-
-              {fitbitError && <div className="form-error">{fitbitError}</div>}
-
-              <div className="fitbit-status-row">
-                <div className={`status-dot ${fitbitData?.connected ? "on" : "off"}`} />
-                <div>
-                  <div className="status-label">
-                    {fitbitData?.connected ? "Fitbitと連携済み" : "未連携"}
-                  </div>
-                  <div className="muted small">
-                    {fitbitData?.lastSync
-                      ? `最終同期: ${new Date(fitbitData.lastSync).toLocaleString("ja-JP")}`
-                      : "まだ同期はありません"}
-                  </div>
-                </div>
-              </div>
-
-              {fitbitLoading ? (
-                <div className="muted">Fitbitデータを読み込み中...</div>
-              ) : fitbitData?.connected && fitbitSummary ? (
-                <ul className="fitbit-summary-list">
-                  <li>
-                    <span>歩数</span>
-                    <strong>{fitbitSummary.steps?.toLocaleString?.() ?? "-"}</strong>
-                  </li>
-                  <li>
-                    <span>消費カロリー</span>
-                    <strong>{fitbitSummary.caloriesOut ? `${fitbitSummary.caloriesOut} kcal` : "-"}</strong>
-                  </li>
-                  <li>
-                    <span>アクティブ分数</span>
-                    <strong>{fitbitSummary.activeMinutes ?? "-"} 分</strong>
-                  </li>
-                  {fitbitSummary.restingHeartRate !== undefined && (
-                    <li>
-                      <span>安静時心拍数</span>
-                      <strong>{fitbitSummary.restingHeartRate} bpm</strong>
-                    </li>
-                  )}
-                </ul>
-              ) : (
-                <div className="muted">連携するとデータがここに表示されます。</div>
-              )}
-
-              <div className="form-actions space-between">
-                <div className="helper-note">連携でデータ入力が短縮できます</div>
-                <button type="button" className="ds-button primary" onClick={startFitbitAuth}>
-                  Fitbitと連携する
-                </button>
-              </div>
-            </Card>
           </div>
-        </section>
-      </main>
-    </div>
+        </Card>
+      </div>
+    </section>
   );
 }

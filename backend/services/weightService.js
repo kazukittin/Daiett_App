@@ -121,13 +121,25 @@ export const addWeightRecord = (payload) => {
     error.status = 400;
     throw error;
   }
-  const weight = Number(payload.weight);
+
+  const weight = Number(payload.weight ?? payload.weightKg);
   if (!Number.isFinite(weight) || weight <= 0 || weight >= 500) {
     const error = new Error("体重は0〜500kgの範囲で入力してください");
     error.status = 400;
     throw error;
   }
-  const record = { date: payload.date, weight: weight };
+
+  if (!payload?.timeOfDay || !["morning", "night"].includes(payload.timeOfDay)) {
+    const error = new Error("測定タイミングはmorningまたはnightで指定してください");
+    error.status = 400;
+    throw error;
+  }
+
+  const record = {
+    date: payload.date,
+    weight,
+    timeOfDay: payload.timeOfDay,
+  };
   return store.upsertWeightRecord(record);
 };
 

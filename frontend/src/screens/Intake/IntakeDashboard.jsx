@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Sidebar from "../../components/layout/Sidebar.jsx";
 import Card from "../../components/ui/Card.jsx";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { getMealSummary } from "../../api/meals.js";
@@ -153,106 +152,101 @@ export default function IntakeDashboard() {
   );
 
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="main-shell">
-        <section className="page intake-page">
-          <header className="page-header intake-header">
-            <div>
-              <h1 className="page-title">摂取カロリー</h1>
-              <p className="muted">今日の食事と摂取量をひと目で確認できます</p>
+    <section className="page intake-page">
+      <header className="page-header intake-header">
+        <div>
+          <h1 className="page-title">摂取カロリー</h1>
+          <p className="muted">今日の食事と摂取量をひと目で確認できます</p>
+        </div>
+      </header>
+
+      <div className="intake-grid">
+        <Card title="今日の摂取カロリー" className="intake-summary-card">
+          <div className="intake-summary">
+            <div className="metric-highlight">
+              <h2>{todaySummary.totalCalories} kcal</h2>
+              <small>{DAILY_GOAL} kcal の目標まであと {Math.max(DAILY_GOAL - todaySummary.totalCalories, 0)} kcal</small>
             </div>
-          </header>
-
-          <div className="intake-grid">
-            <Card title="今日の摂取カロリー" className="intake-summary-card">
-              <div className="intake-summary">
-                <div className="metric-highlight">
-                  <h2>{todaySummary.totalCalories} kcal</h2>
-                  <small>{DAILY_GOAL} kcal の目標まであと {Math.max(DAILY_GOAL - todaySummary.totalCalories, 0)} kcal</small>
-                </div>
-                <div className="intake-progress">
-                  <div
-                    className="intake-progress-bar"
-                    style={{ width: `${Math.min((todaySummary.totalCalories / DAILY_GOAL) * 100, 100)}%` }}
-                  />
-                  <div className="intake-progress-label">
-                    <span>進捗</span>
-                    <strong>{Math.min(Math.round((todaySummary.totalCalories / DAILY_GOAL) * 100), 100)}%</strong>
-                  </div>
-                </div>
+            <div className="intake-progress">
+              <div
+                className="intake-progress-bar"
+                style={{ width: `${Math.min((todaySummary.totalCalories / DAILY_GOAL) * 100, 100)}%` }}
+              />
+              <div className="intake-progress-label">
+                <span>進捗</span>
+                <strong>{Math.min(Math.round((todaySummary.totalCalories / DAILY_GOAL) * 100), 100)}%</strong>
               </div>
-
-              <div className="section-block">
-                <div className="section-header">
-                  <h3>食事の内訳</h3>
-                </div>
-                <ul className="summary-list">
-                  {Object.keys(mealBreakdown).length === 0 && <li className="muted">まだ食事が登録されていません。</li>}
-                  {Object.entries(mealBreakdown).map(([mealType, calories]) => (
-                    <li key={mealType} className="summary-item">
-                      <span>{mealType}</span>
-                      <strong>{calories} kcal</strong>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Card>
-
-            <Card title="食品ログ" className="intake-log-card">
-              <div className="section-block">
-                <div className="section-header">
-                  <h3>今日の記録</h3>
-                  <p className="small muted">最近追加した食品の一覧</p>
-                </div>
-                {todayMeals.length === 0 ? (
-                  <p className="muted">今日の食事はまだ登録されていません。</p>
-                ) : (
-                  <ul className="upcoming-list">
-                    {todayMeals.map((meal) => (
-                      <li key={meal.id}>
-                        <div className="meal-log-row">
-                          <div>
-                            <strong>{meal.mealType}</strong>
-                            <div className="muted small">{meal.memo}</div>
-                          </div>
-                          <div>{meal.totalCalories} kcal</div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </Card>
+            </div>
           </div>
 
-          <div className="intake-trend-grid">
-            <Card title="摂取・消費の推移" className="intake-trend-card" action={renderRangeButtons()}>
-              <div className="section-header">
-                <p className="muted small">{subtitle}</p>
-              </div>
-              <div className="intake-chart-area">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey="date" />
-                    <YAxis
-                      allowDecimals={false}
-                      width={56}
-                      tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
-                      label={{ value: "kcal", angle: -90, position: "insideLeft", offset: 8 }}
-                    />
-                    <Tooltip content={<CalorieTooltip />} />
-                    <Legend />
-                    <Bar dataKey="intakeCalories" name="摂取カロリー" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
-                    <Bar dataKey="burnedCalories" name="消費カロリー" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+          <div className="section-block">
+            <div className="section-header">
+              <h3>食事の内訳</h3>
+            </div>
+            <ul className="summary-list">
+              {Object.keys(mealBreakdown).length === 0 && <li className="muted">まだ食事が登録されていません。</li>}
+              {Object.entries(mealBreakdown).map(([mealType, calories]) => (
+                <li key={mealType} className="summary-item">
+                  <span>{mealType}</span>
+                  <strong>{calories} kcal</strong>
+                </li>
+              ))}
+            </ul>
           </div>
-        </section>
-      </main>
-    </div>
+        </Card>
+
+        <Card title="食品ログ" className="intake-log-card">
+          <div className="section-block">
+            <div className="section-header">
+              <h3>今日の記録</h3>
+              <p className="small muted">最近追加した食品の一覧</p>
+            </div>
+            {todayMeals.length === 0 ? (
+              <p className="muted">今日の食事はまだ登録されていません。</p>
+            ) : (
+              <ul className="upcoming-list">
+                {todayMeals.map((meal) => (
+                  <li key={meal.id}>
+                    <div className="meal-log-row">
+                      <div>
+                        <strong>{meal.mealType}</strong>
+                        <div className="muted small">{meal.memo}</div>
+                      </div>
+                      <div>{meal.totalCalories} kcal</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      <div className="intake-trend-grid">
+        <Card title="摂取・消費の推移" className="intake-trend-card" action={renderRangeButtons()}>
+          <div className="section-header">
+            <p className="muted small">{subtitle}</p>
+          </div>
+          <div className="intake-chart-area">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 12, right: 16, left: 8, bottom: 12 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis dataKey="date" />
+                <YAxis
+                  allowDecimals={false}
+                  width={56}
+                  tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
+                  label={{ value: "kcal", angle: -90, position: "insideLeft", offset: 8 }}
+                />
+                <Tooltip content={<CalorieTooltip />} />
+                <Legend />
+                <Bar dataKey="intakeCalories" name="摂取カロリー" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
+                <Bar dataKey="burnedCalories" name="消費カロリー" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+    </section>
   );
 }
