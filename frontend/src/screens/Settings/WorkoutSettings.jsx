@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Card from "../../components/ui/Card.jsx";
 import { weekdayLabels } from "../../utils/date.js";
-import { getWorkoutSettings, saveWorkoutSettings as saveWorkoutSettingsApi } from "../../api/workouts.js";
+import {
+  getWorkoutSettings,
+  saveWorkoutSettings as saveWorkoutSettingsApi,
+  getWorkoutTypes,
+  createWorkoutType,
+  updateWorkoutType,
+  deleteWorkoutType,
+} from "../../api/workouts.js";
 
 const createEmptyMenu = () => ({ name: "", type: "reps", value: "", sets: "" });
 const menuKey = (weekday, index) => `${weekday}-${index}`;
@@ -242,12 +249,29 @@ export default function WorkoutSettings() {
   const [selectedWeekday, setSelectedWeekday] = useState(0);
   const [editingMenus, setEditingMenus] = useState({});
   const [editDrafts, setEditDrafts] = useState({});
+  const [workoutTypes, setWorkoutTypes] = useState([]);
+  const [typeDraft, setTypeDraft] = useState({ name: "", expectedCalories: "" });
+  const [typeError, setTypeError] = useState("");
+  const [savingTypeId, setSavingTypeId] = useState(null);
 
 
   useEffect(() => {
     getWorkoutSettings()
       .then((settings) => setPlans(settings))
       .catch((error) => console.error("Failed to load workout settings", error));
+
+    getWorkoutTypes()
+      .then((response) => {
+        const normalized = (response?.types || response || []).map((type) => ({
+          ...type,
+          expectedCalories:
+            type.expectedCalories === null || type.expectedCalories === undefined
+              ? ""
+              : String(type.expectedCalories),
+        }));
+        setWorkoutTypes(normalized);
+      })
+      .catch((error) => console.error("Failed to load workout types", error));
   }, []);
 
   const handleAddMenu = () => {
@@ -357,6 +381,92 @@ export default function WorkoutSettings() {
       .catch(() => setSaveStatus("保存に失敗しました"));
   };
 
+  const handleTypeDraftChange = (field, value) => {
+    setTypeDraft((prev) => ({ ...prev, [field]: value }));
+    setTypeError("");
+  };
+
+  const handleAddType = async () => {
+    const name = typeDraft.name.trim();
+    if (!name) {
+      setTypeError("名称を入力してください");
+      return;
+    }
+
+    const payload = {
+      name,
+      expectedCalories:
+        typeDraft.expectedCalories === "" ? undefined : Number(typeDraft.expectedCalories),
+    };
+
+    try {
+      const created = await createWorkoutType(payload);
+      setWorkoutTypes((prev) => [
+        ...prev,
+        {
+          ...created,
+          expectedCalories:
+            created.expectedCalories === null || created.expectedCalories === undefined
+              ? ""
+              : String(created.expectedCalories),
+        },
+      ]);
+      setTypeDraft({ name: "", expectedCalories: "" });
+      setTypeError("");
+    } catch (error) {
+      setTypeError(error.message || "ワークアウトタイプの追加に失敗しました");
+    }
+  };
+
+  const handleTypeFieldChange = (id, field, value) => {
+    setWorkoutTypes((prev) => prev.map((type) => (type.id === id ? { ...type, [field]: value } : type)));
+    setTypeError("");
+  };
+
+  const handleSaveType = async (type) => {
+    setSavingTypeId(type.id);
+    try {
+      const payload = {
+        name: type.name,
+        expectedCalories:
+          type.expectedCalories === "" || type.expectedCalories === null
+            ? null
+            : Number(type.expectedCalories),
+      };
+      const updated = await updateWorkoutType(type.id, payload);
+      setWorkoutTypes((prev) =>
+        prev.map((item) =>
+          item.id === type.id
+            ? {
+                ...updated,
+                expectedCalories:
+                  payload.expectedCalories === null || payload.expectedCalories === undefined
+                    ? ""
+                    : String(payload.expectedCalories),
+              }
+            : item,
+        ),
+      );
+      setTypeError("");
+    } catch (error) {
+      setTypeError(error.message || "更新に失敗しました");
+    } finally {
+      setSavingTypeId(null);
+    }
+  };
+
+  const handleDeleteType = async (id) => {
+    setSavingTypeId(id);
+    try {
+      await deleteWorkoutType(id);
+      setWorkoutTypes((prev) => prev.filter((type) => type.id !== id));
+    } catch (error) {
+      setTypeError(error.message || "削除に失敗しました");
+    } finally {
+      setSavingTypeId(null);
+    }
+  };
+
   return (
     <section className="page settings-page workout-settings-page">
       <header className="page-header settings-header">
@@ -415,6 +525,89 @@ export default function WorkoutSettings() {
                 );
               })}
             </div>
+          </div>
+        </Card>
+
+        <Card title="ワークアウトタイプの管理" className="workout-type-card">
+          <p className="muted small">
+            よく使う運動の名称と目安消費カロリーを登録しておくと、履歴で実績との比較ができます。
+          </p>
+
+          <div className="workout-type-form">
+            <div className="form-inline-fields">
+              <label className="menu-label">
+                名称
+                <input
+                  type="text"
+                  value={typeDraft.name}
+                  onChange={(event) => handleTypeDraftChange("name", event.target.value)}
+                  placeholder="例: ジョギング30分"
+                />
+              </label>
+              <label className="menu-label">
+                目安消費カロリー (kcal)
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={typeDraft.expectedCalories}
+                  onChange={(event) => handleTypeDraftChange("expectedCalories", event.target.value)}
+                  placeholder="例: 200"
+                />
+              </label>
+              <button type="button" className="ds-button primary" onClick={handleAddType}>
+                ワークアウトを追加
+              </button>
+            </div>
+            {typeError && <div className="form-error" style={{ marginTop: 8 }}>{typeError}</div>}
+          </div>
+
+          <div className="workout-type-list">
+            {workoutTypes.length === 0 && <div className="muted">まだ登録されていません</div>}
+            {workoutTypes.map((type) => (
+              <div key={type.id} className="workout-type-row">
+                <div className="workout-type-fields">
+                  <div className="menu-field">
+                    <label className="menu-label">名称</label>
+                    <input
+                      type="text"
+                      value={type.name || ""}
+                      onChange={(event) => handleTypeFieldChange(type.id, "name", event.target.value)}
+                    />
+                  </div>
+                  <div className="menu-field">
+                    <label className="menu-label">目安消費カロリー (kcal)</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      value={type.expectedCalories ?? ""}
+                      onChange={(event) =>
+                        handleTypeFieldChange(type.id, "expectedCalories", event.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="workout-type-actions">
+                  <button
+                    type="button"
+                    className="ds-button secondary"
+                    onClick={() => handleSaveType(type)}
+                    disabled={savingTypeId === type.id}
+                  >
+                    {savingTypeId === type.id ? "保存中..." : "保存"}
+                  </button>
+                  <button
+                    type="button"
+                    className="ds-button ghost danger-text"
+                    onClick={() => handleDeleteType(type.id)}
+                    disabled={savingTypeId === type.id}
+                  >
+                    削除
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
       </div>

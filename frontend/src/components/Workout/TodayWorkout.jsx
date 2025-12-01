@@ -95,17 +95,28 @@ export default function TodayWorkout() {
         </p>
       ) : (
         <ul className="today-workout-list">
-          {todayExercises.map((record) => (
-            <li key={record.id} className="today-workout-item">
-              <div className="today-workout-main">
-                <strong>{record.type}</strong>
-                <span className="today-workout-sub">
-                  {record.duration}分 ・ {record.calories} kcal
-                </span>
-              </div>
-              {record.memo && <div className="memo">{record.memo}</div>}
-            </li>
-          ))}
+          {todayExercises.map((record) => {
+            const expected = Number.isFinite(record.expectedCalories)
+              ? record.expectedCalories
+              : null;
+            const diff =
+              expected != null && Number.isFinite(record.calories)
+                ? record.calories - expected
+                : null;
+            const diffText = diff == null ? "" : `（${diff > 0 ? "+" : ""}${diff}）`;
+            return (
+              <li key={record.id} className="today-workout-item">
+                <div className="today-workout-main">
+                  <strong>{record.type}</strong>
+                  <span className="today-workout-sub">
+                    実績：{record.calories} kcal
+                    {expected != null ? ` / 目安：${expected} kcal ${diffText}` : ""}
+                  </span>
+                </div>
+                {record.memo && <div className="memo">{record.memo}</div>}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import { getTodayISO } from "../../utils/date.js";
-import { addWorkoutRecord } from "../../api/workouts.js";
+import { addWorkoutRecord, getWorkoutTypes } from "../../api/workouts.js";
 
 export default function AddExercise() {
   const navigate = useNavigate();
@@ -12,6 +12,14 @@ export default function AddExercise() {
   const [calories, setCalories] = useState("");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
+  const [workoutTypes, setWorkoutTypes] = useState([]);
+  const [selectedTypeId, setSelectedTypeId] = useState("");
+
+  useEffect(() => {
+    getWorkoutTypes()
+      .then((response) => setWorkoutTypes(response?.types || response || []))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -27,6 +35,7 @@ export default function AddExercise() {
       duration: Number(duration),
       calories: Number(calories),
       memo: memo.trim() || undefined,
+      workoutTypeId: selectedTypeId || undefined,
     };
 
     await addWorkoutRecord(newRecord);
@@ -35,6 +44,7 @@ export default function AddExercise() {
     setDuration("");
     setCalories("");
     setMemo("");
+    setSelectedTypeId("");
     setError("");
   };
 
@@ -64,6 +74,34 @@ export default function AddExercise() {
 
           <form className="exercise-form" onSubmit={handleSubmit}>
             <div className="form-columns">
+              <div className="form-field">
+                <label htmlFor="exercise-type-select" className="form-label">
+                  ワークアウトタイプ（任意）
+                </label>
+                <select
+                  id="exercise-type-select"
+                  value={selectedTypeId}
+                  onChange={(event) => {
+                    const nextId = event.target.value;
+                    setSelectedTypeId(nextId);
+                    const selected = workoutTypes.find((item) => item.id === nextId);
+                    if (selected && !type) {
+                      setType(selected.name);
+                    }
+                  }}
+                >
+                  <option value="">選択なし</option>
+                  {workoutTypes.map((workoutType) => (
+                    <option key={workoutType.id} value={workoutType.id}>
+                      {workoutType.name}
+                      {Number.isFinite(workoutType.expectedCalories)
+                        ? `（目安 ${workoutType.expectedCalories} kcal）`
+                        : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="form-field">
                 <label htmlFor="exercise-date" className="form-label">
                   日付

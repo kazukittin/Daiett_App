@@ -7,6 +7,7 @@ const data = {
   meals: [],
   exercises: [],
   workoutSettings: createEmptyWeekPlan(),
+  workoutTypes: [],
 };
 
 const isValidDateString = (value) => {
@@ -69,6 +70,25 @@ export const store = {
   saveWorkoutSettings: (settings) => {
     data.workoutSettings = settings;
     return settings;
+  },
+
+  listWorkoutTypes: () => [...data.workoutTypes],
+  addWorkoutType: (workoutType) => {
+    const id = workoutType.id ?? Date.now().toString();
+    const newType = { ...workoutType, id };
+    data.workoutTypes.push(newType);
+    return newType;
+  },
+  updateWorkoutType: (id, payload) => {
+    const index = data.workoutTypes.findIndex((type) => type.id === id);
+    if (index === -1) return null;
+    data.workoutTypes[index] = { ...data.workoutTypes[index], ...payload };
+    return data.workoutTypes[index];
+  },
+  deleteWorkoutType: (id) => {
+    const before = data.workoutTypes.length;
+    data.workoutTypes = data.workoutTypes.filter((type) => type.id !== id);
+    return data.workoutTypes.length < before;
   },
 };
 

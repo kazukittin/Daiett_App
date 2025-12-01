@@ -23,6 +23,11 @@ export default function HomeDashboard({ onEditProfile, profile }) {
     Number.isFinite(latestRecord?.weight) ? latestRecord.weight : null,
   [latestRecord]);
 
+  const profileTargetWeight = useMemo(
+    () => (Number.isFinite(profile?.targetWeight) ? profile.targetWeight : null),
+    [profile],
+  );
+
   useEffect(() => {
     getMealSummary({ date: todayKey })
       .then((summary) => setMealSummary(summary))
@@ -90,7 +95,9 @@ export default function HomeDashboard({ onEditProfile, profile }) {
           targetBurn={targetBurn}
           currentWeight={currentWeight}
           yesterdayWeight={currentWeight != null && previousRecord?.weight ? previousRecord.weight : null}
-          targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
+          targetWeight={
+            profileTargetWeight ?? (Number.isFinite(targetWeight) ? targetWeight : null)
+          }
           onEditProfile={onEditProfile}
         />
       </div>

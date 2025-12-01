@@ -42,6 +42,10 @@ export default function CalorieProfileSummary({ profile, onEdit }) {
           <span style={labelStyle}>目標</span>
           <strong>{profile.goal === "lose" ? "減量" : profile.goal === "gain" ? "増量" : "維持"}</strong>
         </div>
+        <div style={rowStyle}>
+          <span style={labelStyle}>目標体重</span>
+          <strong>{profile.targetWeight != null ? `${profile.targetWeight} kg` : "未設定"}</strong>
+        </div>
       </div>
 
       {onEdit && (

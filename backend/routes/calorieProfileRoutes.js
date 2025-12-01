@@ -23,7 +23,7 @@ router.get("/profile", async (req, res) => {
 });
 
 router.put("/profile", async (req, res) => {
-  const { heightCm, age, sex, activityLevel, goal } = req.body || {};
+  const { heightCm, age, sex, activityLevel, goal, targetWeight } = req.body || {};
 
   if (
     !isValidNumber(heightCm) ||
@@ -39,6 +39,9 @@ router.put("/profile", async (req, res) => {
   }
 
   const profile = { heightCm, age, sex, activityLevel, goal };
+  if (isValidNumber(targetWeight)) {
+    profile.targetWeight = targetWeight;
+  }
 
   try {
     await saveProfile(profile);
