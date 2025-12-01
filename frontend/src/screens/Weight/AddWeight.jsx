@@ -1,7 +1,7 @@
 import React from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
-import WeightTrackerCard from "../../components/weight/WeightTrackerCard.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
+import WeightLog from "../../components/WeightLog.jsx";
 
 export default function AddWeight() {
   const { addWeightRecord, latestRecord, previousRecord } = useWeightRecords();
@@ -23,7 +23,7 @@ export default function AddWeight() {
           </header>
 
           <div className="add-weight-layout">
-            <WeightTrackerCard
+            <WeightLog
               onSave={addWeightRecord}
               latestRecord={latestRecord}
               previousRecord={previousRecord}
