@@ -2,17 +2,26 @@ import React, { useState } from "react";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { useDailyFixedWorkoutPlan } from "../../hooks/useDailyFixedWorkoutPlan.js";
 import { getTodayISO, weekdayLabels } from "../../utils/date.js";
+import { completeTodayWorkout, getTodayWorkoutStatus } from "../../api/workouts.js";
 
 const buildMenuKey = (menu, index) => `${menu?.name || "menu"}-${index}`;
 
 const estimateCalories = (menu) => {
+  const explicitInput = menu.expectedCalories;
+  if (explicitInput !== undefined && explicitInput !== null && explicitInput !== "") {
+    const explicit = Number(explicitInput);
+    if (Number.isFinite(explicit)) {
+      return explicit;
+    }
+  }
+
   const sets = Number(menu.sets) || 1;
   if (menu.type === "seconds") {
     const minutes = ((Number(menu.value) || 0) * sets) / 60;
-    return Math.max(20, Math.round(minutes * 8));
+    return Math.max(0, Math.round(minutes * 8));
   }
   const reps = Number(menu.value) || 0;
-  return Math.max(20, Math.round(reps * sets * 0.5));
+  return Math.max(0, Math.round(reps * sets * 0.5));
 };
 
 const estimateDuration = (menu) => {
@@ -28,9 +37,50 @@ export default function TodayWorkout() {
   const { todayExercises, totalCalories, addExercise } = useTodayExercises();
   const { menus: defaultMenus, weekday } = useDailyFixedWorkoutPlan();
   const hasDefaultPlan = defaultMenus.length > 0;
+  const [completedToday, setCompletedToday] = useState(false);
   const [completedMenuKeys, setCompletedMenuKeys] = useState(() => new Set());
 
+  React.useEffect(() => {
+    let isMounted = true;
+    const loadStatus = async () => {
+      try {
+        const status = await getTodayWorkoutStatus();
+        if (!isMounted) return;
+        setCompletedToday(Boolean(status.completed));
+      } catch (error) {
+        console.error("Failed to load workout status", error);
+      }
+    };
+    loadStatus();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const completed = new Set();
+    defaultMenus.forEach((menu, index) => {
+      const key = buildMenuKey(menu, index);
+      const matched = todayExercises.some(
+        (record) => record.meta === "fixed" && record.type === (menu.name || "固定メニュー")
+      );
+      if (matched) {
+        completed.add(key);
+      }
+    });
+
+    if (completedToday) {
+      defaultMenus.forEach((menu, index) => {
+        completed.add(buildMenuKey(menu, index));
+      });
+    }
+
+    setCompletedMenuKeys(completed);
+  }, [defaultMenus, todayExercises, completedToday]);
+
   const handleCompleteMenu = async (menu, index) => {
+    if (completedToday) return;
+
     const key = buildMenuKey(menu, index);
     if (completedMenuKeys.has(key)) return;
 
@@ -44,7 +94,9 @@ export default function TodayWorkout() {
     };
 
     await addExercise(payload);
-    setCompletedMenuKeys((prev) => new Set(prev).add(key));
+    await completeTodayWorkout();
+    setCompletedToday(true);
+    setCompletedMenuKeys(new Set(defaultMenus.map((item, idx) => buildMenuKey(item, idx))));
   };
 
   return (
@@ -67,24 +119,29 @@ export default function TodayWorkout() {
             <span className="muted">{weekdayLabels[weekday]}に予定しているメニュー</span>
           </div>
           <ul className="fixed-workout-list">
-            {defaultMenus.map((menu, index) => (
-              <li key={`${menu.name}-${index}`} className="fixed-workout-item">
-                <label className="fixed-workout-check">
-                  <input
-                    type="checkbox"
-                    onChange={() => handleCompleteMenu(menu, index)}
-                    disabled={completedMenuKeys.has(buildMenuKey(menu, index))}
-                  />
-                  <div>
-                    <div className="fixed-workout-title">{menu.name || "メニュー名未設定"}</div>
-                    <div className="fixed-workout-meta">
-                      {menu.type === "seconds" ? `${menu.value} 秒` : `${menu.value} 回`} ／
-                      セット数 {menu.sets}
+            {defaultMenus.map((menu, index) => {
+              const key = buildMenuKey(menu, index);
+              const isCompleted = completedMenuKeys.has(key) || completedToday;
+              return (
+                <li key={key} className="fixed-workout-item">
+                  <label className="fixed-workout-check">
+                    <input
+                      type="checkbox"
+                      onChange={() => handleCompleteMenu(menu, index)}
+                      checked={isCompleted}
+                      disabled={isCompleted}
+                    />
+                    <div>
+                      <div className="fixed-workout-title">{menu.name || "メニュー名未設定"}</div>
+                      <div className="fixed-workout-meta">
+                        {menu.type === "seconds" ? `${menu.value} 秒` : `${menu.value} 回`} ／
+                        セット数 {menu.sets}
+                      </div>
                     </div>
-                  </div>
-                </label>
-              </li>
-            ))}
+                  </label>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -95,17 +152,28 @@ export default function TodayWorkout() {
         </p>
       ) : (
         <ul className="today-workout-list">
-          {todayExercises.map((record) => (
-            <li key={record.id} className="today-workout-item">
-              <div className="today-workout-main">
-                <strong>{record.type}</strong>
-                <span className="today-workout-sub">
-                  {record.duration}分 ・ {record.calories} kcal
-                </span>
-              </div>
-              {record.memo && <div className="memo">{record.memo}</div>}
-            </li>
-          ))}
+          {todayExercises.map((record) => {
+            const expected = Number.isFinite(record.expectedCalories)
+              ? record.expectedCalories
+              : null;
+            const diff =
+              expected != null && Number.isFinite(record.calories)
+                ? record.calories - expected
+                : null;
+            const diffText = diff == null ? "" : `（${diff > 0 ? "+" : ""}${diff}）`;
+            return (
+              <li key={record.id} className="today-workout-item">
+                <div className="today-workout-main">
+                  <strong>{record.type}</strong>
+                  <span className="today-workout-sub">
+                    実績：{record.calories} kcal
+                    {expected != null ? ` / 目安：${expected} kcal ${diffText}` : ""}
+                  </span>
+                </div>
+                {record.memo && <div className="memo">{record.memo}</div>}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

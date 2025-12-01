@@ -3,7 +3,7 @@ import Card from "../../components/ui/Card.jsx";
 import { weekdayLabels } from "../../utils/date.js";
 import { getWorkoutSettings, saveWorkoutSettings as saveWorkoutSettingsApi } from "../../api/workouts.js";
 
-const createEmptyMenu = () => ({ name: "", type: "reps", value: "", sets: "" });
+const createEmptyMenu = () => ({ name: "", type: "reps", value: "", sets: "", expectedCalories: "" });
 const menuKey = (weekday, index) => `${weekday}-${index}`;
 
 // 新規追加フォームは1枚のカードにまとめ、既存リストとの差を明確化。
@@ -70,6 +70,19 @@ const WorkoutMenuAddForm = ({ draft, weekday, onWeekdayChange, onDraftChange, on
             onChange={(event) => onDraftChange("sets", event.target.value)}
             placeholder="3"
           />
+        </div>
+
+        <div className="menu-field">
+          <label className="menu-label">目安消費カロリー (kcal)</label>
+          <input
+            type="number"
+            min="0"
+            inputMode="numeric"
+            value={draft?.expectedCalories ?? ""}
+            onChange={(event) => onDraftChange("expectedCalories", event.target.value)}
+            placeholder="例: 200"
+          />
+          <p className="input-hint">任意。把握している場合は目安を入力してください。</p>
         </div>
       </div>
 
@@ -142,6 +155,16 @@ const WorkoutMenuRow = ({
               onChange={(event) => onChange(weekday, index, "sets", event.target.value)}
             />
           </div>
+          <div className="menu-field">
+            <label className="menu-label">目安消費カロリー (kcal)</label>
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={draft?.expectedCalories ?? ""}
+              onChange={(event) => onChange(weekday, index, "expectedCalories", event.target.value)}
+            />
+          </div>
         </div>
       ) : (
         <div className="workout-menu-meta">
@@ -156,6 +179,10 @@ const WorkoutMenuRow = ({
           <div>
             <span className="muted small">セット数</span>
             <strong>{menu.sets || 0}</strong>
+          </div>
+          <div>
+            <span className="muted small">目安消費カロリー</span>
+            <strong>{menu.expectedCalories || menu.expectedCalories === 0 ? menu.expectedCalories : "-"} kcal</strong>
           </div>
         </div>
       )}

@@ -9,25 +9,23 @@ const activityFactors = {
   high: 1.725,
 };
 
-const validGoals = new Set(["lose", "maintain", "gain"]);
 const validSexes = new Set(["male", "female"]);
 
 const isValidNumber = (value) => typeof value === "number" && Number.isFinite(value);
 
 router.post("/recommendation", (req, res) => {
-  const { weightKg, heightCm, age, sex, activityLevel, goal } = req.body || {};
+  const { weightKg, heightCm, age, sex, activityLevel } = req.body || {};
 
   if (
     !isValidNumber(weightKg) ||
     !isValidNumber(heightCm) ||
     !isValidNumber(age) ||
     !validSexes.has(sex) ||
-    !activityFactors[activityLevel] ||
-    !validGoals.has(goal)
+    !activityFactors[activityLevel]
   ) {
     return res.status(400).json({
       error:
-        "Invalid input. Ensure weightKg, heightCm, age are numbers and sex, activityLevel, and goal are valid values.",
+        "Invalid input. Ensure weightKg, heightCm, age are numbers and sex and activityLevel are valid values.",
     });
   }
 
@@ -37,19 +35,9 @@ router.post("/recommendation", (req, res) => {
   const activityFactor = activityFactors[activityLevel];
   const tdee = Math.round(bmr * activityFactor);
 
-  const goalAdjustments = {
-    lose: -400,
-    maintain: 0,
-    gain: 300,
-  };
-
-  const targetCalories = Math.round(tdee + goalAdjustments[goal]);
-
   return res.json({
     bmr,
     tdee,
-    targetCalories,
-    goal,
     activityLevel,
   });
 });

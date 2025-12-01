@@ -1,4 +1,5 @@
 import { store, isValidDateString } from "../data/store.js";
+import { listWorkoutTypes } from "./workoutTypeService.js";
 
 // Workout planning, validation, and summaries live here so React components rely on
 // the API rather than duplicating business rules in the browser.
@@ -28,7 +29,23 @@ export const getWorkoutSettings = () => sanitizePlan(store.getWorkoutSettings())
 
 export const saveWorkoutSettings = (plan) => store.saveWorkoutSettings(sanitizePlan(plan));
 
-export const getExerciseRecords = (range = {}) => store.listExercises(range);
+const withExpectedCalories = (records = []) => {
+  const types = listWorkoutTypes();
+  const byId = new Map(types.map((type) => [type.id, type]));
+  const byName = new Map(types.map((type) => [type.name, type]));
+
+  return records.map((record) => {
+    const matchedType =
+      (record.workoutTypeId && byId.get(record.workoutTypeId)) || byName.get(record.type);
+    const expectedCalories = matchedType?.expectedCalories;
+    return {
+      ...record,
+      expectedCalories: Number.isFinite(expectedCalories) ? Number(expectedCalories) : null,
+    };
+  });
+};
+
+export const getExerciseRecords = (range = {}) => withExpectedCalories(store.listExercises(range));
 
 export const addExerciseRecord = (payload) => {
   if (!payload?.date || !isValidDateString(payload.date)) {
@@ -63,11 +80,25 @@ export const addExerciseRecord = (payload) => {
     duration,
     calories,
     memo: payload.memo?.trim() || "",
+    workoutTypeId: payload.workoutTypeId,
   });
 };
 
 export const getWorkoutSummaryForDate = (date) => {
-  const records = store.listExercises({ from: date, to: date });
+  const records = getExerciseRecords({ from: date, to: date });
   const totalCalories = records.reduce((sum, record) => sum + (Number(record.calories) || 0), 0);
   return { date, records, totalCalories };
+};
+
+const getTodayISO = () => new Date().toISOString().split("T")[0];
+
+export const getTodayWorkoutStatus = () => {
+  const today = getTodayISO();
+  const completed = store.isWorkoutCompletedOn(today);
+  return { date: today, completed };
+};
+
+export const markTodayWorkoutComplete = () => {
+  const today = getTodayISO();
+  return store.markWorkoutCompleted(today);
 };

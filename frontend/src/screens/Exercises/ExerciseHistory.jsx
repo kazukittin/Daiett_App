@@ -88,7 +88,12 @@ export default function ExerciseHistory() {
                   <span className="exercise-history-date">{formatDate(record.date)}</span>
                   {record.type ? <span className="exercise-history-type">{record.type}</span> : null}
                   {Number.isFinite(record.calories) ? (
-                    <span className="exercise-history-calories">{record.calories} kcal</span>
+                    <span className="exercise-history-calories">実績: {record.calories} kcal</span>
+                  ) : null}
+                  {Number.isFinite(record.expectedCalories) ? (
+                    <span className="exercise-history-calories expected">
+                      目安: {record.expectedCalories} kcal
+                    </span>
                   ) : null}
                 </div>
                 <div className="exercise-history-body">

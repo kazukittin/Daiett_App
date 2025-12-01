@@ -165,17 +165,6 @@ export default function IntakeDashboard() {
           <div className="intake-summary">
             <div className="metric-highlight">
               <h2>{todaySummary.totalCalories} kcal</h2>
-              <small>{DAILY_GOAL} kcal の目標まであと {Math.max(DAILY_GOAL - todaySummary.totalCalories, 0)} kcal</small>
-            </div>
-            <div className="intake-progress">
-              <div
-                className="intake-progress-bar"
-                style={{ width: `${Math.min((todaySummary.totalCalories / DAILY_GOAL) * 100, 100)}%` }}
-              />
-              <div className="intake-progress-label">
-                <span>進捗</span>
-                <strong>{Math.min(Math.round((todaySummary.totalCalories / DAILY_GOAL) * 100), 100)}%</strong>
-              </div>
             </div>
           </div>
 

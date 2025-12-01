@@ -16,12 +16,16 @@ export default function HomeDashboard({ onEditProfile, profile }) {
   const { trend, period, setPeriod } = useWeightTrend();
   const todayKey = getTodayISO();
   const [mealSummary, setMealSummary] = useState({ records: [], totalCalories: 0 });
-  const [targetIntake, setTargetIntake] = useState(null);
   const [targetBurn, setTargetBurn] = useState(null);
 
   const currentWeight = useMemo(() =>
     Number.isFinite(latestRecord?.weight) ? latestRecord.weight : null,
   [latestRecord]);
+
+  const profileTargetWeight = useMemo(
+    () => (Number.isFinite(profile?.targetWeight) ? profile.targetWeight : null),
+    [profile],
+  );
 
   useEffect(() => {
     getMealSummary({ date: todayKey })
@@ -33,7 +37,6 @@ export default function HomeDashboard({ onEditProfile, profile }) {
     let cancelled = false;
     async function fetchTargets() {
       if (!profile || !Number.isFinite(currentWeight)) {
-        setTargetIntake(null);
         setTargetBurn(null);
         return;
       }
@@ -57,13 +60,11 @@ export default function HomeDashboard({ onEditProfile, profile }) {
           return;
         }
         if (!cancelled) {
-          setTargetIntake(Number.isFinite(data.targetCalories) ? data.targetCalories : null);
           setTargetBurn(Number.isFinite(data.tdee) ? data.tdee : null);
         }
       } catch (error) {
         console.error("Error fetching calorie targets", error);
         if (!cancelled) {
-          setTargetIntake(null);
           setTargetBurn(null);
         }
       }
@@ -85,12 +86,13 @@ export default function HomeDashboard({ onEditProfile, profile }) {
 
         <TodaySummaryCard
           todayIntake={todayIntakeCalories}
-          targetIntake={targetIntake}
           todayBurn={todayBurnCalories}
           targetBurn={targetBurn}
           currentWeight={currentWeight}
           yesterdayWeight={currentWeight != null && previousRecord?.weight ? previousRecord.weight : null}
-          targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
+          targetWeight={
+            profileTargetWeight ?? (Number.isFinite(targetWeight) ? targetWeight : null)
+          }
           onEditProfile={onEditProfile}
         />
       </div>

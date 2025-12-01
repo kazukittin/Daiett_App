@@ -78,9 +78,6 @@ export default function WeightLog({ onSave, latestRecord, previousRecord, profil
         <div style={resultBoxStyle}>
           <div style={{ marginBottom: 6 }}>最新の体重で計算した目安</div>
           <div>推定消費カロリー (TDEE): {calorieResult.tdee} kcal</div>
-          <div style={targetHighlight}>
-            目標摂取カロリー: {calorieResult.targetCalories} kcal
-          </div>
         </div>
       )}
 

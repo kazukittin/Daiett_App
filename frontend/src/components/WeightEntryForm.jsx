@@ -174,9 +174,6 @@ export default function WeightEntryForm({ profile: initialProfile, onLogged, mod
             <div>基礎代謝 (BMR): {calorieResult.bmr} kcal</div>
           )}
           <div>推定消費カロリー (TDEE): {calorieResult.tdee} kcal</div>
-          <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>
-            目標摂取カロリー: {calorieResult.targetCalories} kcal
-          </div>
         </div>
       )}
     </div>

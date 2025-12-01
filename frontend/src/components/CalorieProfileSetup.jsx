@@ -41,6 +41,7 @@ const initialState = {
   sex: "male",
   activityLevel: "moderate",
   goal: "maintain",
+  targetWeight: "",
 };
 
 export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded }) {
@@ -55,6 +56,14 @@ export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded })
       .then((profile) => {
         if (!active) return;
         if (profile) {
+          setForm({
+            heightCm: profile.heightCm ?? "",
+            age: profile.age ?? "",
+            sex: profile.sex ?? "male",
+            activityLevel: profile.activityLevel ?? "moderate",
+            goal: profile.goal ?? "maintain",
+            targetWeight: profile.targetWeight ?? "",
+          });
           onProfileLoaded?.(profile);
         }
       })
@@ -77,6 +86,7 @@ export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded })
     event.preventDefault();
     const heightCm = Number(form.heightCm);
     const age = Number(form.age);
+    const targetWeight = form.targetWeight === "" ? null : Number(form.targetWeight);
 
     if (!heightCm || heightCm <= 0) {
       setError("身長を正しく入力してください。");
@@ -93,6 +103,7 @@ export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded })
       sex: form.sex,
       activityLevel: form.activityLevel,
       goal: form.goal,
+      targetWeight: Number.isFinite(targetWeight) ? targetWeight : undefined,
     };
 
     setSaving(true);
@@ -115,7 +126,7 @@ export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded })
     <div style={cardStyle}>
       <h3 style={{ margin: "0 0 12px" }}>カロリープロファイル設定</h3>
       <p style={{ margin: "0 0 12px", color: "#4b5563", lineHeight: 1.6 }}>
-        目標や活動レベルなどの基礎情報を登録しておくと、体重を記録するたびに自動で消費カロリーと目標摂取カロリーを計算します。
+        目標や活動レベルなどの基礎情報を登録しておくと、体重を記録するたびに自動で消費カロリーを計算します。
       </p>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
         <label style={labelStyle}>
@@ -175,6 +186,21 @@ export default function CalorieProfileSetup({ onProfileSaved, onProfileLoaded })
             <option value="maintain">維持したい</option>
             <option value="gain">増量したい</option>
           </select>
+        </label>
+
+        <label style={labelStyle}>
+          目標体重 (kg)
+          <input
+            type="number"
+            name="targetWeight"
+            value={form.targetWeight}
+            onChange={handleChange}
+            min="0"
+            step="0.1"
+            style={inputStyle}
+            placeholder="例: 60"
+          />
+          <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>未入力でも保存できます。</span>
         </label>
 
         <button type="submit" style={buttonStyle} disabled={saving}>

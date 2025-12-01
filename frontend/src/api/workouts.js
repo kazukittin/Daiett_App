@@ -14,3 +14,11 @@ export const getWorkoutRecords = (params = {}) => {
 };
 
 export const addWorkoutRecord = (payload) => apiClient.post("/api/workouts/records", payload);
+
+export const getWorkoutTypes = () => apiClient.get("/api/workouts/types");
+export const createWorkoutType = (payload) => apiClient.post("/api/workouts/types", payload);
+export const updateWorkoutType = (id, payload) => apiClient.put(`/api/workouts/types/${id}`, payload);
+export const deleteWorkoutType = (id) => apiClient.delete(`/api/workouts/types/${id}`);
+
+export const getTodayWorkoutStatus = () => apiClient.get("/api/workouts/today/status");
+export const completeTodayWorkout = () => apiClient.post("/api/workouts/today/complete");

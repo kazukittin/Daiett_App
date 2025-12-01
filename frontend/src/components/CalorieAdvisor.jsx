@@ -194,9 +194,6 @@ export default function CalorieAdvisor() {
           <p style={{ margin: "4px 0" }}>
             <strong>推定消費カロリー (TDEE):</strong> {result.tdee} kcal
           </p>
-          <p style={{ margin: "8px 0", fontSize: "1.05rem", fontWeight: 700 }}>
-            <strong>目標摂取カロリー:</strong> {result.targetCalories} kcal
-          </p>
         </div>
       )}
     </div>
