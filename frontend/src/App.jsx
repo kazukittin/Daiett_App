@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar.jsx";
 import CalorieProfileSetup from "./components/CalorieProfileSetup.jsx";
 import CalorieProfileSummary from "./components/CalorieProfileSummary.jsx";
-import WeightEntryForm from "./components/WeightEntryForm.jsx";
+import WeightDialog from "./components/WeightDialog.jsx";
 import { fetchCalorieProfile, clearCalorieProfile } from "./api/calorieProfileApi.js";
 import HomeDashboard from "./screens/Home/HomeDashboard.jsx";
 import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
@@ -81,7 +81,7 @@ function Header({ view, onChange }) {
   );
 }
 
-function HomeView({ profile }) {
+function HomeView() {
   return (
     <Routes>
       <Route path="/" element={<HomeDashboard />} />
@@ -90,20 +90,25 @@ function HomeView({ profile }) {
       <Route path="/meals/new" element={<AddMeal />} />
       <Route path="/meals/history" element={<MealHistory />} />
       <Route path="/exercises/history" element={<ExerciseHistory />} />
-      <Route path="/weight/new" element={<AddWeight profile={profile} />} />
+      <Route path="/weight/new" element={<AddWeight />} />
       <Route path="/exercises/new" element={<AddExercise />} />
       <Route path="/settings/workouts" element={<WorkoutSettings />} />
     </Routes>
   );
 }
 
-function CalorieView({ profile, profileLoaded, onProfileSaved, onEdit, error, onWeightLogged }) {
+function CalorieView({ profile, profileLoaded, onProfileSaved, onEdit, error, onOpenWeightDialog, infoMessage }) {
   return (
     <section>
       <h2 style={{ marginTop: 0 }}>カロリー診断</h2>
       <p style={{ color: "#374151", lineHeight: 1.6 }}>
-        現在の体重を記録するたびに、登録したプロファイルを使って推定消費カロリーと目標摂取カロリーを自動計算します。
+        プロファイル登録後は、モーダルの体重入力から毎日の推定消費カロリーと目標摂取カロリーを計算できます。
       </p>
+      {infoMessage && (
+        <div style={{ background: "#fef3c7", border: "1px solid #fcd34d", padding: 10, borderRadius: 8, marginTop: 8 }}>
+          {infoMessage}
+        </div>
+      )}
       {!profileLoaded && <div>プロファイルを読み込み中です...</div>}
       {error && <div style={{ color: "#b91c1c", marginTop: 8 }}>{error}</div>}
       {profileLoaded && !profile && !error && (
@@ -112,8 +117,22 @@ function CalorieView({ profile, profileLoaded, onProfileSaved, onEdit, error, on
       {profileLoaded && profile && (
         <>
           <CalorieProfileSummary profile={profile} onEdit={onEdit} />
-          <div style={{ marginTop: 16 }}>
-            <WeightEntryForm profile={profile} mode="inline" onLogged={onWeightLogged} />
+          <div style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              onClick={onOpenWeightDialog}
+              style={{
+                padding: "10px 14px",
+                borderRadius: 6,
+                border: "none",
+                background: "#2563eb",
+                color: "#fff",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              体重を追加
+            </button>
           </div>
         </>
       )}
@@ -127,6 +146,8 @@ export default function App() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
+  const [calorieNotice, setCalorieNotice] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     let active = true;
@@ -137,7 +158,11 @@ export default function App() {
       })
       .catch((err) => {
         if (!active) return;
-        setProfileError(err.message || "プロファイルの取得に失敗しました。");
+        if (err?.message?.includes("404")) {
+          setProfile(null);
+        } else {
+          setProfileError(err.message || "プロファイルの取得に失敗しました。");
+        }
       })
       .finally(() => {
         if (active) setProfileLoaded(true);
@@ -152,6 +177,7 @@ export default function App() {
     setProfile(nextProfile);
     setProfileError("");
     setProfileLoaded(true);
+    setCalorieNotice("");
   };
 
   const handleEditProfile = async () => {
@@ -159,19 +185,29 @@ export default function App() {
     try {
       await clearCalorieProfile();
       setProfile(null);
+      setView("calorie");
     } catch (err) {
       setProfileError(err.message || "プロファイルの削除に失敗しました。");
     }
+  };
+
+  const handleAddWeightClick = () => {
+    if (!profileLoaded || !profile) {
+      setView("calorie");
+      setCalorieNotice("まずカロリープロファイルを登録してください。");
+      return;
+    }
+    setIsWeightModalOpen(true);
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f3f4f6" }}>
       <Header view={view} onChange={setView} />
       <div style={{ display: "flex", minHeight: "calc(100vh - 72px)" }}>
-        <Sidebar onAddWeightClick={() => setIsWeightModalOpen(true)} />
+        <Sidebar onAddWeightClick={handleAddWeightClick} onNavigate={(path) => navigate(path)} />
         <main style={{ flex: 1, padding: "16px 24px" }}>
           {view === "home" ? (
-            <HomeView profile={profile} />
+            <HomeView />
           ) : (
             <CalorieView
               profile={profile}
@@ -179,56 +215,20 @@ export default function App() {
               onProfileSaved={handleProfileSaved}
               onEdit={handleEditProfile}
               error={profileError}
-              onWeightLogged={() => {}}
+              onOpenWeightDialog={handleAddWeightClick}
+              infoMessage={calorieNotice}
             />
           )}
         </main>
       </div>
 
       {isWeightModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 20,
+        <WeightDialog
+          onClose={() => setIsWeightModalOpen(false)}
+          onSaved={() => {
+            setIsWeightModalOpen(false);
           }}
-          onClick={() => setIsWeightModalOpen(false)}
-        >
-          <div
-            style={{
-              background: "#f8fafc",
-              borderRadius: 10,
-              padding: 16,
-              maxWidth: 560,
-              width: "100%",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>体重を追加</h3>
-              <button
-                type="button"
-                onClick={() => setIsWeightModalOpen(false)}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  fontSize: "1.25rem",
-                  cursor: "pointer",
-                  lineHeight: 1,
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <WeightEntryForm profile={profile} mode="modal" onLogged={() => {}} />
-          </div>
-        </div>
+        />
       )}
     </div>
   );
