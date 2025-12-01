@@ -67,24 +67,29 @@ export default function TodayWorkout() {
             <span className="muted">{weekdayLabels[weekday]}に予定しているメニュー</span>
           </div>
           <ul className="fixed-workout-list">
-            {defaultMenus.map((menu, index) => (
-              <li key={`${menu.name}-${index}`} className="fixed-workout-item">
-                <label className="fixed-workout-check">
-                  <input
-                    type="checkbox"
-                    onChange={() => handleCompleteMenu(menu, index)}
-                    disabled={completedMenuKeys.has(buildMenuKey(menu, index))}
-                  />
-                  <div>
-                    <div className="fixed-workout-title">{menu.name || "メニュー名未設定"}</div>
-                    <div className="fixed-workout-meta">
-                      {menu.type === "seconds" ? `${menu.value} 秒` : `${menu.value} 回`} ／
-                      セット数 {menu.sets}
+            {defaultMenus.map((menu, index) => {
+              const key = buildMenuKey(menu, index);
+              const isCompleted = completedMenuKeys.has(key);
+              return (
+                <li key={`${menu.name}-${index}`} className="fixed-workout-item">
+                  <label className="fixed-workout-check">
+                    <input
+                      type="checkbox"
+                      onChange={() => handleCompleteMenu(menu, index)}
+                      checked={isCompleted}
+                      disabled={isCompleted}
+                    />
+                    <div>
+                      <div className="fixed-workout-title">{menu.name || "メニュー名未設定"}</div>
+                      <div className="fixed-workout-meta">
+                        {menu.type === "seconds" ? `${menu.value} 秒` : `${menu.value} 回`} ／
+                        セット数 {menu.sets}
+                      </div>
                     </div>
-                  </div>
-                </label>
-              </li>
-            ))}
+                  </label>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
