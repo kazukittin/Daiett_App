@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar.jsx";
 import CalorieProfileSetup from "./components/CalorieProfileSetup.jsx";
 import CalorieProfileSummary from "./components/CalorieProfileSummary.jsx";
@@ -14,72 +14,6 @@ import ExerciseHistory from "./screens/Exercises/ExerciseHistory.jsx";
 import AddExercise from "./screens/Exercises/AddExercise.jsx";
 import AddWeight from "./screens/Weight/AddWeight.jsx";
 import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
-
-function Header({ view, onChange }) {
-  const baseButtonStyle = {
-    padding: "10px 14px",
-    borderRadius: 6,
-    border: "1px solid #444",
-    background: "transparent",
-    color: "#fff",
-    cursor: "pointer",
-    marginLeft: 8,
-    minWidth: 96,
-  };
-
-  const activeStyle = {
-    background: "#fff",
-    color: "#111",
-    borderColor: "#fff",
-  };
-
-  return (
-    <header
-      style={{
-        background: "#222",
-        color: "#fff",
-        padding: "14px 20px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>Daiett App</div>
-          <div style={{ fontSize: "0.9rem", color: "#d1d5db" }}>Local diet tracking</div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <button
-            type="button"
-            onClick={() => onChange("home")}
-            style={{
-              ...baseButtonStyle,
-              ...(view === "home" ? activeStyle : {}),
-            }}
-          >
-            ホーム
-          </button>
-          <button
-            type="button"
-            onClick={() => onChange("calorie")}
-            style={{
-              ...baseButtonStyle,
-              ...(view === "calorie" ? activeStyle : {}),
-            }}
-          >
-            カロリー診断
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function HomeView() {
   return (
@@ -97,10 +31,10 @@ function HomeView() {
   );
 }
 
-function CalorieView({ profile, profileLoaded, onProfileSaved, onEdit, error, onOpenWeightDialog, infoMessage }) {
+function ProfileView({ profile, profileLoaded, onProfileSaved, onEdit, error, onOpenWeightDialog, infoMessage }) {
   return (
     <section>
-      <h2 style={{ marginTop: 0 }}>カロリー診断</h2>
+      <h2 style={{ marginTop: 0 }}>プロファイル編集</h2>
       <p style={{ color: "#374151", lineHeight: 1.6 }}>
         プロファイル登録後は、モーダルの体重入力から毎日の推定消費カロリーと目標摂取カロリーを計算できます。
       </p>
@@ -147,7 +81,6 @@ export default function App() {
   const [profileError, setProfileError] = useState("");
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [calorieNotice, setCalorieNotice] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     let active = true;
@@ -185,7 +118,7 @@ export default function App() {
     try {
       await clearCalorieProfile();
       setProfile(null);
-      setView("calorie");
+      setView("profile");
     } catch (err) {
       setProfileError(err.message || "プロファイルの削除に失敗しました。");
     }
@@ -193,7 +126,7 @@ export default function App() {
 
   const handleAddWeightClick = () => {
     if (!profileLoaded || !profile) {
-      setView("calorie");
+      setView("profile");
       setCalorieNotice("まずカロリープロファイルを登録してください。");
       return;
     }
@@ -201,26 +134,28 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f3f4f6" }}>
-      <Header view={view} onChange={setView} />
-      <div style={{ display: "flex", minHeight: "calc(100vh - 72px)" }}>
-        <Sidebar onAddWeightClick={handleAddWeightClick} onNavigate={(path) => navigate(path)} />
-        <main style={{ flex: 1, padding: "16px 24px" }}>
-          {view === "home" ? (
-            <HomeView />
-          ) : (
-            <CalorieView
-              profile={profile}
-              profileLoaded={profileLoaded}
-              onProfileSaved={handleProfileSaved}
-              onEdit={handleEditProfile}
-              error={profileError}
-              onOpenWeightDialog={handleAddWeightClick}
-              infoMessage={calorieNotice}
-            />
-          )}
-        </main>
-      </div>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f3f4f6" }}>
+      <Sidebar
+        activeView={view}
+        onAddWeightClick={handleAddWeightClick}
+        onNavigate={(nextView) => {
+          setView(nextView);
+        }}
+      />
+      <main style={{ flex: 1, padding: "16px 24px" }}>
+        {view === "home" && <HomeView />}
+        {view === "profile" && (
+          <ProfileView
+            profile={profile}
+            profileLoaded={profileLoaded}
+            onProfileSaved={handleProfileSaved}
+            onEdit={handleEditProfile}
+            error={profileError}
+            onOpenWeightDialog={handleAddWeightClick}
+            infoMessage={calorieNotice}
+          />
+        )}
+      </main>
 
       {isWeightModalOpen && (
         <WeightDialog

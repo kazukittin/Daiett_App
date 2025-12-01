@@ -3,20 +3,18 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const menu = [
-  { label: "ダッシュボード", path: "/" },
+  { label: "ホーム", view: "home", path: "/" },
+  { label: "プロファイル編集", view: "profile" },
   { label: "摂取カロリー", path: "/intake" },
   { label: "消費カロリー", path: "/burn" },
   { label: "ワークアウト設定", path: "/settings/workouts" },
 ];
 
-export default function Sidebar({ onAddWeightClick, onNavigate }) {
+export default function Sidebar({ onAddWeightClick, onNavigate, activeView }) {
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleNavigate = (path) => {
-    if (onNavigate) {
-      onNavigate(path);
-    }
     navigate(path);
   };
 
@@ -34,9 +32,25 @@ export default function Sidebar({ onAddWeightClick, onNavigate }) {
         <ul className="nav-list">
           {menu.map((item) => (
             <li
-              key={item.path}
-              className={`nav-item ${location.pathname === item.path ? "active" : ""}`}
-              onClick={() => handleNavigate(item.path)}
+              key={item.path || item.view}
+              className={`nav-item ${
+                item.view
+                  ? activeView === item.view
+                  : location.pathname === item.path
+                    ? "active"
+                    : ""
+              }`}
+              onClick={() => {
+                if (item.view) {
+                  onNavigate?.(item.view);
+                  if (item.path) {
+                    handleNavigate(item.path);
+                  }
+                  return;
+                }
+                onNavigate?.("home");
+                handleNavigate(item.path);
+              }}
             >
               <div className="nav-icon" />
               <span>{item.label}</span>
