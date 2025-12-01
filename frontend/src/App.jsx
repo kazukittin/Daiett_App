@@ -16,10 +16,10 @@ import AddExercise from "./screens/Exercises/AddExercise.jsx";
 import AddWeight from "./screens/Weight/AddWeight.jsx";
 import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
 
-function HomeView({ onEditProfile }) {
+function HomeView({ onEditProfile, profile }) {
   return (
     <Routes>
-      <Route path="/" element={<HomeDashboard onEditProfile={onEditProfile} />} />
+      <Route path="/" element={<HomeDashboard onEditProfile={onEditProfile} profile={profile} />} />
       <Route path="/intake" element={<IntakeDashboard />} />
       <Route path="/burn" element={<BurnDashboard />} />
       <Route path="/meals/new" element={<AddMeal />} />
@@ -129,7 +129,9 @@ export default function App() {
         }}
       />
       <main style={{ flex: 1, padding: "16px 24px" }}>
-        {view === "home" && <HomeView onEditProfile={() => setView("profile")} />}
+        {view === "home" && (
+          <HomeView onEditProfile={() => setView("profile")} profile={profile} />
+        )}
         {view === "profile" && (
           <ProfileView
             profile={profile}
