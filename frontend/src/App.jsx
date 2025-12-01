@@ -5,7 +5,7 @@ import CalorieProfileSetup from "./components/CalorieProfileSetup.jsx";
 import CalorieProfileSummary from "./components/CalorieProfileSummary.jsx";
 import WeightDialog from "./components/WeightDialog.jsx";
 import FitbitConnectCard from "./components/fitbit/FitbitConnectCard.jsx";
-import { fetchCalorieProfile, clearCalorieProfile } from "./api/calorieProfileApi.js";
+import { fetchCalorieProfile } from "./api/calorieProfileApi.js";
 import HomeDashboard from "./screens/Home/HomeDashboard.jsx";
 import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
 import BurnDashboard from "./screens/Burn/BurnDashboard.jsx";
@@ -32,7 +32,16 @@ function HomeView({ onEditProfile, profile }) {
   );
 }
 
-function ProfileView({ profile, profileLoaded, onProfileSaved, onEdit, error, infoMessage }) {
+function ProfileView({
+  profile,
+  profileLoaded,
+  onProfileSaved,
+  onEdit,
+  error,
+  infoMessage,
+  isEditing,
+  onFinishEdit,
+}) {
   return (
     <section>
       <h2 style={{ marginTop: 0 }}>プロファイル編集</h2>
@@ -46,16 +55,22 @@ function ProfileView({ profile, profileLoaded, onProfileSaved, onEdit, error, in
       )}
       {!profileLoaded && <div>プロファイルを読み込み中です...</div>}
       {error && <div style={{ color: "#b91c1c", marginTop: 8 }}>{error}</div>}
-      {profileLoaded && !profile && !error && (
-        <CalorieProfileSetup onProfileSaved={onProfileSaved} onProfileLoaded={onProfileSaved} />
+      {profileLoaded && (isEditing || (!profile && !error)) && (
+        <CalorieProfileSetup
+          onProfileSaved={(next) => {
+            onProfileSaved(next);
+            onFinishEdit?.();
+          }}
+          onProfileLoaded={onProfileSaved}
+        />
       )}
-      {profileLoaded && profile && (
+      {profileLoaded && profile && !isEditing && (
         <>
           <CalorieProfileSummary profile={profile} onEdit={onEdit} />
           <FitbitConnectCard />
         </>
       )}
-      {profileLoaded && !profile && <FitbitConnectCard />}
+      {profileLoaded && !profile && !isEditing && <FitbitConnectCard />}
     </section>
   );
 }
@@ -65,6 +80,7 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [calorieNotice, setCalorieNotice] = useState("");
 
@@ -97,17 +113,13 @@ export default function App() {
     setProfileError("");
     setProfileLoaded(true);
     setCalorieNotice("");
+    setIsEditingProfile(false);
   };
 
-  const handleEditProfile = async () => {
+  const handleEditProfile = () => {
     setProfileError("");
-    try {
-      await clearCalorieProfile();
-      setProfile(null);
-      setView("profile");
-    } catch (err) {
-      setProfileError(err.message || "プロファイルの削除に失敗しました。");
-    }
+    setIsEditingProfile(true);
+    setView("profile");
   };
 
   const handleAddWeightClick = () => {
@@ -140,6 +152,8 @@ export default function App() {
             onEdit={handleEditProfile}
             error={profileError}
             infoMessage={calorieNotice}
+            isEditing={isEditingProfile}
+            onFinishEdit={() => setIsEditingProfile(false)}
           />
         )}
       </main>
