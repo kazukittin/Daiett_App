@@ -6,13 +6,21 @@ import { getTodayISO, weekdayLabels } from "../../utils/date.js";
 const buildMenuKey = (menu, index) => `${menu?.name || "menu"}-${index}`;
 
 const estimateCalories = (menu) => {
+  const explicitInput = menu.expectedCalories;
+  if (explicitInput !== undefined && explicitInput !== null && explicitInput !== "") {
+    const explicit = Number(explicitInput);
+    if (Number.isFinite(explicit)) {
+      return explicit;
+    }
+  }
+
   const sets = Number(menu.sets) || 1;
   if (menu.type === "seconds") {
     const minutes = ((Number(menu.value) || 0) * sets) / 60;
-    return Math.max(20, Math.round(minutes * 8));
+    return Math.max(0, Math.round(minutes * 8));
   }
   const reps = Number(menu.value) || 0;
-  return Math.max(20, Math.round(reps * sets * 0.5));
+  return Math.max(0, Math.round(reps * sets * 0.5));
 };
 
 const estimateDuration = (menu) => {
@@ -29,6 +37,20 @@ export default function TodayWorkout() {
   const { menus: defaultMenus, weekday } = useDailyFixedWorkoutPlan();
   const hasDefaultPlan = defaultMenus.length > 0;
   const [completedMenuKeys, setCompletedMenuKeys] = useState(() => new Set());
+
+  React.useEffect(() => {
+    const completed = new Set();
+    defaultMenus.forEach((menu, index) => {
+      const key = buildMenuKey(menu, index);
+      const matched = todayExercises.some(
+        (record) => record.meta === "fixed" && record.type === (menu.name || "固定メニュー")
+      );
+      if (matched) {
+        completed.add(key);
+      }
+    });
+    setCompletedMenuKeys(completed);
+  }, [defaultMenus, todayExercises]);
 
   const handleCompleteMenu = async (menu, index) => {
     const key = buildMenuKey(menu, index);
@@ -71,7 +93,7 @@ export default function TodayWorkout() {
               const key = buildMenuKey(menu, index);
               const isCompleted = completedMenuKeys.has(key);
               return (
-                <li key={`${menu.name}-${index}`} className="fixed-workout-item">
+                <li key={key} className="fixed-workout-item">
                   <label className="fixed-workout-check">
                     <input
                       type="checkbox"
