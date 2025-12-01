@@ -1,10 +1,10 @@
 import React from "react";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
-import WeightLog from "../../components/WeightLog.jsx";
+import WeightEntryForm from "../../components/WeightEntryForm.jsx";
 
 export default function AddWeight({ profile }) {
-  const { addWeightRecord, latestRecord, previousRecord } = useWeightRecords();
+  const { refresh, latestRecord, previousRecord } = useWeightRecords();
 
   const latestWeight = latestRecord?.weight ?? null;
   const previousWeight = previousRecord?.weight ?? null;
@@ -23,12 +23,7 @@ export default function AddWeight({ profile }) {
           </header>
 
           <div className="add-weight-layout">
-            <WeightLog
-              onSave={addWeightRecord}
-              latestRecord={latestRecord}
-              previousRecord={previousRecord}
-              profile={profile}
-            />
+            <WeightEntryForm profile={profile} onLogged={refresh} />
 
             <aside className="ds-card compact info-card">
               <div className="ds-card-title">最近の状態</div>

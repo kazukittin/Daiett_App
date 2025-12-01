@@ -9,9 +9,17 @@ const menu = [
   { label: "ワークアウト設定", path: "/settings/workouts" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onAddWeightClick }) {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleAddWeight = () => {
+    if (onAddWeightClick) {
+      onAddWeightClick();
+    } else {
+      navigate("/weight/new");
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -36,7 +44,7 @@ export default function Sidebar() {
       <div className="sidebar-bottom">
         <button
           className="sidebar-action-btn weight"
-          onClick={() => navigate("/weight/new")}
+          onClick={handleAddWeight}
         >
           ⚖️ 体重を追加
         </button>
