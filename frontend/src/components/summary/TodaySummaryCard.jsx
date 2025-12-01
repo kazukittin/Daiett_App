@@ -2,90 +2,105 @@ import React from "react";
 
 /**
  * @typedef TodaySummaryCardProps
- * @property {number} dailyTargetCalories
- * @property {number} intakeCalories
- * @property {number} burnCalories
- * @property {number} remainingCalories
- * @property {number | null} currentWeight
- * @property {number | null} targetWeight
+ * @property {number} todayIntake
+ * @property {number} targetIntake
+ * @property {number} todayBurn
+ * @property {number} targetBurn
+ * @property {number} currentWeight
+ * @property {number} yesterdayWeight
+ * @property {number} targetWeight
+ * @property {() => void} [onEditProfile]
  */
 
 /**
- * Compact dashboard card summarizing today's calorie balance and key weight metrics.
+ * Dashboard summary of intake, burn, and weight with simple card layout.
  * @param {TodaySummaryCardProps} props
  */
 export default function TodaySummaryCard({
-  dailyTargetCalories,
-  intakeCalories,
-  burnCalories,
-  remainingCalories,
+  todayIntake,
+  targetIntake,
+  todayBurn,
+  targetBurn,
   currentWeight,
+  yesterdayWeight,
   targetWeight,
   onEditProfile,
 }) {
-  const balanceIsNegative = remainingCalories < 0;
-  const balanceLabel = balanceIsNegative ? "オーバー" : "残り";
+  const diff =
+    Number.isFinite(currentWeight) && Number.isFinite(yesterdayWeight)
+      ? currentWeight - yesterdayWeight
+      : null;
 
-  const formatValue = (value, unit) =>
-    Number.isFinite(value) ? `${Number(value).toFixed(unit === "kcal" ? 0 : 1)} ${unit}` : "--";
+  const formatKcal = (value) => (Number.isFinite(value) ? `${Math.round(value)} kcal` : "-- kcal");
+  const formatWeight = (value) =>
+    Number.isFinite(value) ? `${Number(value).toFixed(1)} kg` : "-- kg";
+
+  const weightDiffText = (() => {
+    if (!Number.isFinite(diff)) return "（昨日の記録なし）";
+    const sign = diff > 0 ? "+" : "";
+    return `（昨日より ${sign}${diff.toFixed(1)} kg）`;
+  })();
+
+  const cardStyle = {
+    background: "#fff",
+    padding: 16,
+    borderRadius: 8,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+    flex: "1 1 240px",
+    minWidth: 240,
+  };
+
+  const titleStyle = { margin: "0 0 8px", fontSize: 16, fontWeight: 700 };
+  const valueStyle = { margin: "6px 0", fontSize: 18, fontWeight: 600 };
+  const labelStyle = { color: "#555", fontSize: 13 };
 
   return (
-    <section className="card today-summary-card">
-      <div className="today-summary-header">
-        <div>
-          <h2>今日のサマリー</h2>
-          <p className="muted">目標 {dailyTargetCalories} kcal</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className={`today-summary-pill ${balanceIsNegative ? "negative" : "positive"}`}>
-            {balanceLabel} {Math.abs(remainingCalories)} kcal
-          </span>
-          {onEditProfile && (
-            <button type="button" className="ds-button secondary" onClick={onEditProfile}>
-              プロファイル編集
-            </button>
-          )}
-        </div>
+    <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2 style={{ margin: 0 }}>今日のサマリー</h2>
+        {onEditProfile ? (
+          <button type="button" onClick={onEditProfile} style={buttonStyle}>
+            プロファイル編集
+          </button>
+        ) : null}
       </div>
 
-      <div className="today-summary-grid">
-        <SummaryStat
-          label="摂取カロリー"
-          value={formatValue(intakeCalories, "kcal")}
-          helper="食事ログから計算"
-        />
-        <SummaryStat
-          label="消費カロリー"
-          value={formatValue(burnCalories, "kcal")}
-          helper="運動記録の合計"
-        />
-        <SummaryStat
-          label="残り目標"
-          className={balanceIsNegative ? "negative" : ""}
-          value={`${Math.abs(remainingCalories)} kcal`}
-          helper={balanceIsNegative ? "目標を超えています" : "まだ余裕があります"}
-        />
-        <SummaryStat
-          label="現在の体重"
-          value={formatValue(currentWeight, "kg")}
-          helper="最新の記録"
-        />
-        <SummaryStat
-          label="目標体重"
-          value={formatValue(targetWeight, "kg")}
-          helper="設定した目標"
-        />
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <div style={cardStyle}>
+          <h3 style={titleStyle}>摂取カロリー</h3>
+          <div style={labelStyle}>今日の記録：</div>
+          <div style={valueStyle}>{formatKcal(todayIntake)}</div>
+          <div style={labelStyle}>目標摂取カロリー：</div>
+          <div style={valueStyle}>{formatKcal(targetIntake)}</div>
+        </div>
+
+        <div style={cardStyle}>
+          <h3 style={titleStyle}>消費カロリー</h3>
+          <div style={labelStyle}>今日の記録：</div>
+          <div style={valueStyle}>{formatKcal(todayBurn)}</div>
+          <div style={labelStyle}>目標消費カロリー：</div>
+          <div style={valueStyle}>{formatKcal(targetBurn)}</div>
+        </div>
+
+        <div style={cardStyle}>
+          <h3 style={titleStyle}>体重</h3>
+          <div style={labelStyle}>現在の体重：</div>
+          <div style={valueStyle}>{formatWeight(currentWeight)}</div>
+          <div style={{ ...labelStyle, margin: "4px 0" }}>{weightDiffText}</div>
+          <div style={labelStyle}>目標体重：</div>
+          <div style={valueStyle}>{formatWeight(targetWeight)}</div>
+        </div>
       </div>
     </section>
   );
 }
 
-function SummaryStat({ label, value, helper, className = "" }) {
-  return (
-    <div className={`today-summary-stat ${className}`.trim()}>
-      <span className="stat-label">{label}</span>
-      <strong className="stat-value">{value}</strong>
-      {helper ? <span className="stat-helper">{helper}</span> : null}
-    </div>
-  );
-}
+const buttonStyle = {
+  padding: "8px 12px",
+  background: "#2563eb",
+  color: "#fff",
+  border: "none",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontWeight: 600,
+};

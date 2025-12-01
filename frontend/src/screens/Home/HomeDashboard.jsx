@@ -9,11 +9,12 @@ import { useWeightTrend } from "../../hooks/useWeightTrend.js";
 import { getMealSummary } from "../../api/meals.js";
 import { getTodayISO } from "../../utils/date.js";
 
-const DAILY_TARGET_CALORIES = 2000;
+const DAILY_TARGET_INTAKE = 2000;
+const DAILY_TARGET_BURN = 500;
 
 export default function HomeDashboard({ onEditProfile }) {
   // Weight summaries and trend data come from backend APIs via hooks.
-  const { weightRecords, latestRecord, targetWeight } = useWeightRecords();
+  const { weightRecords, latestRecord, previousRecord, targetWeight } = useWeightRecords();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
   const { trend, period, setPeriod } = useWeightTrend();
   const todayKey = getTodayISO();
@@ -27,7 +28,6 @@ export default function HomeDashboard({ onEditProfile }) {
 
   const todayMealEntries = mealSummary.records || [];
   const todayIntakeCalories = mealSummary.totalCalories || 0;
-  const remainingCalories = DAILY_TARGET_CALORIES - todayIntakeCalories + (todayBurnCalories || 0);
 
   return (
     <section className="content-grid dashboard-layout">
@@ -35,11 +35,12 @@ export default function HomeDashboard({ onEditProfile }) {
         <div className="dashboard-actions"></div>
 
         <TodaySummaryCard
-          dailyTargetCalories={DAILY_TARGET_CALORIES}
-          intakeCalories={todayIntakeCalories}
-          burnCalories={todayBurnCalories}
-          remainingCalories={remainingCalories}
+          todayIntake={todayIntakeCalories}
+          targetIntake={DAILY_TARGET_INTAKE}
+          todayBurn={todayBurnCalories}
+          targetBurn={DAILY_TARGET_BURN}
           currentWeight={latestRecord?.weight ?? null}
+          yesterdayWeight={latestRecord?.weight && previousRecord?.weight ? previousRecord.weight : null}
           targetWeight={Number.isFinite(targetWeight) ? targetWeight : null}
           onEditProfile={onEditProfile}
         />
