@@ -8,6 +8,7 @@ import mealRoutes from "./routes/mealRoutes.js";
 import workoutRoutes from "./routes/workoutRoutes.js";
 import calorieRoutes from "./routes/calorieRoutes.js";
 import calorieProfileRoutes from "./routes/calorieProfileRoutes.js";
+import foodSetRoutes from "./routes/foodSetRoutes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api/meals", mealRoutes);
 app.use("/api/workouts", workoutRoutes);
 app.use("/api/calories", calorieRoutes);
 app.use("/api/calories", calorieProfileRoutes);
+app.use("/api", foodSetRoutes);
 
 const AUTHORIZE_URL = "https://www.fitbit.com/oauth2/authorize";
 const TOKEN_URL = "https://api.fitbit.com/oauth2/token";

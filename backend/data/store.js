@@ -31,10 +31,14 @@ export const store = {
       .sort((a, b) => new Date(a.date) - new Date(b.date)),
 
   upsertWeightRecord: (record) => {
-    data.weights = data.weights.filter((item) => item.date !== record.date);
-    data.weights.push(record);
+    const isSameSlot = (item) =>
+      item.date === record.date && (record.timeOfDay ? item.timeOfDay === record.timeOfDay : !item.timeOfDay);
+
+    data.weights = data.weights.filter((item) => !isSameSlot(item));
+    const id = record.id ?? Date.now();
+    data.weights.push({ ...record, id });
     data.weights.sort((a, b) => new Date(a.date) - new Date(b.date));
-    return record;
+    return { ...record, id };
   },
 
   listMealRecords: (range = {}) =>

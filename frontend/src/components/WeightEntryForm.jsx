@@ -27,6 +27,8 @@ const modalCardStyle = {
 
 export default function WeightEntryForm({ profile: initialProfile, onLogged, mode = "inline" }) {
   const [weight, setWeight] = useState("");
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [timeOfDay, setTimeOfDay] = useState("morning");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [calorieResult, setCalorieResult] = useState(null);
@@ -50,11 +52,10 @@ export default function WeightEntryForm({ profile: initialProfile, onLogged, mod
     setLoading(true);
     try {
       // 1. Save weight
-      const today = new Date().toISOString().slice(0, 10);
       const weightResponse = await fetch("http://localhost:4000/api/weight/records", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weight: weightValue, date: today }),
+        body: JSON.stringify({ weight: weightValue, date, timeOfDay }),
       });
 
       if (!weightResponse.ok) {
@@ -98,7 +99,7 @@ export default function WeightEntryForm({ profile: initialProfile, onLogged, mod
         setError("カロリープロファイルが未設定です。先に登録してください。");
       }
 
-      onLogged?.({ weightKg: weightValue, calorieResult: calorieData });
+      onLogged?.({ weightKg: weightValue, calorieResult: calorieData, date, timeOfDay });
       setWeight("");
     } catch (err) {
       setError(err.message || "処理に失敗しました。");
@@ -112,6 +113,28 @@ export default function WeightEntryForm({ profile: initialProfile, onLogged, mod
   return (
     <div style={effectiveCardStyle}>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span style={{ fontWeight: 600 }}>日付</span>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={{ padding: 10, borderRadius: 6, border: "1px solid #d1d5db" }}
+          />
+        </label>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span style={{ fontWeight: 600 }}>測定タイミング</span>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input type="radio" value="morning" checked={timeOfDay === "morning"} onChange={(e) => setTimeOfDay(e.target.value)} />
+            <span>朝</span>
+          </label>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input type="radio" value="night" checked={timeOfDay === "night"} onChange={(e) => setTimeOfDay(e.target.value)} />
+            <span>夜</span>
+          </label>
+        </div>
+
         <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <span style={{ fontWeight: 600 }}>体重 (kg)</span>
           <input

@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button.jsx";
 import MealTypeTabs from "../../components/meals/MealTypeTabs.jsx";
 import { useMealEntries } from "../../hooks/useMealEntries.js";
 import { getTodayISO } from "../../utils/date.js";
+import FoodSetManager from "../../components/food/FoodSetManager.jsx";
 
 const createFoodRow = () => ({ id: Date.now(), name: "", portion: "", calories: "" });
 
@@ -171,6 +172,8 @@ export default function AddMeal() {
           </ul>
         </Card>
       </div>
+
+      <FoodSetManager onApplied={() => navigate("/intake")}></FoodSetManager>
     </section>
   );
 }
