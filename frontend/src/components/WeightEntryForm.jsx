@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchCalorieProfile } from "../api/calorieProfileApi.js";
+import { getTodayISO } from "../utils/date.js";
 
 const cardStyle = {
   maxWidth: 480,
@@ -27,7 +28,7 @@ const modalCardStyle = {
 
 export default function WeightEntryForm({ profile: initialProfile, onLogged, mode = "inline" }) {
   const [weight, setWeight] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => getTodayISO());
   const [timeOfDay, setTimeOfDay] = useState("morning");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

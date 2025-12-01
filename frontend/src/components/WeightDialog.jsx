@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { getTodayISO } from "../utils/date.js";
 
 export default function WeightDialog({ onClose, onSaved }) {
   const [weight, setWeight] = useState("");
   const [timeOfDay, setTimeOfDay] = useState("morning");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => getTodayISO());
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
