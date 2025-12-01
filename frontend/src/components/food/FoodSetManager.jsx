@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { getTodayISO } from "../../utils/date.js";
 
 const apiBase = "http://localhost:4000/api/food-sets";
-const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const emptyItem = () => ({ id: crypto.randomUUID(), name: "", calories: "" });
 
@@ -10,7 +10,7 @@ export default function FoodSetManager({ onApplied }) {
   const [loading, setLoading] = useState(false);
   const [formState, setFormState] = useState({ id: null, name: "", description: "", items: [emptyItem()] });
   const [error, setError] = useState("");
-  const [applyDate, setApplyDate] = useState(todayISO());
+  const [applyDate, setApplyDate] = useState(() => getTodayISO());
   const [mealType, setMealType] = useState("breakfast");
   const [selectedSetId, setSelectedSetId] = useState("");
 

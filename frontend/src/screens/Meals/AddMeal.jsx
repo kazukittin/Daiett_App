@@ -14,7 +14,7 @@ export default function AddMeal() {
   const { addMealEntry } = useMealEntries();
 
   const [mealType, setMealType] = useState("breakfast");
-  const [date, setDate] = useState(getTodayISO());
+  const [date, setDate] = useState(() => getTodayISO());
   const [memo, setMemo] = useState("");
   const [foods, setFoods] = useState([createFoodRow()]);
   const [formError, setFormError] = useState("");
