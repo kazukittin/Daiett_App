@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getTodayISO } from "../utils/date.js";
-import { addWorkoutRecord, getWorkoutSummary } from "../api/workouts";
+import { addWorkoutRecord, deleteWorkoutRecord, getWorkoutSummary } from "../api/workouts";
 
 export function useTodayExercises() {
   const todayKey = getTodayISO();
@@ -30,5 +30,18 @@ export function useTodayExercises() {
     await refresh();
   };
 
-  return { todayExercises: summary.records, totalCalories: summary.totalCalories, loading, error, refresh, addExercise };
+  const removeExercise = async (id) => {
+    await deleteWorkoutRecord(id);
+    await refresh();
+  };
+
+  return {
+    todayExercises: summary.records,
+    totalCalories: summary.totalCalories,
+    loading,
+    error,
+    refresh,
+    addExercise,
+    removeExercise,
+  };
 }
