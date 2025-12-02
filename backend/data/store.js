@@ -60,10 +60,38 @@ const isValidDateString = (value) => {
   return !Number.isNaN(parsed.getTime());
 };
 
+const isPlainDate = (value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+const toDate = (value, { endOfDay = false } = {}) => {
+  if (!value) return null;
+  if (value instanceof Date) return new Date(value.getTime());
+
+  if (typeof value === "object" && typeof value.seconds === "number") {
+    const millis = value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1_000_000);
+    return new Date(millis);
+  }
+
+  const parsed = typeof value === "number" ? new Date(value) : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  if (isPlainDate(value)) {
+    const hours = endOfDay ? 23 : 0;
+    const minutes = endOfDay ? 59 : 0;
+    parsed.setHours(hours, minutes, endOfDay ? 59 : 0, endOfDay ? 999 : 0);
+  }
+
+  return parsed;
+};
+
 const withinRange = (dateStr, from, to) => {
-  const date = new Date(dateStr);
-  if (from && date < new Date(from)) return false;
-  if (to && date > new Date(to)) return false;
+  const date = toDate(dateStr);
+  if (!date) return false;
+
+  const fromDate = from ? toDate(from) : null;
+  const toDateValue = to ? toDate(to, { endOfDay: true }) : null;
+
+  if (fromDate && date < fromDate) return false;
+  if (toDateValue && date > toDateValue) return false;
   return true;
 };
 
