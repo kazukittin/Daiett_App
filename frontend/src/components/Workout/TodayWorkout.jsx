@@ -15,17 +15,17 @@ const estimateCalories = (menu) => {
   if (explicitInput !== undefined && explicitInput !== null && explicitInput !== "") {
     const explicit = Number(explicitInput);
     if (Number.isFinite(explicit)) {
-      return explicit;
+      return Math.max(1, Math.round(explicit));
     }
   }
 
   const sets = Number(menu.sets) || 1;
   if (menu.type === "seconds") {
     const minutes = ((Number(menu.value) || 0) * sets) / 60;
-    return Math.max(0, Math.round(minutes * 8));
+    return Math.max(1, Math.round(minutes * 8));
   }
   const reps = Number(menu.value) || 0;
-  return Math.max(0, Math.round(reps * sets * 0.5));
+  return Math.max(1, Math.round(reps * sets * 0.5));
 };
 
 const estimateDuration = (menu) => {
