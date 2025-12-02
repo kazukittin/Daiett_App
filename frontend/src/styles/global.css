@@ -1414,14 +1414,14 @@ a {
 .foods-table {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 .foods-header,
-.foods-row {
+.food-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 40px;
-  gap: var(--spacing-sm);
+  grid-template-columns: 2fr 1fr 1fr 80px;
+  gap: var(--spacing-md);
   align-items: center;
 }
 
