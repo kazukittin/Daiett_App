@@ -94,9 +94,15 @@ export default function TodayWorkout() {
     };
 
     await addExercise(payload);
-    await completeTodayWorkout();
-    setCompletedToday(true);
-    setCompletedMenuKeys(new Set(defaultMenus.map((item, idx) => buildMenuKey(item, idx))));
+
+    const nextKeys = new Set(completedMenuKeys);
+    nextKeys.add(key);
+    setCompletedMenuKeys(nextKeys);
+
+    if (nextKeys.size >= defaultMenus.length && defaultMenus.length > 0) {
+      await completeTodayWorkout();
+      setCompletedToday(true);
+    }
   };
 
   return (
