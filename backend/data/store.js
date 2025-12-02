@@ -151,6 +151,16 @@ export const store = {
     return newRecord;
   },
 
+  deleteExerciseRecord: (id) => {
+    const initialLength = data.exercises.length;
+    data.exercises = data.exercises.filter((record) => record.id !== id);
+    const deleted = data.exercises.length < initialLength;
+    if (deleted) {
+      persist();
+    }
+    return deleted;
+  },
+
   getWorkoutSettings: () => data.workoutSettings,
   saveWorkoutSettings: (settings) => {
     data.workoutSettings = settings;
@@ -188,6 +198,15 @@ export const store = {
       persist();
     }
     return { date, completed: true };
+  },
+
+  unmarkWorkoutCompleted: (date) => {
+    const before = data.workoutCompletionDates.length;
+    data.workoutCompletionDates = data.workoutCompletionDates.filter((value) => value !== date);
+    if (data.workoutCompletionDates.length !== before) {
+      persist();
+    }
+    return { date, completed: false };
   },
 
   listFoodSets: () => [...data.foodSets],
