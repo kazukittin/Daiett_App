@@ -11,3 +11,5 @@ export const getMealRecords = (params = {}) => {
 };
 
 export const addMealRecord = (payload) => apiClient.post("/api/meals/records", payload);
+
+export const deleteMealRecord = (id) => apiClient.delete(`/api/meals/records/${id}`);

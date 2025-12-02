@@ -138,6 +138,26 @@ export const store = {
     return newRecord;
   },
 
+  updateMealRecord: (id, payload) => {
+    const index = data.meals.findIndex((meal) => meal.id === id);
+    if (index === -1) return null;
+
+    const updated = { ...data.meals[index], ...payload, id };
+    data.meals[index] = updated;
+    persist();
+    return updated;
+  },
+
+  deleteMealRecord: (id) => {
+    const before = data.meals.length;
+    data.meals = data.meals.filter((meal) => meal.id !== id);
+    const deleted = data.meals.length !== before;
+    if (deleted) {
+      persist();
+    }
+    return deleted;
+  },
+
   listExercises: (range = {}) =>
     data.exercises
       .filter((record) => withinRange(record.date, range.from, range.to))
