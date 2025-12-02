@@ -84,7 +84,23 @@ export const addExerciseRecord = (payload) => {
     calories,
     memo: payload.memo?.trim() || "",
     workoutTypeId: payload.workoutTypeId,
+    meta: payload.meta,
   });
+};
+
+export const removeExerciseRecord = (id) => {
+  if (!id) {
+    const error = new Error("削除する運動記録のIDを指定してください");
+    error.status = 400;
+    throw error;
+  }
+
+  const deleted = store.deleteExerciseRecord(Number(id));
+  if (!deleted) {
+    const error = new Error("指定された運動記録が見つかりません");
+    error.status = 404;
+    throw error;
+  }
 };
 
 export const getWorkoutSummaryForDate = (date) => {
@@ -104,4 +120,9 @@ export const getTodayWorkoutStatus = () => {
 export const markTodayWorkoutComplete = () => {
   const today = getTodayISO();
   return store.markWorkoutCompleted(today);
+};
+
+export const unmarkTodayWorkoutComplete = () => {
+  const today = getTodayISO();
+  return store.unmarkWorkoutCompleted(today);
 };

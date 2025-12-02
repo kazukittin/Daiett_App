@@ -7,6 +7,8 @@ import {
   getWorkoutSummaryForDate,
   getTodayWorkoutStatus,
   markTodayWorkoutComplete,
+  removeExerciseRecord,
+  unmarkTodayWorkoutComplete,
 } from "../services/workoutService.js";
 import {
   listWorkoutTypes,
@@ -57,6 +59,15 @@ router.post("/records", (req, res, next) => {
   }
 });
 
+router.delete("/records/:id", (req, res, next) => {
+  try {
+    removeExerciseRecord(req.params.id);
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/types", (req, res) => {
   const types = listWorkoutTypes();
   res.json({ types });
@@ -97,6 +108,11 @@ router.get("/today/status", (req, res) => {
 router.post("/today/complete", (req, res) => {
   const status = markTodayWorkoutComplete();
   res.status(201).json(status);
+});
+
+router.delete("/today/complete", (req, res) => {
+  const status = unmarkTodayWorkoutComplete();
+  res.json(status);
 });
 
 export default router;

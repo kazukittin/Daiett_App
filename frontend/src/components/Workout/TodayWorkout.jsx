@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { useDailyFixedWorkoutPlan } from "../../hooks/useDailyFixedWorkoutPlan.js";
 import { getTodayISO, weekdayLabels } from "../../utils/date.js";
-import { completeTodayWorkout, getTodayWorkoutStatus } from "../../api/workouts.js";
+import {
+  completeTodayWorkout,
+  getTodayWorkoutStatus,
+  uncompleteTodayWorkout,
+} from "../../api/workouts.js";
 
 const buildMenuKey = (menu, index) => `${menu?.name || "menu"}-${index}`;
 
@@ -34,7 +38,7 @@ const estimateDuration = (menu) => {
 };
 
 export default function TodayWorkout() {
-  const { todayExercises, totalCalories, addExercise } = useTodayExercises();
+  const { todayExercises, totalCalories, addExercise, removeExercise } = useTodayExercises();
   const { menus: defaultMenus, weekday } = useDailyFixedWorkoutPlan();
   const hasDefaultPlan = defaultMenus.length > 0;
   const [completedToday, setCompletedToday] = useState(false);
@@ -78,11 +82,27 @@ export default function TodayWorkout() {
     setCompletedMenuKeys(completed);
   }, [defaultMenus, todayExercises, completedToday]);
 
-  const handleCompleteMenu = async (menu, index) => {
-    if (completedToday) return;
-
+  const handleToggleMenu = async (menu, index, isCompleted) => {
     const key = buildMenuKey(menu, index);
-    if (completedMenuKeys.has(key)) return;
+
+    if (isCompleted) {
+      const record = todayExercises.find(
+        (item) => item.meta === "fixed" && item.type === (menu.name || "固定メニュー")
+      );
+      if (record) {
+        await removeExercise(record.id);
+      }
+
+      const nextKeys = new Set(completedMenuKeys);
+      nextKeys.delete(key);
+      setCompletedMenuKeys(nextKeys);
+
+      if (completedToday) {
+        await uncompleteTodayWorkout();
+        setCompletedToday(false);
+      }
+      return;
+    }
 
     const payload = {
       date: getTodayISO(),
@@ -133,9 +153,8 @@ export default function TodayWorkout() {
                   <label className="fixed-workout-check">
                     <input
                       type="checkbox"
-                      onChange={() => handleCompleteMenu(menu, index)}
+                      onChange={() => handleToggleMenu(menu, index, isCompleted)}
                       checked={isCompleted}
-                      disabled={isCompleted}
                     />
                     <div>
                       <div className="fixed-workout-title">{menu.name || "メニュー名未設定"}</div>
