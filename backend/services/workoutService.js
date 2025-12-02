@@ -9,6 +9,9 @@ const sanitizeMenu = (menu) => ({
   type: menu?.type === "seconds" ? "seconds" : "reps",
   value: Number(menu?.value) || 0,
   sets: Number(menu?.sets) || 0,
+  expectedCalories: Number.isFinite(Number(menu?.expectedCalories))
+    ? Number(menu.expectedCalories)
+    : null,
 });
 
 const createEmptyPlan = () =>
