@@ -52,6 +52,21 @@ export const addMealRecord = (payload) => {
   });
 };
 
+export const removeMealRecord = (id) => {
+  if (!id) {
+    const error = new Error("削除する食事記録のIDを指定してください");
+    error.status = 400;
+    throw error;
+  }
+
+  const deleted = store.deleteMealRecord(Number(id));
+  if (!deleted) {
+    const error = new Error("指定された食事記録が見つかりません");
+    error.status = 404;
+    throw error;
+  }
+};
+
 export const getMealSummaryForDate = (date) => {
   const records = store.listMealRecords({ from: date, to: date });
   const totalCalories = records.reduce((sum, meal) => sum + (Number(meal.totalCalories) || 0), 0);
