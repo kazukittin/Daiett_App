@@ -1414,14 +1414,14 @@ a {
 .foods-table {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 .foods-header,
-.foods-row {
+.food-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 40px;
-  gap: var(--spacing-sm);
+  grid-template-columns: 2fr 1fr 1fr 80px;
+  gap: var(--spacing-md);
   align-items: center;
 }
 
@@ -2085,6 +2085,32 @@ a {
 .meal-history-memo {
   color: var(--color-text-muted);
   font-size: 0.95rem;
+}
+
+.meal-history-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.meal-history-action {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.meal-history-action:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+}
+
+.meal-history-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .exercise-history-header {

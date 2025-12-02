@@ -1,5 +1,10 @@
 import express from "express";
-import { addMealRecord, getMealRecords, getMealSummaryForDate } from "../services/mealService.js";
+import {
+  addMealRecord,
+  getMealRecords,
+  getMealSummaryForDate,
+  removeMealRecord,
+} from "../services/mealService.js";
 
 const router = express.Router();
 
@@ -28,6 +33,15 @@ router.post("/records", (req, res, next) => {
   try {
     const created = addMealRecord(req.body);
     res.status(201).json(created);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/records/:id", (req, res, next) => {
+  try {
+    removeMealRecord(req.params.id);
+    res.status(204).end();
   } catch (error) {
     next(error);
   }

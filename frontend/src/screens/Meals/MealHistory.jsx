@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Card from "../../components/ui/Card.jsx";
-import { getMealRecords } from "../../api/meals.js";
+import { deleteMealRecord, getMealRecords } from "../../api/meals.js";
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -10,6 +10,7 @@ const formatDate = (dateString) => {
 export default function MealHistory() {
   const [history, setHistory] = useState([]);
   const [filter, setFilter] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     getMealRecords()
@@ -22,6 +23,25 @@ export default function MealHistory() {
       })
       .catch(() => setHistory([]));
   }, []);
+
+  const handleDelete = async (id) => {
+    const targetMeal = history.find((item) => item.id === id);
+    if (!targetMeal) return;
+
+    const confirmed = window.confirm(`${targetMeal.mealType}の記録を削除しますか？`);
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(id);
+      await deleteMealRecord(id);
+      setHistory((prev) => prev.filter((meal) => meal.id !== id));
+    } catch (error) {
+      const message = error?.message || "削除に失敗しました";
+      alert(message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!filter.trim()) return history;
@@ -58,6 +78,16 @@ export default function MealHistory() {
                 <div className="meal-history-body">
                   <div className="meal-history-calories">{meal.totalCalories} kcal</div>
                   {meal.memo && <div className="meal-history-memo">{meal.memo}</div>}
+                </div>
+                <div className="meal-history-actions">
+                  <button
+                    type="button"
+                    className="meal-history-action"
+                    onClick={() => handleDelete(meal.id)}
+                    disabled={deletingId === meal.id}
+                  >
+                    {deletingId === meal.id ? "削除中..." : "削除"}
+                  </button>
                 </div>
               </li>
             ))}
