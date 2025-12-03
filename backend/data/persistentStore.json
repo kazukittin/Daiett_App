@@ -1,0 +1,431 @@
+{
+  "user": {
+    "id": "default",
+    "nickname": "",
+    "email": "",
+    "heightCm": 168,
+    "weight": null,
+    "age": 23,
+    "birthdate": null,
+    "sex": "male",
+    "activityLevel": "moderate",
+    "goal": "lose",
+    "targetWeight": 60,
+    "targetIntakeCalories": null,
+    "targetBurnCalories": null,
+    "unit": "kg",
+    "theme": "light"
+  },
+  "weights": [
+    {
+      "date": "2025-12-01",
+      "weight": 70,
+      "timeOfDay": "night",
+      "id": 1764597697129
+    },
+    {
+      "date": "2025-12-02",
+      "weight": 73.4,
+      "timeOfDay": "morning",
+      "id": 1764629733001
+    }
+  ],
+  "meals": [
+    {
+      "mealType": "lunch",
+      "date": "2025-12-03",
+      "memo": "",
+      "foods": [
+        {
+          "name": "パスタ",
+          "portion": "",
+          "calories": 380
+        },
+        {
+          "name": "納豆",
+          "portion": "",
+          "calories": 100
+        },
+        {
+          "name": "めんつゆ",
+          "portion": "",
+          "calories": 20
+        }
+      ],
+      "totalCalories": 500,
+      "id": 1764735965697
+    },
+    {
+      "mealType": "breakfast",
+      "date": "2025-12-03",
+      "memo": "",
+      "foods": [
+        {
+          "name": "ごはん",
+          "portion": "",
+          "calories": 230
+        },
+        {
+          "name": "たまご",
+          "portion": "",
+          "calories": 80
+        },
+        {
+          "name": "ソーセージ　2本",
+          "portion": "",
+          "calories": 120
+        },
+        {
+          "name": "辣油",
+          "portion": "",
+          "calories": 40
+        }
+      ],
+      "totalCalories": 470,
+      "id": 1764720595914
+    },
+    {
+      "mealType": "dinner",
+      "date": "2025-12-02",
+      "memo": "",
+      "foods": [
+        {
+          "name": "うどん麺",
+          "portion": "",
+          "calories": 300
+        },
+        {
+          "name": "きのこ・山菜",
+          "portion": "",
+          "calories": 50
+        },
+        {
+          "name": "豚肉",
+          "portion": "",
+          "calories": 250
+        },
+        {
+          "name": "つゆ",
+          "portion": "",
+          "calories": 100
+        }
+      ],
+      "totalCalories": 700,
+      "id": 1764672074429
+    },
+    {
+      "mealType": "breakfast",
+      "date": "2025-12-02",
+      "memo": "",
+      "foods": [
+        {
+          "name": "ごはん",
+          "portion": "",
+          "calories": 230
+        },
+        {
+          "name": "たまご",
+          "portion": "",
+          "calories": 80
+        },
+        {
+          "name": "ソーセージ　2本",
+          "portion": "",
+          "calories": 120
+        },
+        {
+          "name": "辣油",
+          "portion": "",
+          "calories": 40
+        }
+      ],
+      "totalCalories": 470,
+      "id": 1764632402001
+    }
+  ],
+  "exercises": [
+    {
+      "date": "2025-12-02",
+      "type": "腕立て伏せ",
+      "duration": 5,
+      "calories": 23,
+      "memo": "固定ワークアウトを実施",
+      "id": 1764645151537
+    }
+  ],
+  "workoutSettings": {
+    "0": {
+      "menus": []
+    },
+    "1": {
+      "menus": [
+        {
+          "name": "スクワット",
+          "type": "reps",
+          "value": 20,
+          "sets": 3,
+          "expectedCalories": 30
+        },
+        {
+          "name": "ランジ",
+          "type": "reps",
+          "value": 10,
+          "sets": 6,
+          "expectedCalories": 35
+        },
+        {
+          "name": "ヒップリフト",
+          "type": "reps",
+          "value": 15,
+          "sets": 3,
+          "expectedCalories": 15
+        },
+        {
+          "name": "ワイドスクワット",
+          "type": "reps",
+          "value": 15,
+          "sets": 2,
+          "expectedCalories": 15
+        }
+      ]
+    },
+    "2": {
+      "menus": [
+        {
+          "name": "腕立て伏せ",
+          "type": "reps",
+          "value": 15,
+          "sets": 3,
+          "expectedCalories": 20
+        },
+        {
+          "name": "バックエクステンション",
+          "type": "reps",
+          "value": 15,
+          "sets": 3,
+          "expectedCalories": 15
+        },
+        {
+          "name": "リバースプランク",
+          "type": "seconds",
+          "value": 20,
+          "sets": 3,
+          "expectedCalories": 10
+        },
+        {
+          "name": "壁押し腕立て",
+          "type": "reps",
+          "value": 15,
+          "sets": 2,
+          "expectedCalories": 10
+        }
+      ]
+    },
+    "3": {
+      "menus": [
+        {
+          "name": "プランク",
+          "type": "seconds",
+          "value": 30,
+          "sets": 3,
+          "expectedCalories": 10
+        },
+        {
+          "name": "サイドプランク",
+          "type": "reps",
+          "value": 20,
+          "sets": 4,
+          "expectedCalories": 10
+        },
+        {
+          "name": "デッドバグ",
+          "type": "reps",
+          "value": 10,
+          "sets": 3,
+          "expectedCalories": 10
+        },
+        {
+          "name": "レッグレイズ",
+          "type": "reps",
+          "value": 10,
+          "sets": 2,
+          "expectedCalories": 10
+        }
+      ]
+    },
+    "4": {
+      "menus": [
+        {
+          "name": "スクワット",
+          "type": "reps",
+          "value": 20,
+          "sets": 3,
+          "expectedCalories": 30
+        },
+        {
+          "name": "ランジ",
+          "type": "reps",
+          "value": 10,
+          "sets": 6,
+          "expectedCalories": 35
+        },
+        {
+          "name": "ヒップリフト",
+          "type": "reps",
+          "value": 15,
+          "sets": 3,
+          "expectedCalories": 15
+        },
+        {
+          "name": "ワイドスクワット",
+          "type": "reps",
+          "value": 15,
+          "sets": 2,
+          "expectedCalories": 15
+        }
+      ]
+    },
+    "5": {
+      "menus": [
+        {
+          "name": "腕立て伏せ",
+          "type": "reps",
+          "value": 15,
+          "sets": 3,
+          "expectedCalories": 20
+        },
+        {
+          "name": "バックエクステンション",
+          "type": "reps",
+          "value": 15,
+          "sets": 3,
+          "expectedCalories": 15
+        },
+        {
+          "name": "リバースプランク",
+          "type": "seconds",
+          "value": 20,
+          "sets": 3,
+          "expectedCalories": 10
+        },
+        {
+          "name": "壁押し腕立て",
+          "type": "reps",
+          "value": 15,
+          "sets": 2,
+          "expectedCalories": 10
+        }
+      ]
+    },
+    "6": {
+      "menus": [
+        {
+          "name": "プランク",
+          "type": "seconds",
+          "value": 30,
+          "sets": 3,
+          "expectedCalories": 10
+        },
+        {
+          "name": "サイドプランク",
+          "type": "seconds",
+          "value": 20,
+          "sets": 2,
+          "expectedCalories": 10
+        },
+        {
+          "name": "デッドバグ",
+          "type": "reps",
+          "value": 30,
+          "sets": 3,
+          "expectedCalories": 10
+        },
+        {
+          "name": "レッグレイズ",
+          "type": "reps",
+          "value": 10,
+          "sets": 2,
+          "expectedCalories": 10
+        }
+      ]
+    }
+  },
+  "workoutTypes": [],
+  "workoutCompletionDates": [],
+  "foodSets": [
+    {
+      "name": "たまごソーセージ丼",
+      "description": "",
+      "items": [
+        {
+          "name": "ごはん",
+          "calories": 230
+        },
+        {
+          "name": "たまご",
+          "calories": 80
+        },
+        {
+          "name": "ソーセージ　2本",
+          "calories": 120
+        },
+        {
+          "name": "辣油",
+          "calories": 40
+        }
+      ],
+      "totalCalories": 470,
+      "id": "fs_minskch0",
+      "createdAt": "2025-12-01T23:39:52.740Z"
+    },
+    {
+      "name": "山菜きのこ肉うどん",
+      "description": "",
+      "items": [
+        {
+          "name": "うどん麺",
+          "calories": 300
+        },
+        {
+          "name": "きのこ・山菜",
+          "calories": 50
+        },
+        {
+          "name": "豚肉",
+          "calories": 250
+        },
+        {
+          "name": "つゆ",
+          "calories": 100
+        }
+      ],
+      "totalCalories": 700,
+      "id": "fs_miog6b60",
+      "createdAt": "2025-12-02T10:40:48.648Z"
+    },
+    {
+      "name": "納豆パスタ",
+      "description": "",
+      "items": [
+        {
+          "name": "パスタ",
+          "calories": 380
+        },
+        {
+          "name": "納豆",
+          "calories": 100
+        },
+        {
+          "name": "めんつゆ",
+          "calories": 20
+        }
+      ],
+      "totalCalories": 500,
+      "id": "fs_mipi81r7",
+      "createdAt": "2025-12-03T04:25:55.171Z"
+    }
+  ],
+  "foodMaster": [],
+  "fitbitActivities": [],
+  "dailyBurned": []
+}
