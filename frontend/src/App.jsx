@@ -5,6 +5,8 @@ import CalorieProfileSetup from "./components/CalorieProfileSetup.jsx";
 import CalorieProfileSummary from "./components/CalorieProfileSummary.jsx";
 import WeightDialog from "./components/WeightDialog.jsx";
 import FitbitConnectCard from "./components/fitbit/FitbitConnectCard.jsx";
+import { ToastProvider } from "./components/ui/ToastProvider.jsx";
+import FAB from "./components/ui/FAB.jsx";
 import { fetchCalorieProfile } from "./api/calorieProfileApi.js";
 import HomeDashboard from "./screens/Home/HomeDashboard.jsx";
 import IntakeDashboard from "./screens/Intake/IntakeDashboard.jsx";
@@ -189,69 +191,73 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f3f4f6" }}>
-      <Sidebar
-        activeView={activeView}
-        onAddWeightClick={handleAddWeightClick}
-        onNavigate={(nextView) => {
-          if (nextView === "profile") {
-            setIsEditingProfile(false);
-            navigate("/profile");
-            return;
-          }
-          navigate(nextView === "home" ? "/" : nextView);
-        }}
-      />
-      <main style={{ flex: 1, padding: "16px 24px" }}>
-        <Routes>
-          <Route
-            path="/"
-            element={<HomeDashboard onEditProfile={handleEditProfile} profile={profile} />}
-          />
-          <Route path="/intake" element={<IntakeDashboard />} />
-          <Route path="/burn" element={<BurnDashboard />} />
-          <Route path="/meals/new" element={<AddMeal />} />
-          <Route path="/meals/history" element={<MealHistory />} />
-          <Route path="/exercises/history" element={<ExerciseHistory />} />
-          <Route path="/weight/new" element={<AddWeight />} />
-          <Route path="/exercises/new" element={<AddExercise />} />
-          <Route path="/settings/workouts" element={<WorkoutSettings />} />
-          <Route
-            path="/profile"
-            element={
-              <ProfileView
-                profile={profile}
-                profileLoaded={profileLoaded}
-                onProfileSaved={handleProfileSaved}
-                onProfileLoaded={handleProfileLoaded}
-                onEdit={handleEditProfile}
-                error={profileError}
-                infoMessage={calorieNotice}
-                isEditing={isEditingProfile}
-                onFinishEdit={() => setIsEditingProfile(false)}
-              />
+    <ToastProvider>
+      <div style={{ display: "flex", minHeight: "100vh", background: "#f3f4f6" }}>
+        <Sidebar
+          activeView={activeView}
+          onAddWeightClick={handleAddWeightClick}
+          onNavigate={(nextView) => {
+            if (nextView === "profile") {
+              setIsEditingProfile(false);
+              navigate("/profile");
+              return;
             }
-          />
-        </Routes>
-      </main>
-
-      {isWeightModalOpen && (
-        <WeightDialog
-          onClose={() => setIsWeightModalOpen(false)}
-          onSaved={() => {
-            setIsWeightModalOpen(false);
+            navigate(nextView === "home" ? "/" : nextView);
           }}
         />
-      )}
+        <main style={{ flex: 1, padding: "16px 24px" }}>
+          <Routes>
+            <Route
+              path="/"
+              element={<HomeDashboard onEditProfile={handleEditProfile} profile={profile} />}
+            />
+            <Route path="/intake" element={<IntakeDashboard />} />
+            <Route path="/burn" element={<BurnDashboard />} />
+            <Route path="/meals/new" element={<AddMeal />} />
+            <Route path="/meals/history" element={<MealHistory />} />
+            <Route path="/exercises/history" element={<ExerciseHistory />} />
+            <Route path="/weight/new" element={<AddWeight />} />
+            <Route path="/exercises/new" element={<AddExercise />} />
+            <Route path="/settings/workouts" element={<WorkoutSettings />} />
+            <Route
+              path="/profile"
+              element={
+                <ProfileView
+                  profile={profile}
+                  profileLoaded={profileLoaded}
+                  onProfileSaved={handleProfileSaved}
+                  onProfileLoaded={handleProfileLoaded}
+                  onEdit={handleEditProfile}
+                  error={profileError}
+                  infoMessage={calorieNotice}
+                  isEditing={isEditingProfile}
+                  onFinishEdit={() => setIsEditingProfile(false)}
+                />
+              }
+            />
+          </Routes>
+        </main>
 
-      <ProfileEditDialog
-        open={isProfileDialogOpen}
-        onClose={() => {
-          setIsProfileDialogOpen(false);
-          setIsEditingProfile(false);
-        }}
-        onProfileSaved={handleProfileSaved}
-      />
-    </div>
+        {isWeightModalOpen && (
+          <WeightDialog
+            onClose={() => setIsWeightModalOpen(false)}
+            onSaved={() => {
+              setIsWeightModalOpen(false);
+            }}
+          />
+        )}
+
+        <ProfileEditDialog
+          open={isProfileDialogOpen}
+          onClose={() => {
+            setIsProfileDialogOpen(false);
+            setIsEditingProfile(false);
+          }}
+          onProfileSaved={handleProfileSaved}
+        />
+
+        <FAB onAddWeight={handleAddWeightClick} />
+      </div>
+    </ToastProvider>
   );
 }

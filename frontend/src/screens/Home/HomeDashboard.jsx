@@ -3,9 +3,12 @@ import WeightTrendCard from "../../components/weight/WeightTrendCard.jsx";
 import TodayWorkout from "../../components/Workout/TodayWorkout.jsx";
 import TodayMealHighlight from "../../components/meals/TodayMealHighlight.jsx";
 import TodaySummaryCard from "../../components/summary/TodaySummaryCard.jsx";
+import StreakCard from "../../components/gamification/StreakCard.jsx";
+import QuickStats from "../../components/summary/QuickStats.jsx";
 import { useWeightRecords } from "../../hooks/useWeightRecords.js";
 import { useTodayExercises } from "../../hooks/useTodayExercises.js";
 import { useWeightTrend } from "../../hooks/useWeightTrend.js";
+import { useStreak } from "../../hooks/useStreak.js";
 import { getMealSummary } from "../../api/meals.js";
 import { getTodayISO } from "../../utils/date.js";
 
@@ -14,13 +17,14 @@ export default function HomeDashboard({ onEditProfile, profile }) {
   const { weightRecords, latestRecord, previousRecord, targetWeight } = useWeightRecords();
   const { totalCalories: todayBurnCalories } = useTodayExercises();
   const { trend, period, setPeriod } = useWeightTrend();
+  const streakData = useStreak();
   const todayKey = getTodayISO();
   const [mealSummary, setMealSummary] = useState({ records: [], totalCalories: 0 });
   const [targetBurn, setTargetBurn] = useState(null);
 
   const currentWeight = useMemo(() =>
     Number.isFinite(latestRecord?.weight) ? latestRecord.weight : null,
-  [latestRecord]);
+    [latestRecord]);
 
   const profileTargetWeight = useMemo(
     () => (Number.isFinite(profile?.targetWeight) ? profile.targetWeight : null),
@@ -94,6 +98,19 @@ export default function HomeDashboard({ onEditProfile, profile }) {
             profileTargetWeight ?? (Number.isFinite(targetWeight) ? targetWeight : null)
           }
           onEditProfile={onEditProfile}
+        />
+      </div>
+
+      {/* Gamification Section */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+        <StreakCard
+          currentStreak={streakData.currentStreak}
+          longestStreak={streakData.longestStreak}
+          totalDays={streakData.totalDays}
+        />
+        <QuickStats
+          weightRecords={weightRecords}
+          targetWeight={profileTargetWeight ?? targetWeight}
         />
       </div>
 

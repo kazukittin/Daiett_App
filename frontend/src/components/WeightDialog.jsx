@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { getTodayISO } from "../utils/date.js";
+import { useToast } from "./ui/ToastProvider.jsx";
+import { useStreak } from "../hooks/useStreak.js";
 
 export default function WeightDialog({ onClose, onSaved }) {
   const [weight, setWeight] = useState("");
@@ -7,6 +9,8 @@ export default function WeightDialog({ onClose, onSaved }) {
   const [date, setDate] = useState(() => getTodayISO());
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
+  const { recordToday } = useStreak();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,10 +39,15 @@ export default function WeightDialog({ onClose, onSaved }) {
         throw new Error(err?.error || "体重の登録に失敗しました。");
       }
 
+      // Record streak and show success toast
+      recordToday();
+      toast.success("体重を記録しました");
+
       onSaved?.({ weightKg: weightValue, timeOfDay, date });
       onClose?.();
     } catch (err) {
       setError(err.message || "処理に失敗しました。");
+      toast.error(err.message || "体重の登録に失敗しました");
     } finally {
       setLoading(false);
     }

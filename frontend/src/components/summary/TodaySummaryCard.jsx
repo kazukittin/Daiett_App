@@ -12,7 +12,7 @@ import React from "react";
  */
 
 /**
- * Dashboard summary of intake, burn, and weight with simple card layout.
+ * Dashboard summary of intake, burn, and weight with enhanced visual design.
  * @param {TodaySummaryCardProps} props
  */
 export default function TodaySummaryCard({
@@ -29,74 +29,177 @@ export default function TodaySummaryCard({
       ? currentWeight - yesterdayWeight
       : null;
 
-  const formatKcal = (value) => (Number.isFinite(value) ? `${Math.round(value)} kcal` : "-- kcal");
+  const formatKcal = (value) => (Number.isFinite(value) ? `${Math.round(value)}` : "--");
   const formatWeight = (value) =>
-    Number.isFinite(value) ? `${Number(value).toFixed(1)} kg` : "-- kg";
+    Number.isFinite(value) ? `${Number(value).toFixed(1)}` : "--";
 
   const weightDiffText = (() => {
-    if (!Number.isFinite(diff)) return "（昨日の記録なし）";
+    if (!Number.isFinite(diff)) return "昨日の記録なし";
     const sign = diff > 0 ? "+" : "";
-    return `（昨日より ${sign}${diff.toFixed(1)} kg）`;
+    return `${sign}${diff.toFixed(1)} kg`;
   })();
 
+  const burnProgress = Number.isFinite(todayBurn) && Number.isFinite(targetBurn) && targetBurn > 0
+    ? Math.min((todayBurn / targetBurn) * 100, 100)
+    : 0;
+
   const cardStyle = {
-    background: "#fff",
-    padding: 16,
-    borderRadius: 8,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-    flex: "1 1 240px",
-    minWidth: 240,
+    background: "linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)",
+    padding: "24px",
+    borderRadius: "20px",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+    flex: "1 1 280px",
+    minWidth: 280,
+    transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+    cursor: "default",
   };
 
-  const titleStyle = { margin: "0 0 8px", fontSize: 16, fontWeight: 700 };
-  const valueStyle = { margin: "6px 0", fontSize: 18, fontWeight: 600 };
-  const labelStyle = { color: "#555", fontSize: 13 };
+  const cardHoverStyle = {
+    ...cardStyle,
+    cursor: "pointer",
+  };
+
+  const titleStyle = {
+    margin: "0 0 16px",
+    fontSize: "0.85rem",
+    fontWeight: 600,
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+  };
+
+  const valueStyle = {
+    margin: "0",
+    fontSize: "2.5rem",
+    fontWeight: 700,
+    background: "linear-gradient(135deg, #3f8a62 0%, #2e6a4c 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+  };
+
+  const labelStyle = {
+    color: "#9ca3af",
+    fontSize: "0.8rem",
+    marginTop: "4px",
+  };
+
+  const badgeStyle = (isPositive) => ({
+    display: "inline-block",
+    padding: "4px 12px",
+    borderRadius: "999px",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    marginTop: "8px",
+    background: isPositive ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+    color: isPositive ? "#10b981" : "#ef4444",
+  });
+
+  const ProgressRing = ({ progress, size = 80, strokeWidth = 6 }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (progress / 100) * circumference;
+
+    return (
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="url(#gradient)"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{
+            transition: "stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
+        <defs>
+          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3f8a62" />
+            <stop offset="100%" stopColor="#2e6a4c" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  };
 
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <section className="slide-in-up" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2 style={{ margin: 0 }}>今日のサマリー</h2>
-        {onEditProfile ? (
-          <button type="button" onClick={onEditProfile} style={buttonStyle}>
+        <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700 }}>今日のサマリー</h2>
+        {onEditProfile && (
+          <button
+            type="button"
+            onClick={onEditProfile}
+            className="btn secondary btn-hover"
+            style={{
+              padding: "8px 16px",
+              fontSize: "0.85rem",
+            }}
+          >
             プロファイル編集
           </button>
-        ) : null}
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <div style={cardStyle}>
+        {/* Intake Card */}
+        <div className="card-interactive" style={cardStyle}>
           <h3 style={titleStyle}>摂取カロリー</h3>
-          <div style={labelStyle}>今日の記録：</div>
           <div style={valueStyle}>{formatKcal(todayIntake)}</div>
+          <div style={labelStyle}>kcal</div>
         </div>
 
-        <div style={cardStyle}>
+        {/* Burn Card with Progress Ring */}
+        <div className="card-interactive" style={cardStyle}>
           <h3 style={titleStyle}>消費カロリー</h3>
-          <div style={labelStyle}>今日の記録：</div>
-          <div style={valueStyle}>{formatKcal(todayBurn)}</div>
-          <div style={labelStyle}>目標消費カロリー：</div>
-          <div style={valueStyle}>{formatKcal(targetBurn)}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <div style={{ position: "relative" }}>
+              <ProgressRing progress={burnProgress} />
+              <div style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "#3f8a62",
+              }}>
+                {Math.round(burnProgress)}%
+              </div>
+            </div>
+            <div>
+              <div style={{ ...valueStyle, fontSize: "1.8rem" }}>{formatKcal(todayBurn)}</div>
+              <div style={labelStyle}>/ {formatKcal(targetBurn)} kcal</div>
+            </div>
+          </div>
         </div>
 
-        <div style={cardStyle}>
+        {/* Weight Card */}
+        <div className="card-interactive" style={cardStyle}>
           <h3 style={titleStyle}>体重</h3>
-          <div style={labelStyle}>現在の体重：</div>
           <div style={valueStyle}>{formatWeight(currentWeight)}</div>
-          <div style={{ ...labelStyle, margin: "4px 0" }}>{weightDiffText}</div>
-          <div style={labelStyle}>目標体重：</div>
-          <div style={valueStyle}>{formatWeight(targetWeight)}</div>
+          <div style={labelStyle}>kg</div>
+          <div style={badgeStyle(diff !== null && diff <= 0)}>
+            {weightDiffText}
+          </div>
+          <div style={{ marginTop: 12, fontSize: "0.8rem", color: "#9ca3af" }}>
+            目標: {formatWeight(targetWeight)} kg
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-const buttonStyle = {
-  padding: "8px 12px",
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: 6,
-  cursor: "pointer",
-  fontWeight: 600,
-};

@@ -50,28 +50,66 @@ const TrendTooltip = ({ active, payload, label, period }) => {
       ? intake - burned
       : null;
 
+  const tooltipStyle = {
+    background: "rgba(255, 255, 255, 0.98)",
+    border: "none",
+    borderRadius: "12px",
+    padding: "12px 16px",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
+    backdropFilter: "blur(10px)",
+  };
+
+  const labelStyle = {
+    fontWeight: 700,
+    fontSize: "0.9rem",
+    color: "#374151",
+    marginBottom: "8px",
+    paddingBottom: "8px",
+    borderBottom: "1px solid #e5e7eb",
+  };
+
+  const itemStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "16px",
+    margin: "6px 0",
+    fontSize: "0.85rem",
+  };
+
+  const valueStyle = {
+    fontWeight: 700,
+    fontSize: "0.95rem",
+  };
+
   return (
-    <div className="chart-tooltip">
-      <p className="chart-tooltip-label">{formatLabel(label, period)}</p>
+    <div className="chart-tooltip fade-in" style={tooltipStyle}>
+      <p style={labelStyle}>{formatLabel(label, period)}</p>
       {weight !== undefined && weight !== null && (
-        <p>
-          体重: <strong>{weight}</strong> kg
-        </p>
+        <div style={itemStyle}>
+          <span style={{ color: "#6b7280" }}>体重:</span>
+          <strong style={{ ...valueStyle, color: "#3f8a62" }}>{weight} kg</strong>
+        </div>
       )}
       {intake !== null && (
-        <p>
-          摂取: <strong>{intake}</strong> kcal
-        </p>
+        <div style={itemStyle}>
+          <span style={{ color: "#6b7280" }}>摂取:</span>
+          <strong style={{ ...valueStyle, color: "#3b82f6" }}>{intake} kcal</strong>
+        </div>
       )}
       {burned !== null && (
-        <p>
-          消費: <strong>{burned}</strong> kcal
-        </p>
+        <div style={itemStyle}>
+          <span style={{ color: "#6b7280" }}>消費:</span>
+          <strong style={{ ...valueStyle, color: "#10b981" }}>{burned} kcal</strong>
+        </div>
       )}
       {diff !== null && (
-        <p>
-          差分: <strong>{diff}</strong> kcal
-        </p>
+        <div style={{ ...itemStyle, marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #e5e7eb" }}>
+          <span style={{ color: "#6b7280" }}>差分:</span>
+          <strong style={{ ...valueStyle, color: diff > 0 ? "#f59e0b" : "#10b981" }}>
+            {diff > 0 ? "+" : ""}{diff} kcal
+          </strong>
+        </div>
       )}
     </div>
   );
