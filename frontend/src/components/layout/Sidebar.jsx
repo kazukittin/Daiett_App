@@ -56,20 +56,6 @@ export default function Sidebar({ onAddWeightClick, onNavigate, activeView }) {
           ))}
         </ul>
       </div>
-
-      <div className="sidebar-bottom">
-        <button className="sidebar-action-btn weight" onClick={handleAddWeight}>
-          ⚖️ 体重を追加
-        </button>
-
-        <button className="sidebar-action-btn meal" onClick={() => handleNavigate("/meals/new")}>
-          🍙 食事を追加
-        </button>
-
-        <button className="sidebar-action-btn exercise" onClick={() => handleNavigate("/exercises/new")}>
-          💪 運動記録を追加
-        </button>
-      </div>
     </aside>
   );
 }
