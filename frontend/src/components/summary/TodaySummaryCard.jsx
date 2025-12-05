@@ -23,6 +23,7 @@ export default function TodaySummaryCard({
   yesterdayWeight,
   targetWeight,
   onEditProfile,
+  waterIntake,
 }) {
   const diff =
     Number.isFinite(currentWeight) && Number.isFinite(yesterdayWeight)
@@ -184,6 +185,15 @@ export default function TodaySummaryCard({
               <div style={labelStyle}>/ {formatKcal(targetBurn)} kcal</div>
             </div>
           </div>
+        </div>
+
+        {/* Water Card */}
+        <div className="card-interactive" style={cardStyle}>
+          <h3 style={titleStyle}>水分補給</h3>
+          <div style={{ ...valueStyle, color: "#3b82f6", background: "none", WebkitTextFillColor: "#3b82f6" }}>
+            {waterIntake || 0}
+          </div>
+          <div style={labelStyle}>ml</div>
         </div>
 
         {/* Weight Card */}

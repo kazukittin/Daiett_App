@@ -12,6 +12,8 @@ import { useStreak } from "../../hooks/useStreak.js";
 import { getMealSummary } from "../../api/meals.js";
 import { getTodayISO } from "../../utils/date.js";
 
+import WaterTracker from "../../components/water/WaterTracker.jsx";
+
 export default function HomeDashboard({ onEditProfile, profile }) {
   // Weight summaries and trend data come from backend APIs via hooks.
   const { weightRecords, latestRecord, previousRecord, targetWeight } = useWeightRecords();
@@ -21,6 +23,7 @@ export default function HomeDashboard({ onEditProfile, profile }) {
   const todayKey = getTodayISO();
   const [mealSummary, setMealSummary] = useState({ records: [], totalCalories: 0 });
   const [targetBurn, setTargetBurn] = useState(null);
+  const [waterIntake, setWaterIntake] = useState(0);
 
   const currentWeight = useMemo(() =>
     Number.isFinite(latestRecord?.weight) ? latestRecord.weight : null,
@@ -97,6 +100,7 @@ export default function HomeDashboard({ onEditProfile, profile }) {
           targetWeight={
             profileTargetWeight ?? (Number.isFinite(targetWeight) ? targetWeight : null)
           }
+          waterIntake={waterIntake}
           onEditProfile={onEditProfile}
         />
       </div>
@@ -108,6 +112,7 @@ export default function HomeDashboard({ onEditProfile, profile }) {
           longestStreak={streakData.longestStreak}
           totalDays={streakData.totalDays}
         />
+        <WaterTracker onUpdate={setWaterIntake} />
         <QuickStats
           weightRecords={weightRecords}
           targetWeight={profileTargetWeight ?? targetWeight}

@@ -9,6 +9,7 @@ import workoutRoutes from "./routes/workoutRoutes.js";
 import calorieRoutes from "./routes/calorieRoutes.js";
 import calorieProfileRoutes from "./routes/calorieProfileRoutes.js";
 import foodSetRoutes from "./routes/foodSetRoutes.js";
+import waterRoutes from "./routes/waterRoutes.js";
 import { getWorkoutSummaryForDate } from "./services/workoutService.js";
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.use("/api/workouts", workoutRoutes);
 app.use("/api/calories", calorieRoutes);
 app.use("/api/calories", calorieProfileRoutes);
 app.use("/api", foodSetRoutes);
+app.use("/api/water", waterRoutes);
 
 const AUTHORIZE_URL = "https://www.fitbit.com/oauth2/authorize";
 const TOKEN_URL = "https://api.fitbit.com/oauth2/token";

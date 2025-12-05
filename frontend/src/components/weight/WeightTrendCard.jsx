@@ -169,18 +169,49 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
     return { avgIntake, avgBurned, diff: avgIntake - avgBurned };
   }, [chartData, trend?.calorieStats]);
 
+  const [metric, setMetric] = React.useState("weight");
+
+  const metricOptions = [
+    { key: "weight", label: "体重", unit: "kg", color: "#3b82f6" },
+    { key: "bodyFat", label: "体脂肪率", unit: "%", color: "#f59e0b" },
+    { key: "muscleMass", label: "筋肉量", unit: "kg", color: "#ef4444" },
+    { key: "waist", label: "ウエスト", unit: "cm", color: "#10b981" },
+    { key: "visceralFat", label: "内臓脂肪", unit: "Lv", color: "#8b5cf6" },
+  ];
+
+  const currentMetric = metricOptions.find((m) => m.key === metric);
+
   const renderRangeButtons = () => (
-    <div className="trend-range-toggle">
-      {PERIOD_OPTIONS.map((option) => (
-        <button
-          key={option.key}
-          type="button"
-          onClick={() => onPeriodChange?.(option.key)}
-          className={`trend-range-button ${period === option.key ? "active" : ""}`}
-        >
-          {option.label}
-        </button>
-      ))}
+    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+      <select
+        value={metric}
+        onChange={(e) => setMetric(e.target.value)}
+        style={{
+          padding: "4px 8px",
+          borderRadius: "6px",
+          border: "1px solid #e5e7eb",
+          fontSize: "0.85rem",
+          background: "#fff",
+        }}
+      >
+        {metricOptions.map((opt) => (
+          <option key={opt.key} value={opt.key}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <div className="trend-range-toggle">
+        {PERIOD_OPTIONS.map((option) => (
+          <button
+            key={option.key}
+            type="button"
+            onClick={() => onPeriodChange?.(option.key)}
+            className={`trend-range-button ${period === option.key ? "active" : ""}`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 
@@ -188,17 +219,15 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
   const noData = !chartData.length;
 
   return (
-    <Card title="体重 & カロリートレンド" action={renderRangeButtons()} className="weight-trend-card">
+    <Card title={`${currentMetric.label} & カロリートレンド`} action={renderRangeButtons()} className="weight-trend-card">
       <div className="trend-stats">
         <div className="trend-stat">
-          <p className="trend-stat-label">最新の体重</p>
-          <strong className="trend-stat-value">{weightStats.latest ? `${weightStats.latest} kg` : "-"}</strong>
-          {weightStats.diff !== null && (
-            <span className={`trend-pill ${weightStats.diff <= 0 ? "positive" : "negative"}`}>
-              {weightStats.diff > 0 ? "+" : ""}
-              {weightStats.diff} kg
-            </span>
-          )}
+          <p className="trend-stat-label">最新の{currentMetric.label}</p>
+          <strong className="trend-stat-value">
+            {chartData.length > 0 && Number.isFinite(chartData[chartData.length - 1][metric])
+              ? `${chartData[chartData.length - 1][metric]} ${currentMetric.unit}`
+              : "-"}
+          </strong>
         </div>
         <div className="trend-divider" aria-hidden />
         <div className="trend-stat">
@@ -223,7 +252,7 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
         <div className="trend-chart-grid">
           <div className="trend-section">
             <div className="trend-section-header">
-              <h3 className="trend-subtitle">体重の推移</h3>
+              <h3 className="trend-subtitle">{currentMetric.label}の推移</h3>
               <p className="muted small">ラインのみで変化を確認</p>
             </div>
             {/* 固定高さのコンテナで軸やツールチップが途切れないようにする */}
@@ -237,15 +266,15 @@ const WeightTrendCard = ({ records = [], trend, period = PERIOD_OPTIONS[0].key, 
                     domain={["auto", "auto"]}
                     width={56}
                     tickFormatter={(value) => (Number.isFinite(value) ? value : "")}
-                    label={{ value: "kg", angle: -90, position: "insideLeft", offset: 10 }}
+                    label={{ value: currentMetric.unit, angle: -90, position: "insideLeft", offset: 10 }}
                   />
                   <Tooltip content={<TrendTooltip period={period} />} />
                   <Area
                     type="monotone"
-                    dataKey="weight"
-                    name={period === "1y" ? "平均体重" : "体重"}
-                    stroke="var(--color-primary)"
-                    fill="rgba(59,130,246,0.12)"
+                    dataKey={metric}
+                    name={currentMetric.label}
+                    stroke={currentMetric.color}
+                    fill={`${currentMetric.color}20`}
                     strokeWidth={3}
                     dot={{ r: 3 }}
                     activeDot={{ r: 6 }}

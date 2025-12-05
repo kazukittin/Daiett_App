@@ -34,7 +34,9 @@ const defaultData = {
   foodSets: [],
   foodMaster: [],
   fitbitActivities: [],
+  fitbitActivities: [],
   dailyBurned: [],
+  water: [],
 };
 
 const loadData = () => {
@@ -269,6 +271,29 @@ export const store = {
   deleteFoodMaster: (id) => {
     data.foodMaster = data.foodMaster.filter((item) => item.id !== id);
     persist();
+  },
+
+  listWaterRecords: (range = {}) =>
+    data.water
+      .filter((record) => withinRange(record.date, range.from, range.to))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)),
+
+  addWaterRecord: (record) => {
+    const id = record.id ?? `water_${nextId().toString(36)}`;
+    const newRecord = { ...record, id };
+    data.water.push(newRecord);
+    persist();
+    return newRecord;
+  },
+
+  deleteWaterRecord: (id) => {
+    const initialLength = data.water.length;
+    data.water = data.water.filter((record) => record.id !== id);
+    const deleted = data.water.length < initialLength;
+    if (deleted) {
+      persist();
+    }
+    return deleted;
   },
 };
 

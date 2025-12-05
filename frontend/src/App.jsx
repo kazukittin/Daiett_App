@@ -15,7 +15,6 @@ import AddMeal from "./screens/Meals/AddMeal.jsx";
 import MealHistory from "./screens/Meals/MealHistory.jsx";
 import ExerciseHistory from "./screens/Exercises/ExerciseHistory.jsx";
 import AddExercise from "./screens/Exercises/AddExercise.jsx";
-import AddWeight from "./screens/Weight/AddWeight.jsx";
 import WorkoutSettings from "./screens/Settings/WorkoutSettings.jsx";
 
 function ProfileView({
@@ -216,7 +215,6 @@ export default function App() {
             <Route path="/meals/new" element={<AddMeal />} />
             <Route path="/meals/history" element={<MealHistory />} />
             <Route path="/exercises/history" element={<ExerciseHistory />} />
-            <Route path="/weight/new" element={<AddWeight />} />
             <Route path="/exercises/new" element={<AddExercise />} />
             <Route path="/settings/workouts" element={<WorkoutSettings />} />
             <Route

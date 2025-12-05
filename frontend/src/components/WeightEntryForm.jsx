@@ -26,8 +26,12 @@ const modalCardStyle = {
   maxWidth: 520,
 };
 
-export default function WeightEntryForm({ profile: initialProfile, onLogged, mode = "inline" }) {
+export default function WeightEntryForm({ profile: initialProfile, onLogged, onClose, mode = "inline" }) {
   const [weight, setWeight] = useState("");
+  const [bodyFat, setBodyFat] = useState("");
+  const [muscleMass, setMuscleMass] = useState("");
+  const [waist, setWaist] = useState("");
+  const [visceralFat, setVisceralFat] = useState("");
   const [date, setDate] = useState(() => getTodayISO());
   const [timeOfDay, setTimeOfDay] = useState("morning");
   const [loading, setLoading] = useState(false);
@@ -53,10 +57,20 @@ export default function WeightEntryForm({ profile: initialProfile, onLogged, mod
     setLoading(true);
     try {
       // 1. Save weight
+      const payload = {
+        weight: weightValue,
+        date,
+        timeOfDay,
+        bodyFat: bodyFat ? Number(bodyFat) : null,
+        muscleMass: muscleMass ? Number(muscleMass) : null,
+        waist: waist ? Number(waist) : null,
+        visceralFat: visceralFat ? Number(visceralFat) : null,
+      };
+
       const weightResponse = await fetch("http://localhost:4000/api/weight/records", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weight: weightValue, date, timeOfDay }),
+        body: JSON.stringify(payload),
       });
 
       if (!weightResponse.ok) {
@@ -149,21 +163,80 @@ export default function WeightEntryForm({ profile: initialProfile, onLogged, mod
           />
         </label>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 6,
-            border: "none",
-            background: "#2563eb",
-            color: "#fff",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          {loading ? "記録中..." : "記録する"}
-        </button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontWeight: 600 }}>体脂肪率 (%)</span>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              value={bodyFat}
+              onChange={(e) => setBodyFat(e.target.value)}
+              style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid #d1d5db" }}
+              placeholder="例: 20.5"
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontWeight: 600 }}>筋肉量 (kg)</span>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              value={muscleMass}
+              onChange={(e) => setMuscleMass(e.target.value)}
+              style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid #d1d5db" }}
+              placeholder="例: 45.0"
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontWeight: 600 }}>ウエスト (cm)</span>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              value={waist}
+              onChange={(e) => setWaist(e.target.value)}
+              style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid #d1d5db" }}
+              placeholder="例: 75.0"
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontWeight: 600 }}>内臓脂肪レベル</span>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              value={visceralFat}
+              onChange={(e) => setVisceralFat(e.target.value)}
+              style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid #d1d5db" }}
+              placeholder="例: 4.0"
+            />
+          </label>
+        </div>
+
+        <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "16px" }}>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn secondary"
+              style={{ padding: "10px 16px" }}
+            >
+              キャンセル
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn primary"
+            style={{
+              padding: "10px 24px",
+              minWidth: "120px",
+            }}
+          >
+            {loading ? "保存中..." : "保存"}
+          </button>
+        </div>
       </form>
 
       {error && <div style={{ color: "#b91c1c", marginTop: 10 }}>{error}</div>}
